@@ -1,8 +1,10 @@
 ///! *Instruction Set Architecture - ISA*
 use std::ops::RangeInclusive;
 
-type Opcode = u8;
-type MemType = u16;
+const BITS_ADDRESS: usize = 16;
+
+type Opcode = usize;
+type MemType = usize;
 
 macro_rules! instruction_set {
     ($($name:ident $op:literal),+) => {
@@ -33,7 +35,7 @@ macro_rules! instruction_set {
                     $(Instruction::$name => $op),+,
                 };
 
-                let size = (std::mem::size_of::<MemType>() * 8) - 1;
+                let size = BITS_ADDRESS - 1;
 
                 let cr = RangeInclusive::new(size - r.end(), size - r.start());
                 MemType::from_str_radix(&code[cr], 2).unwrap()
