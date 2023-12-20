@@ -1,3 +1,5 @@
+use core::panic;
+
 use crate::processor::Processor;
 use isa::Instruction;
 
@@ -16,7 +18,7 @@ impl InstructionCicle for Instruction {
             Instruction::STOREIMED => todo!(),
             Instruction::LOADINDEX => todo!(),
             Instruction::STOREINDEX => todo!(),
-            Instruction::MOV => println!("Deu certo!"),
+            Instruction::MOV => todo!(),
             Instruction::INPUT => todo!(),
             Instruction::OUTPUT => todo!(),
             Instruction::OUTCHAR => todo!(),
@@ -42,10 +44,11 @@ impl InstructionCicle for Instruction {
             Instruction::POP => todo!(),
             Instruction::CALLR => todo!(),
             Instruction::JMPR => todo!(),
-            Instruction::NOP => todo!(),
+            Instruction::NOP => (),
             Instruction::HALT => todo!(),
             Instruction::CLEARC => todo!(),
             Instruction::BREAKP => todo!(),
+            Instruction::InvalidInstruction => panic!("Instrução inválida!"),
         }
     }
 }

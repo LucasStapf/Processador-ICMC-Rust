@@ -105,6 +105,18 @@ instruction_set!(
     CLEARC      "001000XXXXXXXXXX",
     BREAKP      "001110XXXXXXXXXX");
 
+/// Retorna os bits presentes no valor `mem` que estão no range `r`.
+/// A contagem começa do *low bit* para o *high bit*.
+///
+/// ## Exemplo:
+///
+/// ```
+/// use isa::*;
+///
+/// //  bits:   543210
+/// let mem = 0b101000;
+/// assert_eq!(0b101, bits(mem, 3..=5));
+/// ```
 pub fn bits(mem: MemType, r: RangeInclusive<usize>) -> MemType {
     let mask = (1 << (r.end() - r.start() + 1)) - 1;
     let ret = mem;
@@ -114,6 +126,11 @@ pub fn bits(mem: MemType, r: RangeInclusive<usize>) -> MemType {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_bits() {
+        assert_eq!(0b11, bits(0b110000, 4..=5));
+    }
 
     #[test]
     fn test_instruction_display() {
