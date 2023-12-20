@@ -145,9 +145,9 @@ mod tests {
             Instruction::get_instruction(0b0001000000000000)
         );
 
-        // assert_eq!(
-        //     Instruction::RTI,
-        //     Instruction::get_instruction(0b0001001111111111)
-        // );
+        assert_eq!(
+            Instruction::RTI,
+            Instruction::get_instruction(0b0001001111111111)
+        );
     }
 }
