@@ -23,11 +23,20 @@ macro_rules! instruction_set {
         }
 
         impl Instruction {
+
+            /// Retorna o OPCODE da instrução.
             pub fn opcode(&self) -> Opcode {
                 let code = match self {
                     $(Instruction::$name => $op),+,
                 };
                 Opcode::from_str_radix(&code[0..=5], 2).unwrap()
+            }
+
+            /// Retorna a máscara da instrução.
+            pub fn mask(&self) -> &str {
+                match self {
+                    $(Instruction::$name => $op),+,
+                }
             }
 
             pub fn bits(&self, r: RangeInclusive<usize>) -> MemType {
@@ -41,14 +50,25 @@ macro_rules! instruction_set {
                 MemType::from_str_radix(&code[cr], 2).unwrap()
             }
 
+            /// Retorna qual [`Instruction`] está presente no argumento `value`.
+            /// Se a instrução for inválida, irá retornar [`Instruction::InvalidInstruction`].
+            ///
+            /// ## Exemplo
+            ///
+            /// ```
+            /// use isa::*;
+            ///
+            /// let mem = 0b1100001000100011; // LOAD
+            /// assert_eq!(Instruction::LOAD, Instruction::get_instruction(mem));
+            /// ```
             pub fn get_instruction(value: MemType) -> Instruction {
                 let value_string = format!("{:016b}", value);
 
                 let mut test_value: String;
 
                 $(test_value = value_string.chars().zip($op.chars()).map(|(v, x)| {
-                    if x == 'X' {
-                        'X'
+                    if x == '-' {
+                        '-'
                     } else {
                         v
                     }
@@ -66,44 +86,78 @@ macro_rules! instruction_set {
 }
 
 instruction_set!(
-    InvalidInstruction  "----------------",         // Apenas controle para instrução inválida.
-    LOAD        "110000XXXXXXXXXX", // Data Manipulation Instructions
-    STORE       "110001XXXXXXXXXX",
-    LOADIMED    "111000XXXXXXXXXX",
-    STOREIMED   "111001XXXXXXXXXX",
-    LOADINDEX   "111100XXXXXXXXXX",
-    STOREINDEX  "111101XXXXXXXXXX",
-    MOV         "110011XXXXXXXXXX",
-    INPUT       "111110XXXXXXXXXX", // Peripheric Instructions
-    OUTPUT      "111111XXXXXXXXXX",
-    OUTCHAR     "110010XXXXXXXXXX", // IO Instructions
-    INCHAR      "110101XXXXXXXXXX",
-    SOUND       "110100XXXXXXXXXX",
-    ADD         "100000XXXXXXXXXX", // Aritmethic Instructions
-    SUB         "100001XXXXXXXXXX",
-    MUL         "100010XXXXXXXXXX",
-    DIV         "100011XXXXXXXXXX",
-    INC         "100100XXXXXXXXXX",
-    LMOD        "100101XXXXXXXXXX",
-    LAND        "010010XXXXXXXXXX", // Logic Instructions
-    LOR         "010011XXXXXXXXXX",
-    LXOR        "010100XXXXXXXXXX",
-    LNOT        "010101XXXXXXXXXX",
-    SHIFT       "010000XXXXXXXXXX",
-    CMP         "010110XXXXXXXXXX",
-    BRA         "000001XXXXXXXXXX", // Flow Control Instructions
-    JMP         "000010XXXXXXXXXX",
-    CALL        "000011XXXXXXXXXX",
-    RTS         "000100XXXXXXXXX0",
-    RTI         "000100XXXXXXXXX1",
-    PUSH        "000101XXXXXXXXXX",
-    POP         "000110XXXXXXXXXX",
-    CALLR       "001001XXXXXXXXXX",
-    JMPR        "001010XXXXXXXXXX",
-    NOP         "000000XXXXXXXXXX", // Control Instructions
-    HALT        "001111XXXXXXXXXX",
-    CLEARC      "001000XXXXXXXXXX",
-    BREAKP      "001110XXXXXXXXXX");
+    InvalidInstruction  "XXXXXXXXXXXXXXXX",         // Apenas controle para instrução inválida.
+    LOAD        "110000----------", // Data Manipulation Instructions
+    LOADN       "111000----------",
+    LOADI       "111100----------",
+    STORE       "110001----------",
+    STOREN      "111001----------",
+    STOREI      "111101----------",
+    MOV         "110011----------",
+    INPUT       "111110----------", // Peripheric Instructions
+    OUTPUT      "111111----------",
+    OUTCHAR     "110010----------", // IO Instructions
+    INCHAR      "110101----------",
+    SOUND       "110100----------",
+    ADD         "100000---------0", // Aritmethic Instructions
+    ADDC        "100000---------1", 
+    SUB         "100001---------0",
+    SUBC        "100001---------1",
+    MUL         "100010---------0",
+    DIV         "100011---------0",
+    INC         "100100---0------",
+    DEC         "100100---1------",
+    MOD         "100101----------",
+    AND         "010010----------", // Logic Instructions
+    OR          "010011----------",
+    XOR         "010100----------",
+    NOT         "010101----------",
+    SHIFTL0     "010000---000----",
+    SHIFTL1     "010000---001----",
+    SHIFTR0     "010000---010----",
+    SHIFTR1     "010000---011----",
+    ROTL        "010000---10-----",
+    ROTR        "010000---11-----",
+    CMP         "010110----------",
+    JMP         "0000100000------",
+    JEQ         "0000100001------",
+    JNE         "0000100010------",
+    JZ          "0000100011------",
+    JNZ         "0000100100------",
+    JC          "0000100101------",
+    JNC         "0000100110------",
+    JGR         "0000100111------",
+    JLE         "0000101000------",
+    JEG         "0000101001------",
+    JEL         "0000101010------",
+    JOV         "0000101011------",
+    JNO         "0000101100------",
+    JDZ         "0000101101------",
+    JN          "0000101110------",
+    CALL        "0000110000------",
+    CEQ         "0000110001------",
+    CNE         "0000110010------",
+    CZ          "0000110011------",
+    CNZ         "0000110100------",
+    CC          "0000110101------",
+    CNC         "0000110110------",
+    CGR         "0000110111------",
+    CLE         "0000111000------",
+    CEG         "0000111001------",
+    CEL         "0000111010------",
+    COV         "0000111011------",
+    CNO         "0000111100------",
+    CDZ         "0000111101------",
+    CN          "0000111110------",
+    RTS         "000100---------0",
+    RTI         "000100---------1",
+    PUSH        "000101----------",
+    POP         "000110----------",
+    NOP         "000000----------", // Control Instructions
+    HALT        "001111----------",
+    CLEARC      "0010000---------",
+    SETC        "0010001---------",
+    BREAKP      "001110----------");
 
 /// Retorna os bits presentes no valor `mem` que estão no range `r`.
 /// A contagem começa do *low bit* para o *high bit*.
@@ -134,7 +188,7 @@ mod tests {
 
     #[test]
     fn test_instruction_display() {
-        assert_eq!("LOADINDEX", Instruction::LOADINDEX.to_string());
+        assert_eq!("LOADI", Instruction::LOADI.to_string());
     }
 
     #[test]

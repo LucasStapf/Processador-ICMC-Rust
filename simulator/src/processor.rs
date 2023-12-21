@@ -1,32 +1,40 @@
 use core::panic;
+use std::{fmt::Display, usize};
 
 use isa::Instruction;
-use log::info;
+use log::{debug, info};
 
 use crate::instructions::InstructionCicle;
+
+const PANIC_STR_MEM_INDEX: &str = "Acesso indevido da memória!";
+const PANIC_STR_REG_INDEX: &str = "Acesso indevido dos registradores!";
 
 const MEMORY_SIZE: usize = 32768;
 const NUM_REGISTERS: usize = 8;
 
 pub struct Processor {
-    memory: [usize; MEMORY_SIZE],
-    registers: [usize; NUM_REGISTERS],
+    pub memory: [usize; MEMORY_SIZE], // pub temp
+    pub registers: [usize; NUM_REGISTERS],
 
-    rx: usize,
-    ry: usize,
-    rz: usize,
+    pub rx: usize,
+    pub ry: usize,
+    pub rz: usize,
     // Flag Register
-    fr: [bool; 16],
+    pub fr: [bool; 16],
     // Program Counter
-    pc: usize,
+    pub pc: usize,
     // Instruction Register
-    ir: usize,
+    pub ir: usize,
     // Stack Pointer
-    sp: usize,
+    pub sp: usize,
 }
 
 impl Processor {
     pub fn new() -> Self {
+        info!(
+            "Novo processador criado. [Tamanho da Memória {}] [Número de Registradores {}]",
+            MEMORY_SIZE, NUM_REGISTERS
+        );
         Self {
             memory: [0; MEMORY_SIZE],
             registers: [0; NUM_REGISTERS],
@@ -40,12 +48,28 @@ impl Processor {
         }
     }
 
+    pub fn mem(&self, index: usize) -> usize {
+        *self.memory.get(index).expect(PANIC_STR_MEM_INDEX)
+    }
+
+    pub fn set_mem(&mut self, index: usize, value: usize) {
+        *self.memory.get_mut(index).expect(PANIC_STR_MEM_INDEX) = value;
+    }
+
+    pub fn reg(&self, index: usize) -> usize {
+        *self.registers.get(index).expect(PANIC_STR_REG_INDEX)
+    }
+
+    pub fn set_reg(&mut self, index: usize, value: usize) {
+        *self.registers.get_mut(index).expect(PANIC_STR_REG_INDEX) = value;
+    }
+
     fn search_cicle(&mut self) {
         self.ir = *self
             .memory
             .get(self.pc)
             .expect("Limite de memória do processador atingido!");
-        info!(
+        debug!(
             "Search Cicle [Instruction Register {:016b}] [Program Counter {}]",
             self.ir, self.pc
         );
@@ -58,12 +82,23 @@ impl Processor {
         self.rz = isa::bits(self.ir, 1..=3);
 
         let instruction = Instruction::get_instruction(self.ir);
-        info!("Execution Cicle [{}]", instruction);
+        debug!("Execution Cicle [{} {}]", instruction, instruction.mask());
         instruction.execution(self);
     }
 
     pub fn begin_cicle(&mut self) {
         self.search_cicle();
         self.execution_cicle();
+        debug!("{}", self);
+    }
+}
+
+impl Display for Processor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "[Registers {:?}] [FR {:?}] [IR {}] [SP {}] [PC {}]",
+            self.registers, self.fr, self.ir, self.sp, self.pc,
+        )
     }
 }
