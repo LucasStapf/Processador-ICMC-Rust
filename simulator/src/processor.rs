@@ -1,4 +1,3 @@
-use core::panic;
 use std::{fmt::Display, usize};
 
 use isa::Instruction;
@@ -13,7 +12,7 @@ const MEMORY_SIZE: usize = 32768;
 const NUM_REGISTERS: usize = 8;
 
 pub struct Processor {
-    pub memory: [usize; MEMORY_SIZE], // pub temp
+    pub memory: Vec<usize>, // pub temp
     pub registers: [usize; NUM_REGISTERS],
 
     pub rx: usize,
@@ -35,8 +34,14 @@ impl Processor {
             "Novo processador criado. [Tamanho da Memória {}] [Número de Registradores {}]",
             MEMORY_SIZE, NUM_REGISTERS
         );
+
+        let mut mem = Vec::with_capacity(MEMORY_SIZE);
+        for _ in 0..MEMORY_SIZE {
+            mem.push(0);
+        }
+
         Self {
-            memory: [0; MEMORY_SIZE],
+            memory: mem,
             registers: [0; NUM_REGISTERS],
             rx: 0,
             ry: 0,
@@ -86,10 +91,46 @@ impl Processor {
         instruction.execution(self);
     }
 
-    pub fn begin_cicle(&mut self) {
+    pub fn next(&mut self) {
         self.search_cicle();
         self.execution_cicle();
-        debug!("{}", self);
+        debug!("{self}");
+    }
+
+    pub fn info(
+        &self,
+    ) -> (
+        usize,
+        usize,
+        usize,
+        usize,
+        usize,
+        usize,
+        usize,
+        usize,
+        usize,
+        usize,
+        usize,
+    ) {
+        (
+            self.registers[0],
+            self.registers[1],
+            self.registers[2],
+            self.registers[3],
+            self.registers[4],
+            self.registers[5],
+            self.registers[6],
+            self.registers[7],
+            self.pc,
+            self.sp,
+            self.ir,
+        )
+    }
+
+    pub fn run(&mut self) {
+        loop {
+            self.next()
+        }
     }
 }
 

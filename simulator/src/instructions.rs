@@ -20,11 +20,25 @@ impl InstructionCicle for Instruction {
                 p.set_reg(p.rx, p.mem(p.pc));
                 p.pc += 1;
             }
-            Instruction::LOADI => todo!(),
-            Instruction::STORE => todo!(),
-            Instruction::STOREN => todo!(),
-            Instruction::STOREI => todo!(),
-            Instruction::MOV => todo!(),
+            Instruction::LOADI => {
+                p.set_reg(p.rx, p.reg(p.ry));
+            }
+            Instruction::STORE => {
+                p.set_mem(p.mem(p.pc), p.reg(p.rx));
+                p.pc += 1;
+            }
+            Instruction::STOREN => {
+                p.set_mem(p.mem(p.pc), p.mem(p.pc + 1));
+                p.pc += 2;
+            }
+            Instruction::STOREI => {
+                p.set_mem(p.reg(p.rx), p.reg(p.ry));
+            }
+            Instruction::MOV => match isa::bits(p.ir, 0..=1) {
+                0 => p.set_reg(p.rx, p.reg(p.ry)),
+                1 => p.set_reg(p.rx, p.sp),
+                _ => p.sp = p.reg(p.rx),
+            },
             Instruction::INPUT => todo!(),
             Instruction::OUTPUT => todo!(),
             Instruction::OUTCHAR => todo!(),
@@ -84,7 +98,7 @@ impl InstructionCicle for Instruction {
             Instruction::RTI => todo!(),
             Instruction::PUSH => todo!(),
             Instruction::POP => todo!(),
-            Instruction::NOP => todo!(),
+            Instruction::NOP => (),
             Instruction::HALT => todo!(),
             Instruction::CLEARC => todo!(),
             Instruction::SETC => todo!(),

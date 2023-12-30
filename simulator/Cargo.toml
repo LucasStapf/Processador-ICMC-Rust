@@ -6,6 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+async-channel = "2.1.1"
 env_logger = "0.10.1"
+gtk4 = "0.7.3"
 isa = { path = "../isa" } 
 log = "0.4.20"
+once_cell = "1.19.0"
+tokio = { version = "1", features = ["rt-multi-thread"] }
