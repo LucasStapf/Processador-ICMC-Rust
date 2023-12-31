@@ -1,3 +1,5 @@
 [workspace]
 resolver = "2"
-members = ["assembler", "isa", "simulator"]
+members = ["assembler", "isa", "processor", "simulator"]
+
+

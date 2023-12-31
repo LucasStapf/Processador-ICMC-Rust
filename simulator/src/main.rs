@@ -1,17 +1,13 @@
 use env_logger::{Builder, Target};
-use gtk4::glib;
-use gtk4::prelude::*;
-use gtk4::Application;
-use processor::Processor;
 
-mod instructions;
-mod processor;
+use gtk4::{glib, prelude::*, Application};
+
 mod view;
 
 const APP_ID: &str = "org.usp.ProcessadorIcmc";
 
 fn main() -> glib::ExitCode {
-    std::env::set_var("RUST_LOG", "simulator");
+    std::env::set_var("RUST_LOG", "debug");
 
     // log config
     let mut builder = Builder::from_default_env();

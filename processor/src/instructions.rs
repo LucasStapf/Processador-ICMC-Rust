@@ -1,43 +1,40 @@
-use core::panic;
-
-use crate::processor::Processor;
+use super::{ProcError, Processor};
 use isa::Instruction;
 
 pub trait InstructionCicle {
-    fn execution(&self, processor: &mut Processor);
+    fn execution(&self, processor: &mut Processor) -> Result<(), ProcError>;
 }
 
 impl InstructionCicle for Instruction {
-    // add code here
-    fn execution(&self, p: &mut Processor) {
+    fn execution(&self, p: &mut Processor) -> Result<(), ProcError> {
         match self {
-            Instruction::InvalidInstruction => panic!("Instrução inválida!"),
+            Instruction::InvalidInstruction => return Err(ProcError::InvalidInstruction(p.ir())),
             Instruction::LOAD => {
-                p.set_reg(p.rx, p.mem(p.mem(p.pc)));
-                p.pc += 1;
+                p.set_reg(p.rx(), p.mem(p.mem(p.pc())?)?)?;
+                p.inc_pc(1)?;
             }
             Instruction::LOADN => {
-                p.set_reg(p.rx, p.mem(p.pc));
-                p.pc += 1;
+                p.set_reg(p.rx(), p.mem(p.pc())?)?;
+                p.inc_pc(1)?;
             }
             Instruction::LOADI => {
-                p.set_reg(p.rx, p.reg(p.ry));
+                p.set_reg(p.rx(), p.reg(p.ry())?)?;
             }
             Instruction::STORE => {
-                p.set_mem(p.mem(p.pc), p.reg(p.rx));
-                p.pc += 1;
+                p.set_mem(p.mem(p.pc())?, p.reg(p.rx())?)?;
+                p.inc_pc(1)?;
             }
             Instruction::STOREN => {
-                p.set_mem(p.mem(p.pc), p.mem(p.pc + 1));
-                p.pc += 2;
+                p.set_mem(p.mem(p.pc())?, p.mem(p.pc() + 1)?)?;
+                p.inc_pc(2)?;
             }
             Instruction::STOREI => {
-                p.set_mem(p.reg(p.rx), p.reg(p.ry));
+                p.set_mem(p.reg(p.rx())?, p.reg(p.ry())?)?;
             }
-            Instruction::MOV => match isa::bits(p.ir, 0..=1) {
-                0 => p.set_reg(p.rx, p.reg(p.ry)),
-                1 => p.set_reg(p.rx, p.sp),
-                _ => p.sp = p.reg(p.rx),
+            Instruction::MOV => match isa::bits(p.ir(), 0..=1) {
+                0 => p.set_reg(p.rx(), p.reg(p.ry())?)?,
+                1 => p.set_reg(p.rx(), p.sp())?,
+                _ => p.set_sp(p.reg(p.rx())?)?,
             },
             Instruction::INPUT => todo!(),
             Instruction::OUTPUT => todo!(),
@@ -104,5 +101,23 @@ impl InstructionCicle for Instruction {
             Instruction::SETC => todo!(),
             Instruction::BREAKP => todo!(),
         }
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_invalid_instruction() {
+        let mut p = Processor::debug(10);
+        let _ = p.set_mem(0, 0b1011110000000000);
+        assert_eq!(
+            ProcError::InvalidInstruction(0b1011110000000000),
+            p.next().err().unwrap()
+        )
     }
 }

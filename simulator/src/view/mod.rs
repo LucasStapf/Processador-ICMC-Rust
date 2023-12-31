@@ -1,12 +1,12 @@
 use std::fmt::Display;
 
 use gtk4::glib::clone;
-use gtk4::Label;
 use log::error;
 use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
 
-use crate::processor::Processor;
+use processor::errors::ProcError;
+use processor::Processor;
 
 use gtk4::prelude::*;
 use gtk4::Application;
@@ -24,13 +24,15 @@ pub enum RunMode {
     StepByStep(bool),
 }
 
-fn run_mode(processor: &mut Processor, mode: &mut RunMode) {
+fn run_mode(processor: &mut Processor, mode: &mut RunMode) -> std::result::Result<(), ProcError> {
     match mode {
         RunMode::Automatic => processor.next(),
         RunMode::StepByStep(b) => {
             if *b {
-                processor.next();
                 *b = false;
+                processor.next()
+            } else {
+                Ok(())
             }
         }
     }
@@ -49,37 +51,37 @@ pub fn build_ui(app: &Application) {
     let (tx, rx) = async_channel::bounded(1);
     let receiver = run_processor(rx);
 
-    let l_r0 = Label::new(None);
-    let l_r1 = Label::new(None);
-    let l_r2 = Label::new(None);
-    let l_r3 = Label::new(None);
-    let l_r4 = Label::new(None);
-    let l_r5 = Label::new(None);
-    let l_r6 = Label::new(None);
-    let l_r7 = Label::new(None);
-    let l_pc = Label::new(None);
-    let l_sp = Label::new(None);
-    let l_ir = Label::new(None);
+    let el_r0 = gtk4::Label::new(None);
+    let el_r1 = gtk4::Label::new(None);
+    let el_r2 = gtk4::Label::new(None);
+    let el_r3 = gtk4::Label::new(None);
+    let el_r4 = gtk4::Label::new(None);
+    let el_r5 = gtk4::Label::new(None);
+    let el_r6 = gtk4::Label::new(None);
+    let el_r7 = gtk4::Label::new(None);
+    let el_pc = gtk4::Label::new(None);
+    let el_sp = gtk4::Label::new(None);
+    let el_ir = gtk4::Label::new(None);
 
     glib::spawn_future_local(
-        clone!(@weak l_r0, @weak l_r1, @weak l_r2, @weak l_r3, @weak l_r4, @weak l_r5, @weak l_r6, @weak l_r7, @weak l_pc, @weak l_sp, @weak l_ir => async move {
+        clone!(@weak el_r0, @weak el_r1, @weak el_r2, @weak el_r3, @weak el_r4, @weak el_r5, @weak el_r6, @weak el_r7, @weak el_pc, @weak el_sp, @weak el_ir => async move {
             loop {
                 match receiver.recv().await {
                     Ok(info) => {
-                        l_r0.set_text(&info.0.to_string());
-                        l_r1.set_text(&info.1.to_string());
-                        l_r2.set_text(&info.2.to_string());
-                        l_r3.set_text(&info.3.to_string());
-                        l_r4.set_text(&info.4.to_string());
-                        l_r5.set_text(&info.5.to_string());
-                        l_r6.set_text(&info.6.to_string());
-                        l_r7.set_text(&info.7.to_string());
-                        l_pc.set_text(&info.8.to_string());
-                        l_sp.set_text(&info.9.to_string());
-                        l_ir.set_text(&info.10.to_string());
+                        el_r0.set_text(&info.0.to_string());
+                        el_r1.set_text(&info.1.to_string());
+                        el_r2.set_text(&info.2.to_string());
+                        el_r3.set_text(&info.3.to_string());
+                        el_r4.set_text(&info.4.to_string());
+                        el_r5.set_text(&info.5.to_string());
+                        el_r6.set_text(&info.6.to_string());
+                        el_r7.set_text(&info.7.to_string());
+                        el_pc.set_text(&info.8.to_string());
+                        el_sp.set_text(&info.9.to_string());
+                        el_ir.set_text(&info.10.to_string());
                     }
                     Err(e) => {
-                        error!("{e}");
+                        error!("[Receiving info] {e}");
                         break;
                     },
                 }
@@ -91,14 +93,17 @@ pub fn build_ui(app: &Application) {
         .orientation(gtk4::Orientation::Horizontal)
         .build();
 
-    h_boxex.append(&l_r0);
-    h_boxex.append(&l_r1);
-    h_boxex.append(&l_r2);
-    h_boxex.append(&l_r3);
-    h_boxex.append(&l_r4);
-    h_boxex.append(&l_r5);
-    h_boxex.append(&l_r6);
-    h_boxex.append(&l_r7);
+    h_boxex.append(&el_r0);
+    h_boxex.append(&el_r1);
+    h_boxex.append(&el_r2);
+    h_boxex.append(&el_r3);
+    h_boxex.append(&el_r4);
+    h_boxex.append(&el_r5);
+    h_boxex.append(&el_r6);
+    h_boxex.append(&el_r7);
+    h_boxex.append(&el_pc);
+    h_boxex.append(&el_sp);
+    h_boxex.append(&el_ir);
 
     let h_pane = gtk4::Paned::builder()
         .start_child(&h_boxex)
@@ -116,13 +121,19 @@ pub fn build_ui(app: &Application) {
     event_controller.connect_key_pressed(move |_, key, _, _| {
         match key {
             gdk::Key::Home => {
-                tx.send(RunMode::Automatic);
+                let _ = tx
+                    .send_blocking(RunMode::Automatic)
+                    .map_err(|e| error!("[Sending RunMode] {e}"));
             }
             gdk::Key::Page_Up => {
-                tx.send(RunMode::StepByStep(true));
+                let _ = tx
+                    .send_blocking(RunMode::StepByStep(true))
+                    .map_err(|e| error!("[Sending RunMode] {e}"));
             }
             gdk::Key::Page_Down => {
-                tx.send(RunMode::StepByStep(false));
+                let _ = tx
+                    .send_blocking(RunMode::StepByStep(false))
+                    .map_err(|e| error!("[Sending RunMode] {e}"));
             }
             _ => (),
         }
@@ -157,22 +168,28 @@ fn run_processor(
             match rx.try_recv() {
                 Ok(m) => {
                     mode = m;
-                    run_mode(&mut p, &mut mode);
-                    if let Err(e) = t.send(p.info()).await {
+                    if let Err(e) = run_mode(&mut p, &mut mode) {
                         error!("{e}");
+                        break;
+                    }
+                    if let Err(e) = t.send(p.info()).await {
+                        error!("[Sending info] {e}");
                         break;
                     }
                 }
                 Err(e) => match e {
                     async_channel::TryRecvError::Empty => {
-                        run_mode(&mut p, &mut mode);
-                        if let Err(e) = t.send(p.info()).await {
+                        if let Err(e) = run_mode(&mut p, &mut mode) {
                             error!("{e}");
+                            break;
+                        }
+                        if let Err(e) = t.send(p.info()).await {
+                            error!("[Sending info] {e}");
                             break;
                         }
                     }
                     async_channel::TryRecvError::Closed => {
-                        error!("{e}");
+                        error!("[Sending info] {e}");
                         break;
                     }
                 },
