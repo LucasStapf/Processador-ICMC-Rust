@@ -15,6 +15,8 @@ pub const MEMORY_SIZE: usize = 32768;
 /// Número de registradores disponíveis no processador.
 pub const NUM_REGISTERS: usize = 8;
 
+pub const MAX_VALUE_MEMORY: usize = 2_usize.pow(isa::BITS_ADDRESS as u32) - 1;
+
 type Result<T> = std::result::Result<T, ProcError>;
 
 pub struct FlagIndex;
@@ -29,6 +31,7 @@ impl FlagIndex {
     pub const DIV_BY_ZERO: usize = 6;
     pub const STACK_OVERFLOW: usize = 7;
     pub const STACK_UNDERFLOW: usize = 8;
+    pub const NEGATIVE: usize = 9;
 }
 
 pub struct Processor {
@@ -78,7 +81,7 @@ impl Processor {
     /// Cria um novo processador para DEBUG com [`NUM_REGISTERS`] registradores, memória de tamanho `s` e mais 4 registradores especiais que são: *Flag Register* (FR), *Program Counter* (PC), *Stack Pointer* (SP) e *Instruction Register* (IR).
     /// Inicialmente, todos os endereços da memória e todos os registradores guardam o valor 0x0.
     ///
-    /// ## **Importante**
+    /// # **Importante**
     ///
     /// Deve ser utilizado somente para testes!
     pub fn debug(s: usize) -> Self {
@@ -107,11 +110,11 @@ impl Processor {
 
     /// Retorna o valor presente na memória de índice `i`.
     ///
-    /// ## Erros
+    /// # Erros
     ///
-    /// Essa função retornará [`ProcError::InvalidMemoryIndex`] caso o índice seja inválido.
+    /// Retorna o erro [`ProcError::InvalidMemoryIndex`] caso o índice seja inválido.
     ///
-    /// ## Exemplo
+    /// # Exemplo
     ///
     /// ```
     /// use crate::processor::Processor;
@@ -129,12 +132,12 @@ impl Processor {
 
     /// Altera o valor da memória no índice `i` para `v`.
     ///
-    /// ## Erros
+    /// # Erros
     ///
-    /// Esta função irá retorar o erro [`ProcError::InvalidMemoryIndex`] caso o índice `i` seja
+    /// Retorna o erro [`ProcError::InvalidMemoryIndex`] caso o índice `i` seja
     /// inválido.
     ///
-    /// ## Exemplo
+    /// # Exemplo
     ///
     /// ```
     /// use crate::processor::Processor;
@@ -156,12 +159,12 @@ impl Processor {
 
     /// Retorna o valor do registrador `n` (`n` é o índice do vetor de registradores).
     ///
-    /// ## Erros
+    /// # Erros
     ///
-    /// Esta função irá retornar o erro [`ProcError::InvalidRegister`] caso o registrador `n` seja
+    /// Retorna o erro [`ProcError::InvalidRegister`] caso o registrador `n` seja
     /// inválido.
     ///
-    /// ## Exemplo
+    /// # Exemplo
     ///
     /// ```
     /// use crate::processor::Processor;
@@ -178,12 +181,12 @@ impl Processor {
 
     /// Esta função altera o conteúdo do registrar `n` para `v`.
     ///
-    /// ## Erros
+    /// # Erros
     ///
-    /// Esta função irá retornar o erro [`ProcError::InvalidRegister`] caso o registrador `n` seja
+    /// Retorna o erro [`ProcError::InvalidRegister`] caso o registrador `n` seja
     /// invalido.
     ///
-    /// ## Exemplo
+    /// # Exemplo
     ///
     /// ```
     /// use crate::processor::Processor;
@@ -203,16 +206,64 @@ impl Processor {
         }
     }
 
+    /// Retorna o valor presente no campo RX do registrador IR.
+    ///
+    /// # Mapeamento
+    ///
+    /// | Nº | 15 | 14 | 13 | 12 | 11 | 10 | 09 | 08 | 07 | 06 | 05 | 04 | 03 | 02 | 01 | 00 |
+    /// |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+    /// | IR | -- | -- | -- | -- | -- | -- | RX | RX | RX | -- | -- | -- | -- | -- | -- | -- |
     pub fn rx(&self) -> usize {
         self.rx
     }
 
+    /// Retorna o valor presente no campo RY do registrador IR.
+    ///
+    /// # Mapeamento
+    ///
+    /// | Nº | 15 | 14 | 13 | 12 | 11 | 10 | 09 | 08 | 07 | 06 | 05 | 04 | 03 | 02 | 01 | 00 |
+    /// |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+    /// | IR | -- | -- | -- | -- | -- | -- | -- | -- | -- | RY | RY | RY | -- | -- | -- | -- |
     pub fn ry(&self) -> usize {
         self.ry
     }
 
+    /// Retorna o valor presente no campo RZ do registrador IR.
+    ///
+    /// # Mapeamento
+    ///
+    /// | Nº | 15 | 14 | 13 | 12 | 11 | 10 | 09 | 08 | 07 | 06 | 05 | 04 | 03 | 02 | 01 | 00 |
+    /// |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+    /// | IR | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | RZ | RZ | RZ | -- |
     pub fn rz(&self) -> usize {
         self.rz
+    }
+
+    /// Retorna o valor da `i`-ésima *flag* do registrador *Flag Register*.
+    ///
+    /// > ⚠️  **Atenção** :É recomendo utilizar os índices mapeados em [`FlagIndex`] para evitar
+    /// erros e comportamentos indesejados.
+    pub fn fr(&self, i: usize) -> Result<bool> {
+        match self.fr.get(i) {
+            Some(&f) => Ok(f),
+            None => Err(ProcError::InvalidIndex(
+                i,
+                Some("Índice do Flag Register inválido".to_string()),
+            )),
+        }
+    }
+
+    pub fn set_fr(&mut self, i: usize, v: bool) -> Result<()> {
+        match self.fr.get_mut(i) {
+            Some(f) => {
+                *f = v;
+                Ok(())
+            }
+            None => Err(ProcError::InvalidIndex(
+                i,
+                Some("Índice do Flag Register inválido".to_string()),
+            )),
+        }
     }
 
     /// Retorna o valor do registrador especial *Instruction Register*.
@@ -227,9 +278,9 @@ impl Processor {
 
     /// Altera o valor do registrador especial *Stack Pointer* para `v`.
     ///
-    /// ## Erros
+    /// # Erros
     ///
-    /// Esta função irá retornar o erro [`ProcError::MaximumMemoryReached`] caso o valor `v` seja
+    /// Retorna o erro [`ProcError::MaximumMemoryReached`] caso o valor `v` seja
     /// maior que [`MEMORY_SIZE`].
     pub fn set_sp(&mut self, v: usize) -> Result<()> {
         return if v > MEMORY_SIZE {
@@ -247,9 +298,9 @@ impl Processor {
 
     /// Incrementa o valor do registrador especial *Program Counter* de um valor `v`.
     ///
-    /// ## Erros
+    /// # Erros
     ///
-    /// Esta função irá retornar o erro [`ProcError::MaximumMemoryReached`] caso o resultado da
+    /// Retorna o erro [`ProcError::MaximumMemoryReached`] caso o resultado da
     /// soma seja maior que [`MEMORY_SIZE`].
     /// É importante notar que neste caso o valor de PC **não** será atualizado.
     pub fn inc_pc(&mut self, v: usize) -> Result<()> {
@@ -263,7 +314,7 @@ impl Processor {
 
     /// Realiza o ciclo de busca do processador.
     ///
-    /// ## Erros
+    /// # Erros
     ///
     /// Esta função pode retornar qualquer um dos erros abaixo:
     ///
@@ -301,7 +352,7 @@ impl Processor {
         Ok(())
     }
 
-    pub fn info(
+    pub fn state(
         &self,
     ) -> (
         usize,

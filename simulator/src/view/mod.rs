@@ -172,7 +172,7 @@ fn run_processor(
                         error!("{e}");
                         break;
                     }
-                    if let Err(e) = t.send(p.info()).await {
+                    if let Err(e) = t.send(p.state()).await {
                         error!("[Sending info] {e}");
                         break;
                     }
@@ -183,7 +183,7 @@ fn run_processor(
                             error!("{e}");
                             break;
                         }
-                        if let Err(e) = t.send(p.info()).await {
+                        if let Err(e) = t.send(p.state()).await {
                             error!("[Sending info] {e}");
                             break;
                         }

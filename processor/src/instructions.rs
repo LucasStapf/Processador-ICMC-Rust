@@ -1,3 +1,5 @@
+use crate::{FlagIndex, MAX_VALUE_MEMORY};
+
 use super::{ProcError, Processor};
 use isa::Instruction;
 
@@ -41,19 +43,91 @@ impl InstructionCicle for Instruction {
             Instruction::OUTCHAR => todo!(),
             Instruction::INCHAR => todo!(),
             Instruction::SOUND => todo!(),
-            Instruction::ADD => todo!(),
-            Instruction::ADDC => todo!(),
-            Instruction::SUB => todo!(),
-            Instruction::SUBC => todo!(),
+            Instruction::ADD | Instruction::ADDC => {
+                p.set_reg(p.rx(), p.reg(p.ry())? + p.reg(p.rz())?)?;
+
+                if *self == Instruction::ADDC {
+                    p.set_reg(p.rx(), p.reg(p.rx())? + p.fr(FlagIndex::CARRY)? as usize)?;
+                }
+
+                p.set_fr(FlagIndex::ZERO, false)?;
+                p.set_fr(FlagIndex::CARRY, false)?;
+
+                match p.reg(p.rx())? {
+                    r if r == 0 => p.set_fr(FlagIndex::ZERO, false)?,
+                    r if r > MAX_VALUE_MEMORY => {
+                        p.set_fr(FlagIndex::CARRY, true)?;
+                        p.set_reg(p.rx(), r - MAX_VALUE_MEMORY)?;
+                    }
+                    _ => (),
+                };
+            }
+            Instruction::SUB | Instruction::SUBC => {
+                let sub = if *self == Instruction::SUB {
+                    p.reg(p.ry())?.checked_sub(p.reg(p.rz())?)
+                } else {
+                    p.reg(p.ry())?
+                        .checked_sub(p.reg(p.rz())? + p.fr(FlagIndex::CARRY)? as usize)
+                };
+
+                match sub {
+                    Some(s) => {
+                        p.set_reg(p.rx(), s)?;
+
+                        p.set_fr(FlagIndex::ZERO, false)?;
+                        p.set_fr(FlagIndex::NEGATIVE, false)?;
+
+                        if s == 0 {
+                            p.set_fr(FlagIndex::ZERO, true)?;
+                        }
+                    }
+                    None => {
+                        p.set_fr(FlagIndex::ZERO, false)?;
+                        p.set_fr(FlagIndex::NEGATIVE, true)?;
+
+                        p.set_reg(p.rx(), 0x0000)?;
+                    }
+                }
+            }
             Instruction::MUL => todo!(),
             Instruction::DIV => todo!(),
-            Instruction::INC => todo!(),
-            Instruction::DEC => todo!(),
-            Instruction::MOD => todo!(),
-            Instruction::AND => todo!(),
-            Instruction::OR => todo!(),
-            Instruction::XOR => todo!(),
-            Instruction::NOT => todo!(),
+            Instruction::INC | Instruction::DEC => {
+                if *self == Instruction::INC {
+                    p.set_reg(p.rx(), p.reg(p.rx())? + 1)?;
+                } else {
+                    p.set_reg(p.rx(), p.reg(p.rx())? - 1)?;
+                }
+
+                p.set_fr(FlagIndex::ZERO, false)?;
+
+                if p.reg(p.rx())? == 0 {
+                    p.set_fr(FlagIndex::ZERO, true)?;
+                }
+            }
+            Instruction::MOD => {
+                p.set_reg(p.rx(), p.reg(p.ry())? % p.reg(p.rz())?)?;
+
+                p.set_fr(FlagIndex::ZERO, false)?;
+
+                if p.reg(p.rx())? == 0 {
+                    p.set_fr(FlagIndex::ZERO, true)?;
+                }
+            }
+            Instruction::AND | Instruction::OR | Instruction::XOR | Instruction::NOT => {
+                match self {
+                    Instruction::AND => p.set_reg(p.rx(), p.reg(p.ry())? & p.reg(p.rz)?)?,
+                    Instruction::OR => p.set_reg(p.rx(), p.reg(p.ry())? | p.reg(p.rz)?)?,
+                    Instruction::XOR => p.set_reg(p.rx(), p.reg(p.ry())? ^ p.reg(p.rz)?)?,
+                    Instruction::NOT => p.set_reg(p.rx(), !p.reg(p.ry())?)?,
+                    _ => unreachable!(),
+                }
+
+                p.set_fr(FlagIndex::ZERO, false)?;
+
+                if p.reg(p.rx())? == 0 {
+                    p.set_fr(FlagIndex::ZERO, true)?;
+                }
+            }
             Instruction::SHIFTL0 => todo!(),
             Instruction::SHIFTL1 => todo!(),
             Instruction::SHIFTR0 => todo!(),
@@ -97,8 +171,12 @@ impl InstructionCicle for Instruction {
             Instruction::POP => todo!(),
             Instruction::NOP => (),
             Instruction::HALT => todo!(),
-            Instruction::CLEARC => todo!(),
-            Instruction::SETC => todo!(),
+            Instruction::CLEARC => {
+                p.set_fr(FlagIndex::CARRY, false)?;
+            }
+            Instruction::SETC => {
+                p.set_fr(FlagIndex::CARRY, true)?;
+            }
             Instruction::BREAKP => todo!(),
         }
 

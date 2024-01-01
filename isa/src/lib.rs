@@ -1,7 +1,7 @@
 ///! *Instruction Set Architecture - ISA*
 use std::ops::RangeInclusive;
 
-const BITS_ADDRESS: usize = 16;
+pub const BITS_ADDRESS: usize = 16;
 
 type Opcode = usize;
 type MemType = usize;

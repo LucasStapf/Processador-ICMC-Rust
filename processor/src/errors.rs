@@ -3,6 +3,7 @@ use std::{error::Error, fmt::Display};
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProcError {
     MaximumMemoryReached,
+    InvalidIndex(usize, Option<String>),
     InvalidMemoryIndex(usize),
     InvalidInstruction(usize),
     InvalidRegister(usize),
@@ -14,6 +15,10 @@ impl Display for ProcError {
             ProcError::MaximumMemoryReached => {
                 write!(f, "Limite máximo da memória do processador foi atingido.")
             }
+            ProcError::InvalidIndex(i, s) => match s {
+                Some(s) => write!(f, "[índice: {}] {}", i, s),
+                None => write!(f, "Índice inválido: {}", i),
+            },
             ProcError::InvalidMemoryIndex(i) => {
                 write!(f, "Índice para acesso a memória inválido: {}", i)
             }
