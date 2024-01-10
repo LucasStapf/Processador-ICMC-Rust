@@ -11,6 +11,7 @@ env_logger = "0.10.1"
 gtk4 = "0.7.3"
 isa = { path = "../isa" } 
 processor = { path = "../processor" }
+assembler = { path = "../assembler" }
 log = "0.4.20"
 once_cell = "1.19.0"
 tokio = { version = "1", features = ["rt-multi-thread"] }

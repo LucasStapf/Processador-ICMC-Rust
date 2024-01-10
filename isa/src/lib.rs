@@ -3,15 +3,20 @@ use std::ops::RangeInclusive;
 
 pub const BITS_ADDRESS: usize = 16;
 
-type Opcode = usize;
-type MemType = usize;
+/// Tipo de dado utilizado para representar a memória do processador.
+pub type MemType = usize;
+type Opcode = MemType;
 
 macro_rules! instruction_set {
-    ($($name:ident $op:literal),+) => {
+    ($($(#[$doc:meta])* $name:ident $op:literal),+) => {
 
+        /// Conjunto de instruções presente na Arquitetura do Processador ICMC.
         #[derive(Debug, Copy, Clone, PartialEq)]
         pub enum Instruction {
-            $($name),+
+            $(
+                $(#[$doc])*
+                $name
+            ),+
         }
 
         impl std::fmt::Display for Instruction {
@@ -23,6 +28,12 @@ macro_rules! instruction_set {
         }
 
         impl Instruction {
+
+            pub fn vec() -> Vec<Instruction> {
+                let mut vec = Vec::new();
+                $(vec.push(Instruction::$name);)+
+                vec
+            }
 
             /// Retorna o OPCODE da instrução.
             pub fn opcode(&self) -> Opcode {
@@ -37,6 +48,14 @@ macro_rules! instruction_set {
                 match self {
                     $(Instruction::$name => $op),+,
                 }
+            }
+
+
+            pub fn from_str(s: &str) -> Option<Self> {
+                $(if s.eq_ignore_ascii_case(stringify!($name)) {
+                    return Some(Instruction::$name)
+                })+
+                None
             }
 
             pub fn bits(&self, r: RangeInclusive<usize>) -> MemType {
@@ -86,9 +105,40 @@ macro_rules! instruction_set {
 }
 
 instruction_set!(
+    /// Instrução inválida. Utilizada apenas para sinalização.
     InvalidInstruction  "XXXXXXXXXXXXXXXX",         // Apenas controle para instrução inválida.
-    LOAD        "110000----------", // Data Manipulation Instructions
+
+    ///  Carrega um valor da memória do processador para um registrador. 
+    ///
+    ///  # Operação
+    ///  `Rx` ← MEM(`END`)
+    ///
+    ///  # Uso
+    ///  ```asm
+    ///  LOAD Rx, END
+    ///  ```
+    LOAD        "110000----------", // Data Manipulation Instruction
+
+    ///  Carrega um determinado valor em um registrador. 
+    ///
+    ///  # Operação
+    ///  `Rx` ← `NR`
+    ///
+    ///  # Uso
+    ///  ```asm
+    ///  LOADN Rx, #NR
+    ///  ```
     LOADN       "111000----------",
+
+    ///  Carrega um valor da memória do processador para um registrador. 
+    ///
+    ///  # Operação
+    ///  `Rx` ← MEM(`Ry`)
+    ///
+    ///  # Uso
+    ///  ```asm
+    ///  LOADI Rx, Ry
+    ///  ```
     LOADI       "111100----------",
     STORE       "110001----------",
     STOREN      "111001----------",
