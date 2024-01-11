@@ -44,6 +44,7 @@ token_set!(Punctuation,
     Comma ",",
     Pound "#");
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Literal {
     String,
     BinNumber,
@@ -51,6 +52,7 @@ pub enum Literal {
     HexNumber,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Token {
     Keyword(Keyword),
     Instruction(Instruction),

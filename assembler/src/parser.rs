@@ -1,11 +1,14 @@
 use std::{error::Error, fmt::Display};
 
-use crate::token::{Literal, Token};
+use isa::Instruction;
+
+use crate::token::{Keyword, Literal, Punctuation, Token};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ParserError {
     NumberBadFormat,
     Empty,
+    InvalidCharacter,
 }
 
 impl Display for ParserError {
@@ -13,6 +16,7 @@ impl Display for ParserError {
         match self {
             ParserError::NumberBadFormat => write!(f, "Formato do número inválido!"),
             ParserError::Empty => write!(f, "Entrada de dados vazia."),
+            ParserError::InvalidCharacter => write!(f, "Caracter inválido!"),
         }
     }
 }
@@ -59,10 +63,11 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn next_word(&mut self) -> Option<String> {
+    fn next_string(&mut self) -> Option<String> {
         self.consume_left_whitespaces();
 
-        let s: String = if self.input.len() > 0 && self.input.chars().next().unwrap() == '"' {
+        // Verifica palavras do tipo "foo"
+        let mut s: String = if self.input.len() > 0 && self.input.chars().next().unwrap() == '"' {
             let mut index = 0;
             let mut flag = false;
             let p = self.input.char_indices().peekable();
@@ -80,7 +85,7 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            self.input[1..index].to_string()
+            self.input[..index + 1].to_string()
         } else {
             // Pode ter identificadores do tipo foo_bar
             self.input
@@ -92,15 +97,79 @@ impl<'a> Parser<'a> {
         return if s.len() > 0 {
             self.input = &self.input[s.len()..];
             Some(s)
+        } else if self.input.len() > 0 {
+            s = self.input[..1].to_string();
+            self.input = &self.input[1..];
+            Some(s)
         } else {
             None
         };
+    }
+
+    fn next_number(s: String) -> Result<(Token, String), ParserError> {
+        if usize::from_str_radix(s.as_str(), 10).is_ok() {
+            Ok((Token::Literal(Literal::DecNumber), s))
+        } else if s.chars().next().unwrap() == '0' && s.len() > 2 {
+            match s.chars().nth(1).unwrap() {
+                c if c == 'b' || c == 'B' => match usize::from_str_radix(&s.as_str()[2..], 2) {
+                    Ok(_) => Ok((
+                        Token::Literal(Literal::BinNumber),
+                        s.as_str()[2..].to_string(),
+                    )),
+                    Err(_) => Err(ParserError::NumberBadFormat),
+                },
+                c if c == 'x' || c == 'X' => match usize::from_str_radix(&s.as_str()[2..], 16) {
+                    Ok(_) => Ok((
+                        Token::Literal(Literal::HexNumber),
+                        s.as_str()[2..].to_string(),
+                    )),
+                    Err(_) => Err(ParserError::NumberBadFormat),
+                },
+                _ => Err(ParserError::NumberBadFormat),
+            }
+        } else {
+            Err(ParserError::NumberBadFormat)
+        }
+    }
+
+    fn next_word(s: String) -> Result<(Token, String), ParserError> {
+        if let Some(kw) = Keyword::from_str(s.as_str()) {
+            Ok((Token::Keyword(kw), s))
+        } else if let Some(i) = Instruction::from_str(s.as_str()) {
+            Ok((Token::Instruction(i), s))
+        } else {
+            Ok((Token::Identifier, s))
+        }
+    }
+
+    fn next_punctuation(s: String) -> Result<(Token, String), ParserError> {
+        if let Some(p) = Punctuation::from_str(s.as_str()) {
+            Ok((Token::Punctuation(p), s))
+        } else {
+            Err(ParserError::InvalidCharacter)
+        }
+    }
+
+    pub fn next_token(&mut self) -> Result<(Token, String), ParserError> {
+        match self.next_string() {
+            Some(w) => match w.chars().next().unwrap() {
+                c if c.is_digit(10) => Parser::next_number(w),
+                c if c.is_alphabetic() => Parser::next_word(w),
+                c if c == '"' => Ok((
+                    Token::Literal(Literal::String),
+                    w.as_str()[1..w.len() - 1].to_string(),
+                )),
+                _ => Parser::next_punctuation(w),
+            },
+            None => Err(ParserError::Empty),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Parser;
+
+    use super::*;
 
     #[test]
     fn test_consume_left_whitespace() {
@@ -112,51 +181,144 @@ mod tests {
     }
 
     #[test]
-    fn test_next_word_1() {
+    fn test_next_string_1() {
         let input = "\n\tTest";
         let mut p = Parser::new(&input);
 
-        assert_eq!("Test".to_string(), p.next_word().unwrap());
+        assert_eq!("Test".to_string(), p.next_string().unwrap());
     }
 
     #[test]
-    fn test_next_word_2() {
+    fn test_next_string_2() {
         let input = "\n\tTest 2Test";
         let mut p = Parser::new(&input);
 
-        assert_eq!("Test".to_string(), p.next_word().unwrap());
+        assert_eq!("Test".to_string(), p.next_string().unwrap());
     }
 
     #[test]
-    fn test_next_word_3() {
+    fn test_next_string_3() {
         let input = "\n\tTest:3Test";
         let mut p = Parser::new(&input);
 
-        assert_eq!("Test".to_string(), p.next_word().unwrap());
+        assert_eq!("Test".to_string(), p.next_string().unwrap());
     }
 
     #[test]
-    fn test_next_word_4() {
+    fn test_next_string_4() {
         let input = "\n\tTest_4Test";
         let mut p = Parser::new(&input);
 
-        assert_eq!("Test_4Test".to_string(), p.next_word().unwrap());
+        assert_eq!("Test_4Test".to_string(), p.next_string().unwrap());
     }
 
     #[test]
-    fn test_next_word_5() {
+    fn test_next_string_5() {
         let input = "\n\tTest 5Test";
         let mut p = Parser::new(&input);
 
-        p.next_word();
-        assert_eq!("5Test".to_string(), p.next_word().unwrap());
+        p.next_string();
+        assert_eq!("5Test".to_string(), p.next_string().unwrap());
     }
 
     #[test]
-    fn test_next_word_6() {
+    fn test_next_string_6() {
         let input = r#" "Test 6""#;
         let mut p = Parser::new(&input);
 
-        assert_eq!("Test 6".to_string(), p.next_word().unwrap());
+        assert_eq!("\"Test 6\"".to_string(), p.next_string().unwrap());
+    }
+
+    #[test]
+    fn test_next_token_literal_string_1() {
+        let input = r#"  "Test literal" 123"#;
+        let mut p = Parser::new(&input);
+
+        assert_eq!(
+            (Token::Literal(Literal::String), "Test literal".to_string()),
+            p.next_token().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_next_token_literal_dec() {
+        let input = " 123456 Test";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(
+            (Token::Literal(Literal::DecNumber), "123456".to_string()),
+            p.next_token().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_next_token_literal_bin() {
+        let input = " 0b01011 Test";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(
+            (Token::Literal(Literal::BinNumber), "01011".to_string()),
+            p.next_token().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_next_token_literal_hex() {
+        let input = " 0xffc0 Test";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(
+            (Token::Literal(Literal::HexNumber), "ffc0".to_string()),
+            p.next_token().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_next_token_keyword() {
+        let input = " var   r0 Test";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(
+            (Token::Keyword(Keyword::Var), "var".to_string()),
+            p.next_token().unwrap()
+        );
+
+        assert_eq!(
+            (Token::Keyword(Keyword::R0), "r0".to_string()),
+            p.next_token().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_next_token_instruction() {
+        let input = " mov   r0 Test";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(
+            (Token::Instruction(Instruction::MOV), "mov".to_string()),
+            p.next_token().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_next_token_identifier() {
+        let input = " label: mov   r0 Test";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(
+            (Token::Identifier, "label".to_string()),
+            p.next_token().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_next_token_punctuation() {
+        let input = "  ,r0   r0 Test";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(
+            (Token::Punctuation(Punctuation::Comma), ",".to_string()),
+            p.next_token().unwrap()
+        );
     }
 }
