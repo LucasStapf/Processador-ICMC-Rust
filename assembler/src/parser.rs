@@ -1,22 +1,26 @@
+use crate::token::{Keyword, Literal, Punctuation, Token};
+use isa::Instruction;
 use std::{error::Error, fmt::Display};
 
-use isa::Instruction;
-
-use crate::token::{Keyword, Literal, Punctuation, Token};
-
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ParserError {
+    CharBadFormat,
+    StringBadFormat,
     NumberBadFormat,
     Empty,
     InvalidCharacter,
+    InvalidRule,
 }
 
 impl Display for ParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            ParserError::CharBadFormat => write!(f, "Formato do char inválido!"),
+            ParserError::StringBadFormat => write!(f, "Formato da string inválido!"),
             ParserError::NumberBadFormat => write!(f, "Formato do número inválido!"),
             ParserError::Empty => write!(f, "Entrada de dados vazia."),
             ParserError::InvalidCharacter => write!(f, "Caracter inválido!"),
+            ParserError::InvalidRule => write!(f, "Regra inválida!"),
         }
     }
 }
@@ -61,6 +65,18 @@ impl<'a> Parser<'a> {
                 }
             }
         }
+    }
+
+    fn consume_commentary(&mut self) {
+        self.consume_left_whitespaces();
+        while self.input.starts_with(|c: char| c == ';') {
+            for (i, c) in self.input.char_indices() {
+                if c == ';' && i != 0 {
+                    break;
+                }
+            }
+        }
+        self.consume_commentary();
     }
 
     fn next_string(&mut self) -> Option<String> {
@@ -164,6 +180,121 @@ impl<'a> Parser<'a> {
             None => Err(ParserError::Empty),
         }
     }
+
+    fn ruler_check(&mut self) -> Result<(), ParserError> {
+        macro_rules! check_stream {
+            ($(($($next:expr);+)),+) => {{
+                $(
+                    let t = self.next_token()?;
+                    let mut temp = Vec::new();
+                    match t.0 {
+                        $(token if token == $next => {
+                            self.stream.push(t);
+                            temp.push(stringify!($next).to_string());
+                        })+
+                        _ => return Err(ParserError::InvalidRule),
+                    }
+                )+
+                Ok(())
+            }};
+        }
+
+        let token = self.next_token()?;
+        self.stream.push(token.clone()); // Melhorar depois
+
+        match token.0 {
+            Token::Keyword(_) => todo!(),
+            Token::Instruction(i) => match i {
+                Instruction::InvalidInstruction => todo!(),
+                Instruction::LOAD => todo!(),
+                Instruction::LOADN => check_stream!(
+                    (Keyword::R0
+                        ; Keyword::R1
+                        ; Keyword::R2
+                        ; Keyword::R3
+                        ; Keyword::R4
+                        ; Keyword::R5
+                        ; Keyword::R6
+                        ; Keyword::R7),
+                    (Punctuation::Comma),
+                    (Punctuation::Pound),
+                    (Literal::DecNumber ; Literal::BinNumber ; Literal::HexNumber)
+                ),
+                Instruction::LOADI => todo!(),
+                Instruction::STORE => todo!(),
+                Instruction::STOREN => todo!(),
+                Instruction::STOREI => todo!(),
+                Instruction::MOV => todo!(),
+                Instruction::INPUT => todo!(),
+                Instruction::OUTPUT => todo!(),
+                Instruction::OUTCHAR => todo!(),
+                Instruction::INCHAR => todo!(),
+                Instruction::SOUND => todo!(),
+                Instruction::ADD => todo!(),
+                Instruction::ADDC => todo!(),
+                Instruction::SUB => todo!(),
+                Instruction::SUBC => todo!(),
+                Instruction::MUL => todo!(),
+                Instruction::DIV => todo!(),
+                Instruction::INC => todo!(),
+                Instruction::DEC => todo!(),
+                Instruction::MOD => todo!(),
+                Instruction::AND => todo!(),
+                Instruction::OR => todo!(),
+                Instruction::XOR => todo!(),
+                Instruction::NOT => todo!(),
+                Instruction::SHIFTL0 => todo!(),
+                Instruction::SHIFTL1 => todo!(),
+                Instruction::SHIFTR0 => todo!(),
+                Instruction::SHIFTR1 => todo!(),
+                Instruction::ROTL => todo!(),
+                Instruction::ROTR => todo!(),
+                Instruction::CMP => todo!(),
+                Instruction::JMP => todo!(),
+                Instruction::JEQ => todo!(),
+                Instruction::JNE => todo!(),
+                Instruction::JZ => todo!(),
+                Instruction::JNZ => todo!(),
+                Instruction::JC => todo!(),
+                Instruction::JNC => todo!(),
+                Instruction::JGR => todo!(),
+                Instruction::JLE => todo!(),
+                Instruction::JEG => todo!(),
+                Instruction::JEL => todo!(),
+                Instruction::JOV => todo!(),
+                Instruction::JNO => todo!(),
+                Instruction::JDZ => todo!(),
+                Instruction::JN => todo!(),
+                Instruction::CALL => todo!(),
+                Instruction::CEQ => todo!(),
+                Instruction::CNE => todo!(),
+                Instruction::CZ => todo!(),
+                Instruction::CNZ => todo!(),
+                Instruction::CC => todo!(),
+                Instruction::CNC => todo!(),
+                Instruction::CGR => todo!(),
+                Instruction::CLE => todo!(),
+                Instruction::CEG => todo!(),
+                Instruction::CEL => todo!(),
+                Instruction::COV => todo!(),
+                Instruction::CNO => todo!(),
+                Instruction::CDZ => todo!(),
+                Instruction::CN => todo!(),
+                Instruction::RTS => todo!(),
+                Instruction::RTI => todo!(),
+                Instruction::PUSH => todo!(),
+                Instruction::POP => todo!(),
+                Instruction::NOP => todo!(),
+                Instruction::HALT => todo!(),
+                Instruction::CLEARC => todo!(),
+                Instruction::SETC => todo!(),
+                Instruction::BREAKP => todo!(),
+            },
+            Token::Identifier => todo!(),
+            Token::Literal(_) => todo!(),
+            Token::Punctuation(_) => todo!(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -236,6 +367,21 @@ mod tests {
 
         assert_eq!(
             (Token::Literal(Literal::String), "Test literal".to_string()),
+            p.next_token().unwrap()
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn test_next_token_literal_string_2() {
+        let input = r#"  "Test literal 123"#;
+        let mut p = Parser::new(&input);
+
+        assert_eq!(
+            (
+                Token::Literal(Literal::String),
+                "Test literal 123".to_string()
+            ),
             p.next_token().unwrap()
         );
     }
@@ -320,5 +466,13 @@ mod tests {
             (Token::Punctuation(Punctuation::Comma), ",".to_string()),
             p.next_token().unwrap()
         );
+    }
+
+    #[test]
+    fn test_ruler_check_1() {
+        let input = "  LOADN R0, #0123";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(Ok(()), p.ruler_check());
     }
 }

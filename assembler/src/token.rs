@@ -1,3 +1,5 @@
+use std::{fmt::Display, option::Option};
+
 use isa::Instruction;
 
 macro_rules! token_set {
@@ -46,6 +48,7 @@ token_set!(Punctuation,
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Literal {
+    Char,
     String,
     BinNumber,
     DecNumber,
@@ -59,4 +62,51 @@ pub enum Token {
     Identifier,
     Literal(Literal),
     Punctuation(Punctuation),
+}
+
+impl PartialEq<Keyword> for Token {
+    fn eq(&self, other: &Keyword) -> bool {
+        match self {
+            Token::Keyword(k) => k == other,
+            _ => false,
+        }
+    }
+}
+
+impl PartialEq<Instruction> for Token {
+    fn eq(&self, other: &Instruction) -> bool {
+        match self {
+            Token::Instruction(i) => i == other,
+            _ => false,
+        }
+    }
+}
+
+impl PartialEq<Literal> for Token {
+    fn eq(&self, other: &Literal) -> bool {
+        match self {
+            Token::Literal(l) => l == other,
+            _ => false,
+        }
+    }
+}
+
+impl PartialEq<Punctuation> for Token {
+    fn eq(&self, other: &Punctuation) -> bool {
+        match self {
+            Token::Punctuation(p) => p == other,
+            _ => false,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tokens_partial_eq() {
+        let t = Token::Keyword(Keyword::R0);
+        assert_eq!(t, Keyword::R0)
+    }
 }
