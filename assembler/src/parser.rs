@@ -1,6 +1,6 @@
-use crate::token::{Keyword, Literal, Punctuation, Token};
+use crate::token::*;
 use isa::Instruction;
-use std::{error::Error, fmt::Display};
+use std::{char, error::Error, fmt::Display};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ParserError {
@@ -51,6 +51,16 @@ impl<'a> Parser<'a> {
         self.curr_col = 0;
     }
 
+    fn skip_next_line(&mut self) {
+        match self.input.split_once(|c| c == '\n') {
+            Some((_, s2)) => {
+                self.input = s2;
+                self.inc_line();
+            }
+            None => self.input = "",
+        }
+    }
+
     fn consume_left_whitespaces(&mut self) {
         if self.input.starts_with(char::is_whitespace) {
             for (i, c) in self.input.char_indices() {
@@ -70,56 +80,80 @@ impl<'a> Parser<'a> {
     fn consume_commentary(&mut self) {
         self.consume_left_whitespaces();
         while self.input.starts_with(|c: char| c == ';') {
-            for (i, c) in self.input.char_indices() {
-                if c == ';' && i != 0 {
-                    break;
-                }
-            }
+            self.skip_next_line();
+            self.consume_left_whitespaces();
         }
-        self.consume_commentary();
     }
 
-    fn next_string(&mut self) -> Option<String> {
+    fn next_item(&mut self) -> Result<String, ParserError> {
         self.consume_left_whitespaces();
 
-        // Verifica palavras do tipo "foo"
-        let mut s: String = if self.input.len() > 0 && self.input.chars().next().unwrap() == '"' {
-            let mut index = 0;
-            let mut flag = false;
-            let p = self.input.char_indices().peekable();
-            for (i, c) in p {
-                index = i;
-                if i != 0 {
-                    match c {
-                        c if c == '"' => match flag {
-                            true => flag = false,
-                            false => break,
-                        },
-                        c if c == '\\' => flag = true,
-                        _ => flag = false,
+        macro_rules! surround_by {
+            ($string:expr, $sep:literal) => {
+                if $string.len() > 0 && $string.chars().next().unwrap() == $sep {
+                    let mut index = 0;
+                    let mut flag = false;
+                    let p = $string.char_indices();
+                    for (i, c) in p {
+                        index = i;
+                        if i != 0 {
+                            match c {
+                                '\\' => flag = true,
+                                $sep => match flag {
+                                    true => flag = false,
+                                    false => break,
+                                },
+                                _ => flag = false,
+                            }
+                        }
                     }
+
+                    if index < $string.len() {
+                        Some($string[..index + 1].to_string())
+                    } else {
+                        None
+                    }
+                } else {
+                    None
                 }
-            }
+            };
+        }
 
-            self.input[..index + 1].to_string()
-        } else {
-            // Pode ter identificadores do tipo foo_bar
-            self.input
-                .chars()
-                .take_while(|c| !c.is_whitespace() && (*c == '_' || !c.is_ascii_punctuation()))
-                .collect()
-        };
-
-        return if s.len() > 0 {
-            self.input = &self.input[s.len()..];
-            Some(s)
-        } else if self.input.len() > 0 {
-            s = self.input[..1].to_string();
-            self.input = &self.input[1..];
-            Some(s)
-        } else {
-            None
-        };
+        match self.input.chars().next() {
+            Some(c) => match c {
+                '\'' => match surround_by!(self.input, '\'') {
+                    Some(s) => {
+                        self.input = &self.input[s.len()..];
+                        Ok(s)
+                    }
+                    None => Err(ParserError::CharBadFormat),
+                },
+                '"' => match surround_by!(self.input, '"') {
+                    Some(s) => {
+                        self.input = &self.input[s.len()..];
+                        Ok(s)
+                    }
+                    None => Err(ParserError::StringBadFormat),
+                },
+                c if c.is_alphanumeric() => {
+                    let s: String = self
+                        .input
+                        .chars()
+                        .take_while(|c| {
+                            !c.is_whitespace() && (*c == '_' || !c.is_ascii_punctuation())
+                        })
+                        .collect();
+                    self.input = &self.input[s.len()..];
+                    Ok(s)
+                }
+                _ => {
+                    let s = self.input.chars().next().unwrap().to_string();
+                    self.input = &self.input[1..];
+                    Ok(s)
+                }
+            },
+            None => Err(ParserError::Empty),
+        }
     }
 
     fn next_number(s: String) -> Result<(Token, String), ParserError> {
@@ -167,17 +201,18 @@ impl<'a> Parser<'a> {
     }
 
     pub fn next_token(&mut self) -> Result<(Token, String), ParserError> {
-        match self.next_string() {
-            Some(w) => match w.chars().next().unwrap() {
+        match self.next_item() {
+            Ok(w) => match w.chars().next().unwrap() {
                 c if c.is_digit(10) => Parser::next_number(w),
                 c if c.is_alphabetic() => Parser::next_word(w),
+                c if c == '\'' => Ok((Token::Literal(Literal::Char), w)),
                 c if c == '"' => Ok((
                     Token::Literal(Literal::String),
                     w.as_str()[1..w.len() - 1].to_string(),
                 )),
                 _ => Parser::next_punctuation(w),
             },
-            None => Err(ParserError::Empty),
+            Err(e) => Err(e),
         }
     }
 
@@ -205,8 +240,24 @@ impl<'a> Parser<'a> {
         match token.0 {
             Token::Keyword(_) => todo!(),
             Token::Instruction(i) => match i {
-                Instruction::InvalidInstruction => todo!(),
-                Instruction::LOAD => todo!(),
+                Instruction::InvalidInstruction => unreachable!(),
+
+                Instruction::LOAD => check_stream!((
+                    Keyword::R0
+                        ; Keyword::R1
+                        ; Keyword::R2
+                        ; Keyword::R3
+                        ; Keyword::R4
+                        ; Keyword::R5
+                        ; Keyword::R6
+                        ; Keyword::R7),
+                    (Punctuation::Comma),
+                    (Literal::DecNumber
+                        ; Literal::BinNumber
+                        ; Literal::HexNumber
+                        ; Token::Identifier)
+                ),
+
                 Instruction::LOADN => check_stream!(
                     (Keyword::R0
                         ; Keyword::R1
@@ -218,12 +269,78 @@ impl<'a> Parser<'a> {
                         ; Keyword::R7),
                     (Punctuation::Comma),
                     (Punctuation::Pound),
-                    (Literal::DecNumber ; Literal::BinNumber ; Literal::HexNumber)
+                    (Literal::DecNumber
+                        ; Literal::BinNumber
+                        ; Literal::HexNumber
+                        ; Literal::Char
+                        ; Token::Identifier)
                 ),
-                Instruction::LOADI => todo!(),
-                Instruction::STORE => todo!(),
-                Instruction::STOREN => todo!(),
-                Instruction::STOREI => todo!(),
+
+                Instruction::LOADI => check_stream!(
+                    (Keyword::R0
+                        ; Keyword::R1
+                        ; Keyword::R2
+                        ; Keyword::R3
+                        ; Keyword::R4
+                        ; Keyword::R5
+                        ; Keyword::R6
+                        ; Keyword::R7),
+                    (Keyword::R0
+                        ; Keyword::R1
+                        ; Keyword::R2
+                        ; Keyword::R3
+                        ; Keyword::R4
+                        ; Keyword::R5
+                        ; Keyword::R6
+                        ; Keyword::R7)
+                ),
+
+                Instruction::STORE => check_stream!(
+                    (Literal::DecNumber
+                        ; Literal::BinNumber
+                        ; Literal::HexNumber
+                        ; Token::Identifier),
+                    (Keyword::R0
+                        ; Keyword::R1
+                        ; Keyword::R2
+                        ; Keyword::R3
+                        ; Keyword::R4
+                        ; Keyword::R5
+                        ; Keyword::R6
+                        ; Keyword::R7)
+                ),
+
+                Instruction::STOREN => check_stream!(
+                    (Literal::DecNumber
+                        ; Literal::BinNumber
+                        ; Literal::HexNumber
+                        ; Token::Identifier),
+                    (Literal::DecNumber
+                        ; Literal::BinNumber
+                        ; Literal::HexNumber
+                        ; Literal::Char
+                        ; Token::Identifier)
+                ),
+
+                Instruction::STOREI => check_stream!(
+                    (Keyword::R0
+                        ; Keyword::R1
+                        ; Keyword::R2
+                        ; Keyword::R3
+                        ; Keyword::R4
+                        ; Keyword::R5
+                        ; Keyword::R6
+                        ; Keyword::R7),
+                    (Keyword::R0
+                        ; Keyword::R1
+                        ; Keyword::R2
+                        ; Keyword::R3
+                        ; Keyword::R4
+                        ; Keyword::R5
+                        ; Keyword::R6
+                        ; Keyword::R7)
+                ),
+
                 Instruction::MOV => todo!(),
                 Instruction::INPUT => todo!(),
                 Instruction::OUTPUT => todo!(),
@@ -312,11 +429,32 @@ mod tests {
     }
 
     #[test]
+    fn test_consume_commentary() {
+        let input = " ; Test 123 Test \n
+            Nice";
+        let mut p = Parser::new(&input);
+        p.consume_commentary();
+
+        assert_eq!("Nice", p.input);
+    }
+
+    #[test]
+    fn test_consume_mult_commentary() {
+        let input = " ; Test 123 Test \n
+            ; Nice test \n
+            MOV ";
+        let mut p = Parser::new(&input);
+        p.consume_commentary();
+
+        assert_eq!("MOV ", p.input);
+    }
+
+    #[test]
     fn test_next_string_1() {
         let input = "\n\tTest";
         let mut p = Parser::new(&input);
 
-        assert_eq!("Test".to_string(), p.next_string().unwrap());
+        assert_eq!("Test".to_string(), p.next_item().unwrap());
     }
 
     #[test]
@@ -324,7 +462,7 @@ mod tests {
         let input = "\n\tTest 2Test";
         let mut p = Parser::new(&input);
 
-        assert_eq!("Test".to_string(), p.next_string().unwrap());
+        assert_eq!("Test".to_string(), p.next_item().unwrap());
     }
 
     #[test]
@@ -332,7 +470,7 @@ mod tests {
         let input = "\n\tTest:3Test";
         let mut p = Parser::new(&input);
 
-        assert_eq!("Test".to_string(), p.next_string().unwrap());
+        assert_eq!("Test".to_string(), p.next_item().unwrap());
     }
 
     #[test]
@@ -340,7 +478,7 @@ mod tests {
         let input = "\n\tTest_4Test";
         let mut p = Parser::new(&input);
 
-        assert_eq!("Test_4Test".to_string(), p.next_string().unwrap());
+        assert_eq!("Test_4Test".to_string(), p.next_item().unwrap());
     }
 
     #[test]
@@ -348,8 +486,8 @@ mod tests {
         let input = "\n\tTest 5Test";
         let mut p = Parser::new(&input);
 
-        p.next_string();
-        assert_eq!("5Test".to_string(), p.next_string().unwrap());
+        p.next_item();
+        assert_eq!("5Test".to_string(), p.next_item().unwrap());
     }
 
     #[test]
@@ -357,7 +495,7 @@ mod tests {
         let input = r#" "Test 6""#;
         let mut p = Parser::new(&input);
 
-        assert_eq!("\"Test 6\"".to_string(), p.next_string().unwrap());
+        assert_eq!("\"Test 6\"".to_string(), p.next_item().unwrap());
     }
 
     #[test]
@@ -469,10 +607,28 @@ mod tests {
     }
 
     #[test]
-    fn test_ruler_check_1() {
+    fn test_ruler_check() {
         let input = "  LOADN R0, #0123";
         let mut p = Parser::new(&input);
 
         assert_eq!(Ok(()), p.ruler_check());
+
+        let input = "  LOADN R0, #label";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(Ok(()), p.ruler_check());
+
+        let input = "  LOADN R0, #'\''";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(Ok(()), p.ruler_check());
+    }
+
+    #[test]
+    fn test_ruler_check_error() {
+        let input = "  LOADN SP, #'\''";
+        let mut p = Parser::new(&input);
+
+        assert_eq!(Err(ParserError::InvalidRule), p.ruler_check());
     }
 }
