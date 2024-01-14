@@ -1,7 +1,7 @@
-use crate::{FlagIndex, MAX_VALUE_MEMORY};
+use crate::MAX_VALUE_MEMORY;
 
 use super::{ProcError, Processor};
-use isa::Instruction;
+use isa::{FlagIndex, Instruction};
 
 pub trait InstructionCicle {
     fn execution(&self, processor: &mut Processor) -> Result<(), ProcError>;

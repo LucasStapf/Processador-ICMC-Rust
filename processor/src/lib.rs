@@ -19,21 +19,6 @@ pub const MAX_VALUE_MEMORY: usize = 2_usize.pow(isa::BITS_ADDRESS as u32) - 1;
 
 type Result<T> = std::result::Result<T, ProcError>;
 
-pub struct FlagIndex;
-
-impl FlagIndex {
-    pub const GREATER: usize = 0;
-    pub const LESSER: usize = 1;
-    pub const EQUAL: usize = 2;
-    pub const ZERO: usize = 3;
-    pub const CARRY: usize = 4;
-    pub const ARITHMETIC_OVERFLOW: usize = 5;
-    pub const DIV_BY_ZERO: usize = 6;
-    pub const STACK_OVERFLOW: usize = 7;
-    pub const STACK_UNDERFLOW: usize = 8;
-    pub const NEGATIVE: usize = 9;
-}
-
 pub struct Processor {
     memory: Vec<usize>, // pub temp
     registers: [usize; NUM_REGISTERS],
@@ -241,7 +226,7 @@ impl Processor {
 
     /// Retorna o valor da `i`-ésima *flag* do registrador *Flag Register*.
     ///
-    /// > ⚠️  **Atenção** :É recomendo utilizar os índices mapeados em [`FlagIndex`] para evitar
+    /// > ⚠️  **Atenção** :É recomendo utilizar os índices mapeados em [`isa::FlagIndex`] para evitar
     /// erros e comportamentos indesejados.
     pub fn fr(&self, i: usize) -> Result<bool> {
         match self.fr.get(i) {
