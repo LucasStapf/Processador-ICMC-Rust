@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE cambalache-project SYSTEM "cambalache-project.dtd">
+<cambalache-project version="0.13.1" target_tk="gtk-4.0">
+  <ui>
+	(1,1,"mem_row.ui","mem_row.ui",None,None,None,None,None,None,None)
+  </ui>
+  <ui_library>
+	(1,"gtk","4.6",None)
+  </ui_library>
+  <object>
+	(1,1,"GtkBox","MemRowObj",None,None,None,None,-1,None),
+	(1,2,"GtkLabel","label_mem_addr",1,None,None,None,None,None),
+	(1,3,"GtkLabel","label_mem_inst",1,None,None,None,2,None),
+	(1,4,"GtkLabel","label_mem_raw",1,None,None,None,4,None),
+	(1,5,"GtkSeparator",None,1,None,None,None,1,None),
+	(1,6,"GtkSeparator",None,1,None,None,None,3,None)
+  </object>
+  <object_property>
+	(1,1,"GtkBox","spacing","10",None,None,None,None,None,None,None,None,None),
+	(1,1,"GtkWidget","halign","center",None,None,None,None,None,None,None,None,None),
+	(1,1,"GtkWidget","margin-bottom","4",None,None,None,None,None,None,None,None,None),
+	(1,1,"GtkWidget","margin-end","4",None,None,None,None,None,None,None,None,None),
+	(1,1,"GtkWidget","margin-start","4",None,None,None,None,None,None,None,None,None),
+	(1,1,"GtkWidget","margin-top","4",None,None,None,None,None,None,None,None,None),
+	(1,1,"GtkWidget","valign","center",None,None,None,None,None,None,None,None,None),
+	(1,2,"GtkLabel","label","0x0000",None,None,None,None,None,None,None,None,None),
+	(1,2,"GtkLabel","width-chars","6",None,None,None,None,None,None,None,None,None),
+	(1,3,"GtkLabel","label","INSTRUCTION",None,None,None,None,None,None,None,None,None),
+	(1,3,"GtkLabel","width-chars","30",None,None,None,None,None,None,None,None,None),
+	(1,3,"GtkLabel","xalign","0.0",None,None,None,None,None,None,None,None,None),
+	(1,4,"GtkLabel","label","0000000000000000",None,None,None,None,None,None,None,None,None),
+	(1,4,"GtkLabel","width-chars","16",None,None,None,None,None,None,None,None,None)
+  </object_property>
+</cambalache-project>

@@ -1,20 +1,46 @@
 use env_logger::{Builder, Target};
 
-use gtk4::{glib, prelude::*, Application};
+use adw::prelude::*;
+use adw::{gio, glib, Application};
+use gtk::gdk::Display;
+use gtk::CssProvider;
 
-mod view;
+mod mem_obj;
+mod mem_row;
+mod processor;
+mod window;
 
 const APP_ID: &str = "org.usp.ProcessadorIcmc";
 
 fn main() -> glib::ExitCode {
-    std::env::set_var("RUST_LOG", "debug");
+    std::env::set_var("RUST_LOG", "info");
 
+    gio::resources_register_include!("compile.gresource")
+        .expect("Falha ao carregar os recursos de UI.");
     // log config
     let mut builder = Builder::from_default_env();
     builder.target(Target::Stdout);
     builder.init();
 
     let app = Application::builder().application_id(APP_ID).build();
-    app.connect_activate(crate::view::build_ui);
+    app.connect_startup(|_| load_css());
+    app.connect_activate(build_ui);
     app.run()
+}
+
+fn load_css() {
+    let provider = CssProvider::new();
+    provider.load_from_data(include_str!("../resources/sim.css"));
+
+    // Add the provider to the default screen
+    gtk::style_context_add_provider_for_display(
+        &Display::default().expect("Could not connect to a display."),
+        &provider,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
+}
+
+fn build_ui(app: &Application) {
+    let window = window::Window::new(app);
+    window.present();
 }

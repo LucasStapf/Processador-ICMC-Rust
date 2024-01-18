@@ -8,10 +8,14 @@ edition = "2021"
 [dependencies]
 async-channel = "2.1.1"
 env_logger = "0.10.1"
-gtk4 = "0.7.3"
+gtk = {version = "0.7.3", package = "gtk4" }
 isa = { path = "../isa" } 
 processor = { path = "../processor" }
 assembler = { path = "../assembler" }
 log = "0.4.20"
 once_cell = "1.19.0"
 tokio = { version = "1", features = ["rt-multi-thread"] }
+adw = { version = "0.5.3", package = "libadwaita" }
+
+[build-dependencies]
+glib-build-tools = "0.18.0"
