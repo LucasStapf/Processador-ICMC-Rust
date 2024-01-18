@@ -276,7 +276,7 @@ impl<'a> Parser<'a> {
                         ; Token::Identifier)
                 ),
 
-                Instruction::LOADI => check_stream!(
+                Instruction::LOADI | Instruction::STOREI | Instruction::CMP => check_stream!(
                     (Keyword::R0
                         ; Keyword::R1
                         ; Keyword::R2
@@ -285,6 +285,7 @@ impl<'a> Parser<'a> {
                         ; Keyword::R5
                         ; Keyword::R6
                         ; Keyword::R7),
+                    (Punctuation::Comma),
                     (Keyword::R0
                         ; Keyword::R1
                         ; Keyword::R2
@@ -300,6 +301,7 @@ impl<'a> Parser<'a> {
                         ; Literal::BinNumber
                         ; Literal::HexNumber
                         ; Token::Identifier),
+                    (Punctuation::Comma),
                     (Keyword::R0
                         ; Keyword::R1
                         ; Keyword::R2
@@ -315,30 +317,12 @@ impl<'a> Parser<'a> {
                         ; Literal::BinNumber
                         ; Literal::HexNumber
                         ; Token::Identifier),
+                    (Punctuation::Comma),
                     (Literal::DecNumber
                         ; Literal::BinNumber
                         ; Literal::HexNumber
                         ; Literal::Char
                         ; Token::Identifier)
-                ),
-
-                Instruction::STOREI => check_stream!(
-                    (Keyword::R0
-                        ; Keyword::R1
-                        ; Keyword::R2
-                        ; Keyword::R3
-                        ; Keyword::R4
-                        ; Keyword::R5
-                        ; Keyword::R6
-                        ; Keyword::R7),
-                    (Keyword::R0
-                        ; Keyword::R1
-                        ; Keyword::R2
-                        ; Keyword::R3
-                        ; Keyword::R4
-                        ; Keyword::R5
-                        ; Keyword::R6
-                        ; Keyword::R7)
                 ),
 
                 Instruction::MOV => todo!(),
@@ -347,18 +331,49 @@ impl<'a> Parser<'a> {
                 Instruction::OUTCHAR => todo!(),
                 Instruction::INCHAR => todo!(),
                 Instruction::SOUND => todo!(),
-                Instruction::ADD => todo!(),
-                Instruction::ADDC => todo!(),
-                Instruction::SUB => todo!(),
-                Instruction::SUBC => todo!(),
-                Instruction::MUL => todo!(),
-                Instruction::DIV => todo!(),
+
+                Instruction::ADD
+                | Instruction::ADDC
+                | Instruction::SUB
+                | Instruction::SUBC
+                | Instruction::MUL
+                | Instruction::DIV
+                | Instruction::MOD
+                | Instruction::AND
+                | Instruction::XOR
+                | Instruction::OR => {
+                    check_stream!(
+                        (Keyword::R0
+                            ; Keyword::R1
+                            ; Keyword::R2
+                            ; Keyword::R3
+                            ; Keyword::R4
+                            ; Keyword::R5
+                            ; Keyword::R6
+                            ; Keyword::R7),
+                        (Punctuation::Comma),
+                        (Keyword::R0
+                            ; Keyword::R1
+                            ; Keyword::R2
+                            ; Keyword::R3
+                            ; Keyword::R4
+                            ; Keyword::R5
+                            ; Keyword::R6
+                            ; Keyword::R7),
+                        (Punctuation::Comma),
+                        (Keyword::R0
+                            ; Keyword::R1
+                            ; Keyword::R2
+                            ; Keyword::R3
+                            ; Keyword::R4
+                            ; Keyword::R5
+                            ; Keyword::R6
+                            ; Keyword::R7)
+                    )
+                }
+
                 Instruction::INC => todo!(),
                 Instruction::DEC => todo!(),
-                Instruction::MOD => todo!(),
-                Instruction::AND => todo!(),
-                Instruction::OR => todo!(),
-                Instruction::XOR => todo!(),
                 Instruction::NOT => todo!(),
                 Instruction::SHIFTL0 => todo!(),
                 Instruction::SHIFTL1 => todo!(),
@@ -366,46 +381,62 @@ impl<'a> Parser<'a> {
                 Instruction::SHIFTR1 => todo!(),
                 Instruction::ROTL => todo!(),
                 Instruction::ROTR => todo!(),
-                Instruction::CMP => todo!(),
-                Instruction::JMP => todo!(),
-                Instruction::JEQ => todo!(),
-                Instruction::JNE => todo!(),
-                Instruction::JZ => todo!(),
-                Instruction::JNZ => todo!(),
-                Instruction::JC => todo!(),
-                Instruction::JNC => todo!(),
-                Instruction::JGR => todo!(),
-                Instruction::JLE => todo!(),
-                Instruction::JEG => todo!(),
-                Instruction::JEL => todo!(),
-                Instruction::JOV => todo!(),
-                Instruction::JNO => todo!(),
-                Instruction::JDZ => todo!(),
-                Instruction::JN => todo!(),
-                Instruction::CALL => todo!(),
-                Instruction::CEQ => todo!(),
-                Instruction::CNE => todo!(),
-                Instruction::CZ => todo!(),
-                Instruction::CNZ => todo!(),
-                Instruction::CC => todo!(),
-                Instruction::CNC => todo!(),
-                Instruction::CGR => todo!(),
-                Instruction::CLE => todo!(),
-                Instruction::CEG => todo!(),
-                Instruction::CEL => todo!(),
-                Instruction::COV => todo!(),
-                Instruction::CNO => todo!(),
-                Instruction::CDZ => todo!(),
-                Instruction::CN => todo!(),
-                Instruction::RTS => todo!(),
-                Instruction::RTI => todo!(),
-                Instruction::PUSH => todo!(),
-                Instruction::POP => todo!(),
-                Instruction::NOP => todo!(),
-                Instruction::HALT => todo!(),
-                Instruction::CLEARC => todo!(),
-                Instruction::SETC => todo!(),
-                Instruction::BREAKP => todo!(),
+
+                Instruction::JMP
+                | Instruction::JEQ
+                | Instruction::JZ
+                | Instruction::JC
+                | Instruction::JN
+                | Instruction::JNE
+                | Instruction::JNZ
+                | Instruction::JNC
+                | Instruction::JGR
+                | Instruction::JLE
+                | Instruction::JEG
+                | Instruction::JEL
+                | Instruction::JOV
+                | Instruction::JNO
+                | Instruction::JDZ
+                | Instruction::CZ
+                | Instruction::CC
+                | Instruction::CN
+                | Instruction::CEQ
+                | Instruction::CNE
+                | Instruction::CNZ
+                | Instruction::CNC
+                | Instruction::CGR
+                | Instruction::CEG
+                | Instruction::CEL
+                | Instruction::COV
+                | Instruction::CNO
+                | Instruction::CDZ
+                | Instruction::CALL
+                | Instruction::CLE => check_stream!(
+                    (Literal::DecNumber
+                        ; Literal::BinNumber
+                        ; Literal::HexNumber
+                        ; Token::Identifier)
+                ),
+
+                Instruction::RTS
+                | Instruction::RTI
+                | Instruction::SETC
+                | Instruction::CLEARC
+                | Instruction::HALT
+                | Instruction::NOP
+                | Instruction::BREAKP => Ok(()),
+
+                Instruction::PUSH | Instruction::POP => check_stream!(
+                    (Keyword::R0
+                        ; Keyword::R1
+                        ; Keyword::R2
+                        ; Keyword::R3
+                        ; Keyword::R4
+                        ; Keyword::R5
+                        ; Keyword::R6
+                        ; Keyword::R7
+                        ; Keyword::FR)
+                ),
             },
             Token::Identifier => todo!(),
             Token::Literal(_) => todo!(),

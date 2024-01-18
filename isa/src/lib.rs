@@ -25,7 +25,7 @@ impl FlagIndex {
 macro_rules! instruction_set {
     ($($(#[$doc:meta])* $name:ident $op:literal),+) => {
 
-        /// Conjunto de instruções presente na Arquitetura do Processador ICMC.
+        /// Conjunto de instruções presentes na Arquitetura do Processador ICMC.
         #[derive(Debug, Copy, Clone, PartialEq)]
         pub enum Instruction {
             $(
