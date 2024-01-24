@@ -14,6 +14,9 @@ pub struct MemRow {
     pub label_mem_inst: TemplateChild<Label>,
     #[template_child]
     pub label_mem_raw: TemplateChild<Label>,
+    #[template_child]
+    pub label_mem_float: TemplateChild<Label>,
+
     // Vector holding the bindings to properties of `TaskObject`
     pub bindings: RefCell<Vec<Binding>>,
 }

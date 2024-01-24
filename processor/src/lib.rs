@@ -2,9 +2,12 @@ pub mod errors;
 pub mod instructions;
 use crate::instructions::InstructionCicle;
 
-use isa::Instruction;
-use log::{debug, info, warn};
-use std::{fmt::Display, usize};
+use isa::{Instruction, MemoryCell};
+use log::{debug, error, info, warn};
+use std::{
+    fmt::Display,
+    sync::{Arc, Mutex},
+};
 
 use self::errors::ProcError;
 
@@ -20,7 +23,7 @@ pub const MAX_VALUE_MEMORY: usize = 2_usize.pow(isa::BITS_ADDRESS as u32) - 1;
 type Result<T> = std::result::Result<T, ProcError>;
 
 pub struct Processor {
-    memory: Vec<usize>, // pub temp
+    memory: Arc<Mutex<Vec<usize>>>, // pub temp
     registers: [usize; NUM_REGISTERS],
 
     rx: usize,
@@ -36,6 +39,12 @@ pub struct Processor {
     sp: usize,
 }
 
+impl Default for Processor {
+    fn default() -> Self {
+        Processor::new()
+    }
+}
+
 impl Processor {
     /// Cria um novo processador com [`NUM_REGISTERS`] registradores, memória de tamanho [`MEMORY_SIZE`] e mais 4 registradores especiais que são: *Flag Register* (FR), *Program Counter* (PC), *Stack Pointer* (SP) e *Instruction Register* (IR).
     /// Inicialmente, todos os endereços da memória e todos os registradores guardam o valor 0x0.
@@ -45,13 +54,15 @@ impl Processor {
             MEMORY_SIZE, NUM_REGISTERS
         );
 
-        let mut mem = Vec::with_capacity(MEMORY_SIZE);
+        let mem = Arc::new(Mutex::new(Vec::with_capacity(MEMORY_SIZE)));
+        let c_mem = mem.clone();
+        let mut guard = mem.lock().unwrap();
         for _ in 0..MEMORY_SIZE {
-            mem.push(0);
+            guard.push(0);
         }
 
         Self {
-            memory: mem,
+            memory: c_mem,
             registers: [0; NUM_REGISTERS],
             rx: 0,
             ry: 0,
@@ -75,13 +86,15 @@ impl Processor {
             s, NUM_REGISTERS
         );
 
-        let mut mem = Vec::with_capacity(s);
+        let mem = Arc::new(Mutex::new(Vec::with_capacity(MEMORY_SIZE)));
+        let c_mem = mem.clone();
+        let mut guard = mem.lock().unwrap();
         for _ in 0..s {
-            mem.push(0);
+            guard.push(0);
         }
 
         Self {
-            memory: mem,
+            memory: c_mem,
             registers: [0; NUM_REGISTERS],
             rx: 0,
             ry: 0,
@@ -91,6 +104,10 @@ impl Processor {
             ir: 0,
             sp: 0,
         }
+    }
+
+    pub fn arc_mem(&self) -> Arc<Mutex<Vec<MemoryCell>>> {
+        self.memory.clone()
     }
 
     /// Retorna o valor presente na memória de índice `i`.
@@ -109,9 +126,12 @@ impl Processor {
     ///
     /// ```
     pub fn mem(&self, i: usize) -> Result<usize> {
-        match self.memory.get(i) {
-            Some(&v) => Ok(v),
-            None => Err(ProcError::InvalidMemoryIndex(i)),
+        match self.memory.lock() {
+            Ok(m) => match m.get(i) {
+                Some(&v) => Ok(v),
+                None => Err(ProcError::InvalidMemoryIndex(i)),
+            },
+            Err(_) => Err(ProcError::BlockedMemory),
         }
     }
 
@@ -133,12 +153,15 @@ impl Processor {
     /// assert_eq!(0x1, p.mem(0).unwrap());
     /// ```
     pub fn set_mem(&mut self, i: usize, v: usize) -> Result<()> {
-        match self.memory.get_mut(i) {
-            Some(m) => {
-                *m = v;
-                Ok(())
-            }
-            None => Err(ProcError::InvalidMemoryIndex(i)),
+        match self.memory.lock() {
+            Ok(mut m) => match m.get_mut(i) {
+                Some(m) => {
+                    *m = v;
+                    Ok(())
+                }
+                None => Err(ProcError::InvalidMemoryIndex(i)),
+            },
+            Err(_) => Err(ProcError::BlockedMemory),
         }
     }
 
@@ -372,7 +395,7 @@ impl Display for Processor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "[Registers {:?}] [FR {:?}] [IR {}] [SP {}] [PC {}]",
+            "[Registers {:?}] [FR {:?}] [IR {}] [SP {:#06x}] [PC {:#06x}]",
             self.registers, self.fr, self.ir, self.sp, self.pc,
         )
     }

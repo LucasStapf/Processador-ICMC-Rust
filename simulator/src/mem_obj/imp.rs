@@ -13,6 +13,8 @@ pub struct MemObject {
     #[property(name = "addr", get, set, type = String, member = addr)]
     #[property(name = "inst", get, set, type = String, member = inst)]
     #[property(name = "raw", get, set, type = String, member = raw)]
+    #[property(name = "float", get, set, type = Option<String>, member = float)]
+    #[property(name = "visible", get, set, type = bool, member = visible)]
     pub data: RefCell<MemData>,
 }
 

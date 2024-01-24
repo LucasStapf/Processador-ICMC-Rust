@@ -21,6 +21,7 @@ impl MemRow {
         let label_addr = self.imp().label_mem_addr.get();
         let label_inst = self.imp().label_mem_inst.get();
         let label_raw = self.imp().label_mem_raw.get();
+        let label_float = self.imp().label_mem_float.get();
         let mut bindings = self.imp().bindings.borrow_mut();
 
         let content_label_binding = mem_object
@@ -39,6 +40,20 @@ impl MemRow {
 
         let content_label_binding = mem_object
             .bind_property("raw", &label_raw, "label")
+            .sync_create()
+            .build();
+        // Save binding
+        bindings.push(content_label_binding);
+
+        let content_label_binding = mem_object
+            .bind_property("float", &label_float, "label")
+            .sync_create()
+            .build();
+        // Save binding
+        bindings.push(content_label_binding);
+
+        let content_label_binding = mem_object
+            .bind_property("visible", &label_float, "visible")
             .sync_create()
             .build();
         // Save binding

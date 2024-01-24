@@ -1,16 +1,17 @@
-use std::cell::RefCell;
+use std::borrow::Borrow;
+use std::{borrow::BorrowMut, cell::RefCell};
 
 use adw::glib;
 use adw::subclass::prelude::*;
-use gtk::{
-    gdk, gio,
-    glib::clone,
-    prelude::{EditableExt, WidgetExt},
-    CompositeTemplate, Entry, Label, ListView,
-};
-use log::error;
+use gtk::gdk::Cursor;
+use gtk::{gdk, gio, prelude::WidgetExt, CompositeTemplate, Entry, Label, ListView, ToggleButton};
+use gtk::{glib::clone, prelude::*};
+use log::{debug, error};
 
-use crate::processor::{ProcessadorICMC, RunMode};
+use crate::mem_row::MemRow;
+use crate::processor::RunMode;
+
+use super::WindowData;
 
 #[derive(CompositeTemplate, Default)]
 #[template(resource = "/br/com/processador/sim.ui")]
@@ -60,7 +61,12 @@ pub struct Window {
 
     #[template_child]
     pub list_view_mem: TemplateChild<ListView>,
-    pub mem: RefCell<Option<gio::ListStore>>,
+    pub mem_list: RefCell<Option<gio::ListStore>>,
+
+    pub data: RefCell<WindowData>,
+
+    #[template_child]
+    pub toggle_mode_debug: TemplateChild<ToggleButton>,
 }
 
 #[glib::object_subclass]
@@ -71,10 +77,23 @@ impl ObjectSubclass for Window {
 
     fn class_init(klass: &mut Self::Class) {
         klass.bind_template();
+        klass.bind_template_callbacks();
     }
 
     fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
         obj.init_template();
+    }
+}
+
+#[gtk::template_callbacks]
+impl Window {
+    #[template_callback]
+    fn handler_edge_reached(&self, pos: gtk::PositionType, _scroll: &gtk::ScrolledWindow) {
+        if pos == gtk::PositionType::Bottom {
+            let end = *self.data.borrow().view_memory_range.end();
+            let index = (end + super::SCROLL_MEMORY_ADD).clamp(0, processor::MEMORY_SIZE - 1);
+            self.obj().update_memory_view(index);
+        }
     }
 }
 
@@ -85,73 +104,49 @@ impl ObjectImpl for Window {
         let obj = self.obj();
         obj.setup_memory();
         obj.setup_factory();
+        obj.update_memory_view(super::SCROLL_MEMORY_ADD);
 
-        for _ in 0..100 {
-            obj.new_memory(
-                "0x0000".to_string(),
-                "NOP".to_string(),
-                "0000000000000000".to_string(),
-            );
-        }
+        let (tx, rx) = async_channel::bounded(1);
+        self.data.borrow_mut().processor_manager.borrow_mut().tx = Some(tx);
+        self.data.borrow_mut().processor_manager.borrow_mut().run();
 
-        let (tx_1, rx_1) = async_channel::bounded(1);
-        let (tx_2, rx_2) = async_channel::bounded(1);
-
-        ProcessadorICMC::new(tx_1, rx_2).run();
-
-        glib::spawn_future_local(clone!(
-                @strong self.entry_r0 as val_r0,
-                @strong self.entry_r1 as val_r1,
-                @strong self.entry_r2 as val_r2,
-                @strong self.entry_r3 as val_r3,
-                @strong self.entry_r4 as val_r4,
-                @strong self.entry_r5 as val_r5,
-                @strong self.entry_r6 as val_r6,
-                @strong self.entry_r7 as val_r7,
-                @strong self.label_fr_0 as val_fr_0,
-                @strong self.label_val_pc as val_pc,
-                @strong self.label_val_sp as val_sp,
-                @strong self.label_val_ir as val_ir => async move {
-                    loop {
-                        match rx_1.recv().await {
-                            Ok((r0, r1, r2, r3, r4, r5, r6, r7, pc, sp, ir)) => {
-                                val_r0.set_text(&r0.to_string());
-                                val_r1.set_text(&r1.to_string());
-                                val_r2.set_text(&r2.to_string());
-                                val_r3.set_text(&r3.to_string());
-                                val_r4.set_text(&r4.to_string());
-                                val_r5.set_text(&r5.to_string());
-                                val_r6.set_text(&r6.to_string());
-                                val_r7.set_text(&r7.to_string());
-                                val_pc.set_text(&format!("0x{:04x}", pc));
-                                val_sp.set_text(&format!("0x{:04x}", sp));
-                                val_ir.set_text(&format!("{:016b}", ir));
-                            },
-                            Err(e) => {
-                                error!("{e}");
-                                break;
-                            },
-                        }
-                    }
+        glib::spawn_future_local(clone!(@strong obj as window => async move {
+            while let Ok(()) = rx.recv().await {
+                window.update_ui();
+            }
         }));
 
+        let pm = self.data.borrow_mut().processor_manager.clone();
         let event_controller = gtk::EventControllerKey::new();
-        event_controller.connect_key_pressed(move |_, key, _, _| {
-            match key {
-                gdk::Key::Page_Up => {
-                    let _ = tx_2
-                        .send_blocking(RunMode::Run)
-                        .map_err(|e| error!("[Sending RunMode] {e}"));
+        event_controller.connect_key_pressed(
+            clone!(@strong self.toggle_mode_debug as toggle_debug,
+                @strong pm => move |_, key, _, _| {
+                match key {
+                    gdk::Key::Page_Up => {
+                        match pm.mode.lock() {
+                            Ok(mut m) => {
+                                debug!("Modo selecionado: Run");
+                                *m = RunMode::Run;
+                                toggle_debug.set_active(false);
+                            }
+                            Err(e) => error!("Falha ao mudar o modo para Run: {e}"),
+                        }
+                    }
+                    gdk::Key::Page_Down => {
+                        match pm.mode.lock() {
+                            Ok(mut m) => {
+                                debug!("Modo selecionado: Debug");
+                                *m = RunMode::Debug(true);
+                                toggle_debug.set_active(true);
+                            }
+                            Err(e) => error!("Falha ao mudar o modo para Run: {e}"),
+                        }
+                    }
+                    _ => (),
                 }
-                gdk::Key::Page_Down => {
-                    let _ = tx_2
-                        .send_blocking(RunMode::Debug(true))
-                        .map_err(|e| error!("[Sending RunMode] {e}"));
-                }
-                _ => (),
-            }
-            glib::Propagation::Proceed
-        });
+                glib::Propagation::Proceed
+            }),
+        );
 
         self.obj().add_controller(event_controller);
     }

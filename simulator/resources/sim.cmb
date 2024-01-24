@@ -10,9 +10,12 @@
   <css>
 	(3,"sim.css",None,1)
   </css>
+  <css_ui>
+	(3,1)
+  </css_ui>
   <object>
-	(1,62,"GtkApplicationWindow","SimDebugWindow",None,None,None,None,-1,None),
-	(1,63,"GtkBox",None,62,None,None,None,None,None),
+	(1,62,"GtkApplicationWindow","SimDebugWindow",None,None,None,None,-1,"&lt;menu id=\"menu\"&gt;\n	&lt;submenu&gt;\n		&lt;attribute name=\"label\"&gt;Files&lt;/attribute&gt;\n	&lt;/submenu&gt;\n&lt;/menu&gt;"),
+	(1,63,"GtkBox",None,62,None,None,None,2,None),
 	(1,90,"GtkBox",None,63,None,None,None,4,None),
 	(1,110,"GtkBox",None,63,None,None,None,5,None),
 	(1,111,"GtkToggleButton","toggle_mode_run",110,None,None,None,1,None),
@@ -252,6 +255,8 @@
 	(1,164,"GtkOrientable","orientation","vertical",None,None,None,None,None,None,None,None,None),
 	(1,164,"GtkWidget","visible","True",None,None,None,None,None,112,"GtkToggleButton","active","default"),
 	(1,165,"GtkScrolledWindow","hscrollbar-policy","never",None,None,None,None,None,None,None,None,None),
+	(1,165,"GtkWidget","vexpand","True",None,None,None,None,None,None,None,None,None),
+	(1,166,"GtkListView","show-separators","True",None,None,None,None,None,None,None,None,None),
 	(1,166,"GtkWidget","margin-end","2",None,None,None,None,None,None,None,None,None),
 	(1,166,"GtkWidget","margin-start","2",None,None,None,None,None,None,None,None,None),
 	(1,166,"GtkWidget","vexpand","True",None,None,None,None,None,None,None,None,None),
@@ -272,6 +277,9 @@
 	(1,172,"GtkWidget","margin-end","10",None,None,None,None,None,None,None,None,None),
 	(1,172,"GtkWidget","tooltip-text","Reset",None,None,None,None,None,None,None,None,None)
   </object_property>
+  <object_signal>
+	(1,1,165,"GtkScrolledWindow","edge-reached","handler_edge_reached",None,None,1,None,None)
+  </object_signal>
   <object_data>
 	(1,111,"GtkWidget",1,1,None,None,None,None,None,None),
 	(1,111,"GtkWidget",2,2,None,1,None,None,None,None),

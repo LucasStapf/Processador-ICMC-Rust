@@ -7,8 +7,8 @@ edition = "2021"
 
 [dependencies]
 async-channel = "2.1.1"
-env_logger = "0.10.1"
-gtk = {version = "0.7.3", package = "gtk4" }
+env_logger = "0.11.0"
+gtk = { version = "0.7.3", package = "gtk4" }
 isa = { path = "../isa" } 
 processor = { path = "../processor" }
 assembler = { path = "../assembler" }

@@ -13,7 +13,7 @@ mod window;
 const APP_ID: &str = "org.usp.ProcessadorIcmc";
 
 fn main() -> glib::ExitCode {
-    std::env::set_var("RUST_LOG", "info");
+    std::env::set_var("RUST_LOG", "debug");
 
     gio::resources_register_include!("compile.gresource")
         .expect("Falha ao carregar os recursos de UI.");
@@ -32,10 +32,19 @@ fn load_css() {
     let provider = CssProvider::new();
     provider.load_from_data(include_str!("../resources/sim.css"));
 
+    let mem = CssProvider::new();
+    mem.load_from_data(include_str!("../resources/memcell.css"));
+
     // Add the provider to the default screen
     gtk::style_context_add_provider_for_display(
         &Display::default().expect("Could not connect to a display."),
         &provider,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
+
+    gtk::style_context_add_provider_for_display(
+        &Display::default().expect("Could not connect to a display."),
+        &mem,
         gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
 }

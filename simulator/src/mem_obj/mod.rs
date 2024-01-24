@@ -6,11 +6,12 @@ glib::wrapper! {
 }
 
 impl MemObject {
-    pub fn new(addr: String, inst: String, raw: String) -> Self {
+    pub fn new(addr: String, inst: String, raw: String, float: Option<String>) -> Self {
         Object::builder()
             .property("addr", addr)
             .property("inst", inst)
             .property("raw", raw)
+            .property("float", float)
             .build()
     }
 }
@@ -20,4 +21,6 @@ pub struct MemData {
     pub addr: String,
     pub inst: String,
     pub raw: String,
+    pub float: Option<String>,
+    pub visible: bool,
 }

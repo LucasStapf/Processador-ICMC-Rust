@@ -4,8 +4,8 @@ use std::ops::RangeInclusive;
 pub const BITS_ADDRESS: usize = 16;
 
 /// Tipo de dado utilizado para representar a memória do processador.
-pub type MemType = usize;
-type Opcode = MemType;
+pub type MemoryCell = usize;
+type Opcode = MemoryCell;
 
 pub struct FlagIndex;
 
@@ -73,7 +73,7 @@ macro_rules! instruction_set {
                 None
             }
 
-            pub fn bits(&self, r: RangeInclusive<usize>) -> MemType {
+            pub fn bits(&self, r: RangeInclusive<usize>) -> MemoryCell {
                 let code = match self {
                     $(Instruction::$name => $op),+,
                 };
@@ -81,7 +81,7 @@ macro_rules! instruction_set {
                 let size = BITS_ADDRESS - 1;
 
                 let cr = RangeInclusive::new(size - r.end(), size - r.start());
-                MemType::from_str_radix(&code[cr], 2).unwrap()
+                MemoryCell::from_str_radix(&code[cr], 2).unwrap()
             }
 
             /// Retorna qual [`Instruction`] está presente no argumento `value`.
@@ -95,7 +95,7 @@ macro_rules! instruction_set {
             /// let mem = 0b1100001000100011; // LOAD
             /// assert_eq!(Instruction::LOAD, Instruction::get_instruction(mem));
             /// ```
-            pub fn get_instruction(value: MemType) -> Instruction {
+            pub fn get_instruction(value: MemoryCell) -> Instruction {
                 let value_string = format!("{:016b}", value);
 
                 let mut test_value: String;
@@ -779,7 +779,7 @@ instruction_set!(
 /// let mem = 0b101000;
 /// assert_eq!(0b101, bits(mem, 3..=5));
 /// ```
-pub fn bits(mem: MemType, r: RangeInclusive<usize>) -> MemType {
+pub fn bits(mem: MemoryCell, r: RangeInclusive<usize>) -> MemoryCell {
     let mask = (1 << (r.end() - r.start() + 1)) - 1;
     let ret = mem;
     (ret >> r.start()) & mask
