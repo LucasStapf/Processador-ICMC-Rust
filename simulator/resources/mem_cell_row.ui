@@ -4,24 +4,18 @@
   <!-- interface-name mem_row.ui -->
   <requires lib="gtk" version="4.6"/>
   <template class="MemoryCellRow" parent="GtkBox">
+    <property name="margin-bottom">4</property>
+    <property name="margin-end">4</property>
+    <property name="margin-start">4</property>
+    <property name="margin-top">4</property>
     <child>
-      <object class="GtkFrame">
-        <property name="label-widget">
-          <object class="GtkLabel" id="label_mem_float">
-            <property name="label">&lt;b&gt;SP&lt;/b&gt;</property>
-            <property name="use-markup">True</property>
-            <style>
-              <class name="float"/>
-            </style>
-          </object>
-        </property>
-        <property name="label-xalign">1.0</property>
-        <property name="valign">center</property>
+      <object class="GtkBox">
+        <property name="margin-end">4</property>
+        <property name="margin-start">4</property>
+        <property name="orientation">vertical</property>
         <child>
           <object class="GtkBox">
             <property name="halign">center</property>
-            <property name="margin-end">4</property>
-            <property name="margin-start">4</property>
             <property name="spacing">10</property>
             <property name="valign">center</property>
             <child>
@@ -51,13 +45,27 @@
               <object class="GtkSeparator"/>
             </child>
             <child>
-              <object class="GtkLabel" id="label_mem_raw">
-                <property name="halign">start</property>
-                <property name="label">0000000000000000</property>
-                <property name="width-chars">16</property>
-                <style>
-                  <class name="row"/>
-                </style>
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkLabel" id="label_mem_float">
+                    <property name="halign">end</property>
+                    <property name="label">SP</property>
+                    <property name="use-markup">True</property>
+                    <style>
+                      <class name="float"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_mem_raw">
+                    <property name="label">0000000000000000</property>
+                    <property name="width-chars">16</property>
+                    <style>
+                      <class name="row"/>
+                    </style>
+                  </object>
+                </child>
               </object>
             </child>
             <style>

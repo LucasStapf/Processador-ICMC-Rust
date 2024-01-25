@@ -6,64 +6,24 @@ use glib::Object;
 use gtk::glib::subclass::types::ObjectSubclassIsExt;
 
 glib::wrapper! {
-    pub struct MemRow(ObjectSubclass<imp::MemRow>)
+    pub struct MemoryCellRow(ObjectSubclass<imp::MemoryCellRow>)
     @extends gtk::Box, gtk::Widget,
     @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget, gtk::Orientable;
 }
 
-impl MemRow {
-    pub fn new() -> Self {
+impl MemoryCellRow {
+    fn build() -> Self {
         Object::builder().build()
     }
-
-    pub fn bind(&self, mem_object: &MemObject) {
-        // Get state
-        let label_addr = self.imp().label_mem_addr.get();
-        let label_inst = self.imp().label_mem_inst.get();
-        let label_raw = self.imp().label_mem_raw.get();
-        let label_float = self.imp().label_mem_float.get();
-        let mut bindings = self.imp().bindings.borrow_mut();
-
-        let content_label_binding = mem_object
-            .bind_property("addr", &label_addr, "label")
-            .sync_create()
-            .build();
-        // Save binding
-        bindings.push(content_label_binding);
-
-        let content_label_binding = mem_object
-            .bind_property("inst", &label_inst, "label")
-            .sync_create()
-            .build();
-        // Save binding
-        bindings.push(content_label_binding);
-
-        let content_label_binding = mem_object
-            .bind_property("raw", &label_raw, "label")
-            .sync_create()
-            .build();
-        // Save binding
-        bindings.push(content_label_binding);
-
-        let content_label_binding = mem_object
-            .bind_property("float", &label_float, "label")
-            .sync_create()
-            .build();
-        // Save binding
-        bindings.push(content_label_binding);
-
-        let content_label_binding = mem_object
-            .bind_property("visible", &label_float, "visible")
-            .sync_create()
-            .build();
-        // Save binding
-        bindings.push(content_label_binding);
-    }
-
-    pub fn unbind(&self) {
-        // Unbind all stored bindings
-        for binding in self.imp().bindings.borrow_mut().drain(..) {
-            binding.unbind();
+    pub fn new(addr: usize, inst: &str, raw: usize, float: Option<&str>) -> Self {
+        let mem = MemoryCellRow::build();
+        mem.imp().label_mem_addr.set_text(&format!("{:#06x}", addr));
+        mem.imp().label_mem_inst.set_text(inst);
+        mem.imp().label_mem_raw.set_text(&format!("{:016b}", raw));
+        if let Some(s) = float {
+            mem.imp().label_mem_float.set_text(s);
+            mem.imp().label_mem_float.set_visible(true);
         }
+        mem
     }
 }

@@ -7,7 +7,7 @@ use gtk::{CompositeTemplate, Label};
 
 #[derive(Default, CompositeTemplate)]
 #[template(resource = "/br/com/processador/mem_row.ui")]
-pub struct MemRow {
+pub struct MemoryCellRow {
     #[template_child]
     pub label_mem_addr: TemplateChild<Label>,
     #[template_child]
@@ -16,17 +16,14 @@ pub struct MemRow {
     pub label_mem_raw: TemplateChild<Label>,
     #[template_child]
     pub label_mem_float: TemplateChild<Label>,
-
-    // Vector holding the bindings to properties of `TaskObject`
-    pub bindings: RefCell<Vec<Binding>>,
 }
 
 // The central trait for subclassing a GObject
 #[glib::object_subclass]
-impl ObjectSubclass for MemRow {
+impl ObjectSubclass for MemoryCellRow {
     // `NAME` needs to match `class` attribute of template
-    const NAME: &'static str = "MemRowObj";
-    type Type = super::MemRow;
+    const NAME: &'static str = "MemoryCellRow";
+    type Type = super::MemoryCellRow;
     type ParentType = gtk::Box;
 
     fn class_init(klass: &mut Self::Class) {
@@ -39,10 +36,10 @@ impl ObjectSubclass for MemRow {
 }
 
 // Trait shared by all GObjects
-impl ObjectImpl for MemRow {}
+impl ObjectImpl for MemoryCellRow {}
 
 // Trait shared by all widgets
-impl WidgetImpl for MemRow {}
+impl WidgetImpl for MemoryCellRow {}
 
 // Trait shared by all boxes
-impl BoxImpl for MemRow {}
+impl BoxImpl for MemoryCellRow {}

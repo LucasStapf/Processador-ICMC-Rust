@@ -1,19 +1,17 @@
 mod imp;
 
+use crate::mem_row::MemoryCellRow;
 use adw::prelude::*;
 use adw::Application;
 use adw::{gio, glib};
 use glib::Object;
 use gtk::glib::subclass::types::ObjectSubclassIsExt;
-use gtk::{ListItem, NoSelection, SignalListItemFactory};
 use log::error;
-use std::ops::RangeInclusive;
 
-use crate::mem_obj::MemObject;
-use crate::mem_row::MemRow;
 use crate::processor::ProcessorManager;
 
 const SCROLL_MEMORY_ADD: usize = 100;
+const CELLS_PER_PAGE: usize = 1000;
 
 glib::wrapper! {
     pub struct Window(ObjectSubclass<imp::Window>)
@@ -57,119 +55,155 @@ impl Window {
             }
             Err(e) => error!("Falha na comunicação entre UI e processador: {e}"),
         }
-        self.update_memory_view(pc);
+        // self.update_memory_view(pc);
+        // self.focus_memory_row(pc);
     }
 
-    pub fn update_memory_view(&self, index: usize) {
-        let mut data = self.imp().data.borrow_mut();
-        let pm = data.processor_manager.clone();
-        let vmr = data.view_memory_range.clone();
+    // pub fn update_memory_view(&self, index: usize) {
+    //     let start = index / CELLS_PER_PAGE;
+    //     let end = (start + CELLS_PER_PAGE).clamp(0, processor::MEMORY_SIZE);
+    //
+    //     for i in 0..CELLS_PER_PAGE {
+    //         if let Some(r) = self.imp().list_box_mem.row_at_index(i as i32) {
+    //             self.imp().list_box_mem.remove(&r);
+    //         }
+    //     }
+    //
+    //     match self.imp().data.borrow().processor_manager.processor.lock() {
+    //         Ok(p) => {
+    //             for i in start..end {
+    //                 self.imp().list_box_mem.append(&MemoryCellRow::new(
+    //                     i,
+    //                     "NOP",
+    //                     p.mem(i).unwrap(),
+    //                     None,
+    //                 ));
+    //             }
+    //         }
+    //         Err(e) => error!("Falha na comunicação entre UI e processador: {e}"),
+    //     }
+    // }
+    //
+    // pub fn focus_memory_row(&self, index: usize) {
+    //     let i = index.clamp(0, CELLS_PER_PAGE);
+    //     let row = self.imp().list_box_mem.row_at_index(i as i32);
+    //     self.imp().list_box_mem.select_row(row.as_ref());
+    //     self.imp()
+    //         .scroll_window
+    //         .set_vadjustment(self.imp().list_box_mem.adjustment().as_ref());
+    //     row.unwrap().grab_focus();
+    // }
 
-        match pm.processor.lock() {
-            Ok(p) => {
-                if !vmr.contains(&index) {
-                    for i in *vmr.end()..index {
-                        self.new_memory(
-                            i.to_string(),
-                            "".to_string(),
-                            p.mem(i).unwrap().to_string(),
-                            None,
-                        )
-                    }
-                    data.view_memory_range = 0..=index;
-                }
-            }
-            Err(e) => error!(
-                "Falha na comunicação entre UI e processador para atualizar o MemoryView: {e}"
-            ),
-        };
-    }
-
-    fn memory(&self) -> gio::ListStore {
-        self.imp()
-            .mem_list
-            .borrow()
-            .clone()
-            .expect("Não foi possível obter acessar a memória.")
-    }
-
-    fn setup_memory(&self) {
-        let model = gio::ListStore::new::<MemObject>();
-        self.imp().mem_list.replace(Some(model));
-
-        let selection_model = NoSelection::new(Some(self.memory()));
-        self.imp().list_view_mem.set_model(Some(&selection_model));
-    }
-
-    fn new_memory(&self, s1: String, s2: String, s3: String, s4: Option<String>) {
-        // Add new task to model
-        let mem = MemObject::new(s1, s2, s3, s4);
-        self.memory().append(&mem);
-    }
-
-    fn setup_factory(&self) {
-        // Create a new factory
-        let factory = SignalListItemFactory::new();
-
-        // Create an empty `TaskRow` during setup
-        factory.connect_setup(move |_, list_item| {
-            // Create `TaskRow`
-            let mem_row = MemRow::new();
-            list_item
-                .downcast_ref::<ListItem>()
-                .expect("Needs to be ListItem")
-                .set_child(Some(&mem_row));
-        });
-
-        // Tell factory how to bind `TaskRow` to a `TaskObject`
-        factory.connect_bind(move |_, list_item| {
-            // Get `TaskObject` from `ListItem`
-            let task_object = list_item
-                .downcast_ref::<ListItem>()
-                .expect("Needs to be ListItem")
-                .item()
-                .and_downcast::<MemObject>()
-                .expect("The item has to be an `TaskObject`.");
-
-            // Get `TaskRow` from `ListItem`
-            let task_row = list_item
-                .downcast_ref::<ListItem>()
-                .expect("Needs to be ListItem")
-                .child()
-                .and_downcast::<MemRow>()
-                .expect("The child has to be a `TaskRow`.");
-
-            task_row.bind(&task_object);
-        });
-
-        // Tell factory how to unbind `TaskRow` from `TaskObject`
-        factory.connect_unbind(move |_, list_item| {
-            // Get `TaskRow` from `ListItem`
-            let task_row = list_item
-                .downcast_ref::<ListItem>()
-                .expect("Needs to be ListItem")
-                .child()
-                .and_downcast::<MemRow>()
-                .expect("The child has to be a `TaskRow`.");
-
-            task_row.unbind();
-        });
-
-        // Set the factory of the list view
-        self.imp().list_view_mem.set_factory(Some(&factory));
-    }
+    // pub fn update_memory_view(&self, index: usize) {
+    //     let mut data = self.imp().data.borrow_mut();
+    //     let pm = data.processor_manager.clone();
+    //     let vmr = data.view_memory_range.clone();
+    //
+    //     match pm.processor.lock() {
+    //         Ok(p) => {
+    //             if !vmr.contains(&index) {
+    //                 for i in *vmr.end()..index {
+    //                     self.new_memory(
+    //                         i.to_string(),
+    //                         "".to_string(),
+    //                         p.mem(i).unwrap().to_string(),
+    //                         None,
+    //                     )
+    //                 }
+    //                 data.view_memory_range = 0..=index;
+    //             }
+    //         }
+    //         Err(e) => error!(
+    //             "Falha na comunicação entre UI e processador para atualizar o MemoryView: {e}"
+    //         ),
+    //     };
+    // }
+    //
+    // fn memory(&self) -> gio::ListStore {
+    //     self.imp()
+    //         .mem_list
+    //         .borrow()
+    //         .clone()
+    //         .expect("Não foi possível obter acessar a memória.")
+    // }
+    //
+    // fn setup_memory(&self) {
+    //     let model = gio::ListStore::new::<MemObject>();
+    //     self.imp().mem_list.replace(Some(model));
+    //
+    //     let selection_model = NoSelection::new(Some(self.memory()));
+    //     self.imp().list_view_mem.set_model(Some(&selection_model));
+    // }
+    //
+    // fn new_memory(&self, s1: String, s2: String, s3: String, s4: Option<String>) {
+    //     // Add new task to model
+    //     let mem = MemObject::new(s1, s2, s3, s4);
+    //     self.memory().append(&mem);
+    // }
+    //
+    // fn setup_factory(&self) {
+    //     // Create a new factory
+    //     let factory = SignalListItemFactory::new();
+    //
+    //     // Create an empty `TaskRow` during setup
+    //     factory.connect_setup(move |_, list_item| {
+    //         // Create `TaskRow`
+    //         let mem_row = MemRow::new();
+    //         list_item
+    //             .downcast_ref::<ListItem>()
+    //             .expect("Needs to be ListItem")
+    //             .set_child(Some(&mem_row));
+    //     });
+    //
+    //     // Tell factory how to bind `TaskRow` to a `TaskObject`
+    //     factory.connect_bind(move |_, list_item| {
+    //         // Get `TaskObject` from `ListItem`
+    //         let task_object = list_item
+    //             .downcast_ref::<ListItem>()
+    //             .expect("Needs to be ListItem")
+    //             .item()
+    //             .and_downcast::<MemObject>()
+    //             .expect("The item has to be an `TaskObject`.");
+    //
+    //         // Get `TaskRow` from `ListItem`
+    //         let task_row = list_item
+    //             .downcast_ref::<ListItem>()
+    //             .expect("Needs to be ListItem")
+    //             .child()
+    //             .and_downcast::<MemRow>()
+    //             .expect("The child has to be a `TaskRow`.");
+    //
+    //         task_row.bind(&task_object);
+    //     });
+    //
+    //     // Tell factory how to unbind `TaskRow` from `TaskObject`
+    //     factory.connect_unbind(move |_, list_item| {
+    //         // Get `TaskRow` from `ListItem`
+    //         let task_row = list_item
+    //             .downcast_ref::<ListItem>()
+    //             .expect("Needs to be ListItem")
+    //             .child()
+    //             .and_downcast::<MemRow>()
+    //             .expect("The child has to be a `TaskRow`.");
+    //
+    //         task_row.unbind();
+    //     });
+    //
+    //     // Set the factory of the list view
+    //     self.imp().list_view_mem.set_factory(Some(&factory));
+    // }
 }
 
 pub struct WindowData {
     pub processor_manager: ProcessorManager,
-    pub view_memory_range: RangeInclusive<usize>,
+    pub memory_page: Option<usize>,
 }
 
 impl Default for WindowData {
     fn default() -> Self {
         Self {
             processor_manager: Default::default(),
-            view_memory_range: 0..=0,
+            memory_page: None,
         }
     }
 }

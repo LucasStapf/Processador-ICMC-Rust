@@ -5,10 +5,11 @@
   <!-- interface-authors Lucas Stapf -->
   <requires lib="gtk" version="4.6"/>
   <template class="SimDebugWindow" parent="GtkApplicationWindow">
+    <property name="fullscreened">True</property>
     <property name="title">Processador ICMC</property>
     <child>
       <object class="GtkBox">
-        <property name="hexpand">True</property>
+        <property name="halign">center</property>
         <property name="margin-bottom">8</property>
         <property name="margin-end">8</property>
         <property name="margin-start">8</property>
@@ -17,342 +18,344 @@
         <property name="spacing">10</property>
         <property name="vexpand">True</property>
         <child>
-          <object class="GtkBox">
-            <property name="orientation">vertical</property>
-            <property name="spacing">10</property>
-            <property name="visible" bind-source="toggle_mode_debug" bind-property="active" bind-flags="default">True</property>
-            <child>
+          <object class="GtkFrame">
+            <property name="label-widget">
               <object class="GtkLabel">
                 <property name="label">&lt;b&gt;Registers&lt;/b&gt;</property>
                 <property name="use-markup">True</property>
               </object>
-            </child>
+            </property>
+            <property name="label-xalign">0.5</property>
+            <property name="visible" bind-source="toggle_mode_debug" bind-property="active" bind-flags="default">True</property>
             <child>
               <object class="GtkBox">
                 <property name="halign">center</property>
-                <property name="spacing">6</property>
+                <property name="margin-bottom">8</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">10</property>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;PC&lt;/b&gt;</property>
-                    <property name="tooltip-text">Program Counter</property>
-                    <property name="use-markup">True</property>
-                    <property name="width-chars">4</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="label_val_pc">
-                    <property name="justify">right</property>
-                    <property name="label">0x0000</property>
-                    <property name="width-chars">9</property>
-                    <style/>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;SP&lt;/b&gt;</property>
-                    <property name="tooltip-text">Stack Pointer</property>
-                    <property name="use-markup">True</property>
-                    <property name="width-chars">4</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="label_val_sp">
-                    <property name="justify">right</property>
-                    <property name="label">0x0000</property>
-                    <property name="width-chars">9</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;IR&lt;/b&gt;</property>
-                    <property name="tooltip-text">Instruction Register</property>
-                    <property name="use-markup">True</property>
-                    <property name="width-chars">4</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="label_val_ir">
-                    <property name="justify">right</property>
-                    <property name="label">0000000000000000</property>
-                    <property name="width-chars">16</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;FR&lt;/b&gt;</property>
-                    <property name="tooltip-text">Flag Register</property>
-                    <property name="use-markup">True</property>
-                    <property name="width-chars">4</property>
+                  <object class="GtkBox">
+                    <property name="halign">center</property>
+                    <property name="spacing">6</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;PC&lt;/b&gt;</property>
+                        <property name="tooltip-text">Program Counter</property>
+                        <property name="use-markup">True</property>
+                        <property name="width-chars">4</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label_val_pc">
+                        <property name="justify">right</property>
+                        <property name="label">0x0000</property>
+                        <property name="width-chars">9</property>
+                        <style/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;SP&lt;/b&gt;</property>
+                        <property name="tooltip-text">Stack Pointer</property>
+                        <property name="use-markup">True</property>
+                        <property name="width-chars">4</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label_val_sp">
+                        <property name="justify">right</property>
+                        <property name="label">0x0000</property>
+                        <property name="width-chars">9</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;IR&lt;/b&gt;</property>
+                        <property name="tooltip-text">Instruction Register</property>
+                        <property name="use-markup">True</property>
+                        <property name="width-chars">4</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label_val_ir">
+                        <property name="justify">right</property>
+                        <property name="label">0000000000000000</property>
+                        <property name="width-chars">16</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;FR&lt;/b&gt;</property>
+                        <property name="tooltip-text">Flag Register</property>
+                        <property name="use-markup">True</property>
+                        <property name="width-chars">4</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="spacing">4</property>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_15">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_14">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_13">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_12">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_11">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_10">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_9">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Negative</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_8">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">StackUnderflow</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_7">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">StackOverflow</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_6">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Div by Zero</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_5">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Arithmetic Overflow</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_4">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Carry</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_3">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Zero</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_2">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Equal</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_1">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Lesser</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_0">
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Greater</property>
+                            <property name="width-chars">1</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <child>
                   <object class="GtkBox">
-                    <property name="spacing">4</property>
+                    <property name="halign">center</property>
+                    <property name="spacing">6</property>
                     <child>
-                      <object class="GtkLabel" id="label_fr_15">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;R0&lt;/b&gt;</property>
+                        <property name="tooltip-text">Register 0</property>
+                        <property name="use-markup">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_14">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkEntry" id="entry_r0">
+                        <property name="input-purpose">number</property>
+                        <property name="max-width-chars">0</property>
+                        <property name="width-chars">7</property>
+                        <property name="xalign">0.9</property>
+                        <style/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_13">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;R1&lt;/b&gt;</property>
+                        <property name="tooltip-text">Register 1</property>
+                        <property name="use-markup">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_12">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkEntry" id="entry_r1">
+                        <property name="input-purpose">number</property>
+                        <property name="max-width-chars">0</property>
+                        <property name="width-chars">7</property>
+                        <property name="xalign">0.9</property>
+                        <style/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_11">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;R2&lt;/b&gt;</property>
+                        <property name="tooltip-text">Register 2</property>
+                        <property name="use-markup">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_10">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkEntry" id="entry_r2">
+                        <property name="input-purpose">number</property>
+                        <property name="max-width-chars">0</property>
+                        <property name="width-chars">7</property>
+                        <property name="xalign">0.9</property>
+                        <style/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_9">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="tooltip-text">Negative</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;R3&lt;/b&gt;</property>
+                        <property name="tooltip-text">Register 3</property>
+                        <property name="use-markup">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_8">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="tooltip-text">StackUnderflow</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkEntry" id="entry_r3">
+                        <property name="input-purpose">number</property>
+                        <property name="max-width-chars">0</property>
+                        <property name="width-chars">7</property>
+                        <property name="xalign">0.9</property>
+                        <style/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_7">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="tooltip-text">StackOverflow</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;R4&lt;/b&gt;</property>
+                        <property name="tooltip-text">Register 4</property>
+                        <property name="use-markup">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_6">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="tooltip-text">Div by Zero</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkEntry" id="entry_r4">
+                        <property name="input-purpose">number</property>
+                        <property name="max-width-chars">0</property>
+                        <property name="width-chars">7</property>
+                        <property name="xalign">0.9</property>
+                        <style/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_5">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="tooltip-text">Arithmetic Overflow</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;R5&lt;/b&gt;</property>
+                        <property name="tooltip-text">Register 5</property>
+                        <property name="use-markup">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_4">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="tooltip-text">Carry</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkEntry" id="entry_r5">
+                        <property name="input-purpose">number</property>
+                        <property name="max-width-chars">0</property>
+                        <property name="width-chars">7</property>
+                        <property name="xalign">0.9</property>
+                        <style/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_3">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="tooltip-text">Zero</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;R6&lt;/b&gt;</property>
+                        <property name="tooltip-text">Register 6</property>
+                        <property name="use-markup">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_2">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="tooltip-text">Equal</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkEntry" id="entry_r6">
+                        <property name="input-purpose">number</property>
+                        <property name="max-width-chars">0</property>
+                        <property name="width-chars">7</property>
+                        <property name="xalign">0.9</property>
+                        <style/>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_1">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="tooltip-text">Lesser</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;R7&lt;/b&gt;</property>
+                        <property name="tooltip-text">Register 7</property>
+                        <property name="use-markup">True</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label_fr_0">
-                        <property name="justify">right</property>
-                        <property name="label">0</property>
-                        <property name="tooltip-text">Greater</property>
-                        <property name="width-chars">1</property>
+                      <object class="GtkEntry" id="entry_r7">
+                        <property name="input-purpose">number</property>
+                        <property name="max-width-chars">0</property>
+                        <property name="width-chars">7</property>
+                        <property name="xalign">0.9</property>
+                        <style/>
                       </object>
                     </child>
                   </object>
                 </child>
               </object>
             </child>
-            <child>
-              <object class="GtkBox">
-                <property name="halign">center</property>
-                <property name="spacing">6</property>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;R0&lt;/b&gt;</property>
-                    <property name="tooltip-text">Register 0</property>
-                    <property name="use-markup">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="entry_r0">
-                    <property name="input-purpose">number</property>
-                    <property name="max-width-chars">0</property>
-                    <property name="width-chars">7</property>
-                    <property name="xalign">0.9</property>
-                    <style/>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;R1&lt;/b&gt;</property>
-                    <property name="tooltip-text">Register 1</property>
-                    <property name="use-markup">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="entry_r1">
-                    <property name="input-purpose">number</property>
-                    <property name="max-width-chars">0</property>
-                    <property name="width-chars">7</property>
-                    <property name="xalign">0.9</property>
-                    <style/>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;R2&lt;/b&gt;</property>
-                    <property name="tooltip-text">Register 2</property>
-                    <property name="use-markup">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="entry_r2">
-                    <property name="input-purpose">number</property>
-                    <property name="max-width-chars">0</property>
-                    <property name="width-chars">7</property>
-                    <property name="xalign">0.9</property>
-                    <style/>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;R3&lt;/b&gt;</property>
-                    <property name="tooltip-text">Register 3</property>
-                    <property name="use-markup">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="entry_r3">
-                    <property name="input-purpose">number</property>
-                    <property name="max-width-chars">0</property>
-                    <property name="width-chars">7</property>
-                    <property name="xalign">0.9</property>
-                    <style/>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;R4&lt;/b&gt;</property>
-                    <property name="tooltip-text">Register 4</property>
-                    <property name="use-markup">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="entry_r4">
-                    <property name="input-purpose">number</property>
-                    <property name="max-width-chars">0</property>
-                    <property name="width-chars">7</property>
-                    <property name="xalign">0.9</property>
-                    <style/>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;R5&lt;/b&gt;</property>
-                    <property name="tooltip-text">Register 5</property>
-                    <property name="use-markup">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="entry_r5">
-                    <property name="input-purpose">number</property>
-                    <property name="max-width-chars">0</property>
-                    <property name="width-chars">7</property>
-                    <property name="xalign">0.9</property>
-                    <style/>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;R6&lt;/b&gt;</property>
-                    <property name="tooltip-text">Register 6</property>
-                    <property name="use-markup">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="entry_r6">
-                    <property name="input-purpose">number</property>
-                    <property name="max-width-chars">0</property>
-                    <property name="width-chars">7</property>
-                    <property name="xalign">0.9</property>
-                    <style/>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;R7&lt;/b&gt;</property>
-                    <property name="tooltip-text">Register 7</property>
-                    <property name="use-markup">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="entry_r7">
-                    <property name="input-purpose">number</property>
-                    <property name="max-width-chars">0</property>
-                    <property name="width-chars">7</property>
-                    <property name="xalign">0.9</property>
-                    <style/>
-                  </object>
-                </child>
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkSeparator">
-            <property name="visible" bind-source="toggle_mode_debug" bind-property="active" bind-flags="default">True</property>
           </object>
         </child>
         <child>
@@ -365,33 +368,93 @@
               <object class="GtkBox">
                 <property name="orientation">vertical</property>
                 <property name="spacing">10</property>
+                <property name="vexpand">True</property>
                 <property name="visible" bind-source="toggle_mode_debug" bind-property="active" bind-flags="default">True</property>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;Memory&lt;/b&gt;</property>
-                    <property name="use-markup">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkScrolledWindow">
-                    <property name="hscrollbar-policy">never</property>
+                  <object class="GtkFrame">
+                    <property name="label-widget">
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;Memory&lt;/b&gt;</property>
+                        <property name="use-markup">True</property>
+                      </object>
+                    </property>
+                    <property name="label-xalign">0.5</property>
                     <property name="vexpand">True</property>
-                    <signal name="edge-reached" handler="handler_edge_reached" swapped="yes"/>
                     <child>
-                      <object class="GtkListView" id="list_view_mem">
-                        <property name="margin-end">2</property>
-                        <property name="margin-start">2</property>
-                        <property name="show-separators">True</property>
-                        <property name="vexpand">True</property>
+                      <object class="GtkScrolledWindow">
+                        <property name="hexpand">True</property>
+                        <property name="hscrollbar-policy">never</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="margin-end">4</property>
+                            <property name="margin-start">4</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                            <child>
+                              <object class="MemoryCellRow"/>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                   </object>
                 </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSeparator">
-                <property name="visible" bind-source="toggle_mode_debug" bind-property="active" bind-flags="default">True</property>
               </object>
             </child>
             <child>
@@ -400,16 +463,21 @@
                 <property name="orientation">vertical</property>
                 <property name="spacing">10</property>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="label">&lt;b&gt;Video&lt;/b&gt;</property>
-                    <property name="use-markup">True</property>
-                    <property name="visible" bind-source="toggle_mode_debug" bind-property="active" bind-flags="default">True</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkDrawingArea">
-                    <property name="content-height">487</property>
-                    <property name="content-width">645</property>
+                  <object class="GtkFrame">
+                    <property name="label-widget">
+                      <object class="GtkLabel">
+                        <property name="label">&lt;b&gt;Video&lt;/b&gt;</property>
+                        <property name="use-markup">True</property>
+                      </object>
+                    </property>
+                    <property name="label-xalign">0.5</property>
+                    <child>
+                      <object class="GtkDrawingArea">
+                        <property name="content-height">487</property>
+                        <property name="content-width">645</property>
+                        <property name="vexpand">True</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
