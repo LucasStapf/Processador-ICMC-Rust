@@ -17,13 +17,32 @@ impl MemoryCellRow {
     }
     pub fn new(addr: usize, inst: &str, raw: usize, float: Option<&str>) -> Self {
         let mem = MemoryCellRow::build();
-        mem.imp().label_mem_addr.set_text(&format!("{:#06x}", addr));
+        mem.imp().label_mem_addr.set_text(&format!("{:#06X}", addr));
         mem.imp().label_mem_inst.set_text(inst);
         mem.imp().label_mem_raw.set_text(&format!("{:016b}", raw));
         if let Some(s) = float {
-            mem.imp().label_mem_float.set_text(s);
+            mem.imp().label_mem_float.set_markup(s);
             mem.imp().label_mem_float.set_visible(true);
         }
         mem
+    }
+
+    pub fn update(&self, addr: usize, inst: &str, raw: usize, float: Option<&str>) {
+        self.imp()
+            .label_mem_addr
+            .set_text(&format!("{:#06X}", addr));
+        self.imp().label_mem_inst.set_text(inst);
+        self.imp().label_mem_raw.set_text(&format!("{:016b}", raw));
+
+        match float {
+            Some(s) => {
+                self.imp().label_mem_float.set_markup(s);
+                self.imp().label_mem_float.set_visible(true);
+            }
+            None => {
+                self.imp().label_mem_float.set_text("");
+                self.imp().label_mem_float.set_visible(false);
+            }
+        }
     }
 }

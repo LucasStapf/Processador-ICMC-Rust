@@ -131,7 +131,7 @@ impl Processor {
                 Some(&v) => Ok(v),
                 None => Err(ProcError::InvalidMemoryIndex(i)),
             },
-            Err(_) => Err(ProcError::BlockedMemory),
+            Err(_) => Err(ProcError::ProcessorPanic),
         }
     }
 
@@ -161,7 +161,7 @@ impl Processor {
                 }
                 None => Err(ProcError::InvalidMemoryIndex(i)),
             },
-            Err(_) => Err(ProcError::BlockedMemory),
+            Err(_) => Err(ProcError::ProcessorPanic),
         }
     }
 
@@ -312,7 +312,7 @@ impl Processor {
     /// soma seja maior que [`MEMORY_SIZE`].
     /// É importante notar que neste caso o valor de PC **não** será atualizado.
     pub fn inc_pc(&mut self, v: usize) -> Result<()> {
-        return if self.pc + v > MEMORY_SIZE {
+        return if self.pc + v > MEMORY_SIZE - 1 {
             Err(ProcError::MaximumMemoryReached)
         } else {
             self.pc += v;

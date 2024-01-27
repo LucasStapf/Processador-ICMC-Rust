@@ -1,9 +1,12 @@
 use adw::glib;
 use adw::prelude::*;
 use adw::subclass::prelude::*;
+use adw::ActionRow;
 use gtk::glib::clone;
-use gtk::ScrolledWindow;
-use gtk::{gdk, CompositeTemplate, Entry, Label, ListBox, ToggleButton};
+use gtk::InfoBar;
+use gtk::Revealer;
+use gtk::{gdk, CompositeTemplate, Entry, Label, ToggleButton};
+use log::info;
 use log::{debug, error};
 use std::{borrow::BorrowMut, cell::RefCell};
 
@@ -58,29 +61,32 @@ pub struct Window {
     #[template_child]
     pub label_val_ir: TemplateChild<Label>,
 
-    // #[template_child]
-    // pub scroll_window: TemplateChild<ScrolledWindow>,
-    // #[template_child]
-    // pub list_box_mem: TemplateChild<ListBox>,
-    // #[template_child]
-    // pub list_view_mem: TemplateChild<ListView>,
-    // pub mem_list: RefCell<Option<gio::ListStore>>,
-    pub data: RefCell<WindowData>,
+    #[template_child]
+    pub box_memory_cells: TemplateChild<gtk::Box>,
 
     #[template_child]
     pub toggle_mode_debug: TemplateChild<ToggleButton>,
+
+    #[template_child]
+    pub revealer_info_top: TemplateChild<Revealer>,
+    #[template_child]
+    pub info_bar_top: TemplateChild<InfoBar>,
+    #[template_child]
+    pub action_row_info: TemplateChild<ActionRow>,
+
+    pub data: RefCell<WindowData>,
 }
 
 #[glib::object_subclass]
 impl ObjectSubclass for Window {
     const NAME: &'static str = "SimDebugWindow";
     type Type = super::Window;
-    type ParentType = gtk::ApplicationWindow;
+    type ParentType = gtk::Window;
 
     fn class_init(klass: &mut Self::Class) {
         MemoryCellRow::ensure_type();
         klass.bind_template();
-        // klass.bind_template_callbacks();
+        klass.bind_template_callbacks();
     }
 
     fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -88,34 +94,54 @@ impl ObjectSubclass for Window {
     }
 }
 
-// #[gtk::template_callbacks]
-// impl Window {
-//     #[template_callback]
-//     fn handler_edge_reached(&self, pos: gtk::PositionType, _scroll: &gtk::ScrolledWindow) {
-//         if pos == gtk::PositionType::Bottom {
-//             // let end = *self.data.borrow().view_memory_range.end();
-//             // let index = (end + super::SCROLL_MEMORY_ADD).clamp(0, processor::MEMORY_SIZE - 1);
-//             // self.obj().update_memory_view(index);
-//         }
-//     }
-// }
+#[gtk::template_callbacks]
+impl Window {
+    #[template_callback]
+    fn mem_button_up_clicked(&self, _button: gtk::Button) {
+        let index = self.data.borrow().top_index.saturating_sub(1);
+        self.obj().update_memory_view(index);
+    }
+
+    #[template_callback]
+    fn mem_button_down_clicked(&self, _button: gtk::Button) {
+        let index = self
+            .data
+            .borrow()
+            .top_index
+            .saturating_add(1)
+            .clamp(0, processor::MEMORY_SIZE - 1);
+        self.obj().update_memory_view(index);
+    }
+
+    #[template_callback]
+    fn restart_button_clicked(&self, _button: gtk::Button) {
+        todo!()
+    }
+
+    #[template_callback]
+    fn button_info_close_clicked(&self) {
+        self.obj().close_info();
+    }
+}
 
 impl ObjectImpl for Window {
     fn constructed(&self) {
         self.parent_constructed();
 
         let obj = self.obj();
-        // obj.update_memory_view(500);
-        // obj.setup_memory();
-        // obj.setup_factory();
-        // obj.update_memory_view(super::SCROLL_MEMORY_ADD);
+        obj.update_memory_view(0);
 
+        // Cria o processador
         let (tx, rx) = async_channel::bounded(1);
         self.data.borrow_mut().processor_manager.borrow_mut().tx = Some(tx);
         self.data.borrow_mut().processor_manager.borrow_mut().run();
 
         glib::spawn_future_local(clone!(@strong obj as window => async move {
-            while let Ok(()) = rx.recv().await {
+            while let Ok(error) = rx.recv().await {
+                match error {
+                    Some(e) => window.show_error_dialog(e),
+                    None => (),
+                }
                 window.update_ui();
             }
         }));

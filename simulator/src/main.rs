@@ -10,7 +10,7 @@ mod mem_row;
 mod processor;
 mod window;
 
-const APP_ID: &str = "org.usp.ProcessadorIcmc";
+const APP_ID: &str = "org.ProcessadorICMC";
 
 fn main() -> glib::ExitCode {
     std::env::set_var("RUST_LOG", "debug");

@@ -1,11 +1,13 @@
+use isa::MemoryCell;
+
 pub trait InstructionDisplay {
-    fn display(&self) -> String;
+    fn display(&self, value: MemoryCell) -> String;
 }
 
 impl InstructionDisplay for isa::Instruction {
-    fn display(&self) -> String {
+    fn display(&self, value: MemoryCell) -> String {
         match self {
-            isa::Instruction::InvalidInstruction => todo!(),
+            isa::Instruction::InvalidInstruction => "Invalid Instruction".to_string(),
             isa::Instruction::LOAD => todo!(),
             isa::Instruction::LOADN => todo!(),
             isa::Instruction::LOADI => todo!(),
@@ -72,7 +74,7 @@ impl InstructionDisplay for isa::Instruction {
             isa::Instruction::RTI => todo!(),
             isa::Instruction::PUSH => todo!(),
             isa::Instruction::POP => todo!(),
-            isa::Instruction::NOP => todo!(),
+            isa::Instruction::NOP => "NOP".to_string(),
             isa::Instruction::HALT => todo!(),
             isa::Instruction::CLEARC => todo!(),
             isa::Instruction::SETC => todo!(),
