@@ -10,6 +10,7 @@ use adw::{gio, glib};
 use glib::Object;
 use gtk::glib::subclass::types::ObjectSubclassIsExt;
 use gtk::MessageType;
+use isa::MemoryCell;
 use log::debug;
 use log::error;
 use processor::errors::ProcError;
@@ -26,6 +27,14 @@ glib::wrapper! {
 impl Window {
     pub fn new(app: &Application) -> Self {
         Object::builder().property("application", app).build()
+    }
+
+    fn number_format(&self, value: MemoryCell) -> String {
+        match self.imp().data.borrow().number_fomat {
+            NumberFormat::Binary => format!("{:016b}", value),
+            NumberFormat::Decimal => format!("{}", value),
+            NumberFormat::Hexadecimal => format!("{:#06X}", value),
+        }
     }
 
     pub fn update_ui(&self) {
@@ -136,33 +145,138 @@ impl Window {
                 .first_child()
                 .and_downcast::<MemoryCellRow>()
             {
-                let float = match i {
-                    n if n == p.pc() => Some("<b>PC</b>"),
-                    _ => None,
-                };
-
-                let raw = p
-                    .mem(i)
-                    .expect("Foi utilizado um índice inválido para atualizar o memory-view.");
-
-                let mut inst = isa::Instruction::get_instruction(raw).display(raw);
-                cell.update(i, &inst, raw, float);
-
-                i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);
-
-                while let Some(s) = cell.next_sibling() {
-                    cell = s.downcast::<MemoryCellRow>().unwrap();
+                loop {
                     let float = match i {
                         n if n == p.pc() => Some("<b>PC</b>"),
                         _ => None,
                     };
+
                     let raw = p
                         .mem(i)
                         .expect("Foi utilizado um índice inválido para atualizar o memory-view.");
 
-                    inst = isa::Instruction::get_instruction(raw).display(raw);
-                    cell.update(i, &inst, raw, float);
+                    let inst = isa::Instruction::get_instruction(raw);
+                    cell.update(i, &inst.display(i, &p), raw, float);
                     i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);
+
+                    cell.remove_css_class("error");
+                    match inst {
+                        isa::Instruction::InvalidInstruction => cell.add_css_class("error"),
+                        isa::Instruction::LOAD
+                        | isa::Instruction::LOADN
+                        | isa::Instruction::STORE
+                        | isa::Instruction::JZ
+                        | isa::Instruction::JC
+                        | isa::Instruction::JN
+                        | isa::Instruction::JMP
+                        | isa::Instruction::JEQ
+                        | isa::Instruction::JNE
+                        | isa::Instruction::JNZ
+                        | isa::Instruction::JNC
+                        | isa::Instruction::JGR
+                        | isa::Instruction::JLE
+                        | isa::Instruction::JEG
+                        | isa::Instruction::JEL
+                        | isa::Instruction::JOV
+                        | isa::Instruction::JNO
+                        | isa::Instruction::JDZ
+                        | isa::Instruction::CZ
+                        | isa::Instruction::CC
+                        | isa::Instruction::CN
+                        | isa::Instruction::CEQ
+                        | isa::Instruction::CNE
+                        | isa::Instruction::CNZ
+                        | isa::Instruction::CNC
+                        | isa::Instruction::CGR
+                        | isa::Instruction::CEG
+                        | isa::Instruction::CEL
+                        | isa::Instruction::COV
+                        | isa::Instruction::CNO
+                        | isa::Instruction::CDZ
+                        | isa::Instruction::CLE
+                        | isa::Instruction::CALL => {
+                            if let Some(n) = cell.next_sibling().and_downcast::<MemoryCellRow>() {
+                                cell = n;
+                                cell.update(
+                                    i,
+                                    &format!("#0x{:X}", p.mem(i).unwrap()),
+                                    p.mem(i).unwrap(),
+                                    None,
+                                );
+                                i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);
+                            }
+                        }
+
+                        isa::Instruction::LOADI
+                        | isa::Instruction::STOREI
+                        | isa::Instruction::MOV
+                        | isa::Instruction::INCHAR
+                        | isa::Instruction::OUTCHAR
+                        | isa::Instruction::ADD
+                        | isa::Instruction::SUB
+                        | isa::Instruction::ADDC
+                        | isa::Instruction::SUBC
+                        | isa::Instruction::MUL
+                        | isa::Instruction::DIV
+                        | isa::Instruction::INC
+                        | isa::Instruction::DEC
+                        | isa::Instruction::MOD
+                        | isa::Instruction::AND
+                        | isa::Instruction::OR
+                        | isa::Instruction::XOR
+                        | isa::Instruction::NOT
+                        | isa::Instruction::CMP
+                        | isa::Instruction::ROTL
+                        | isa::Instruction::ROTR
+                        | isa::Instruction::SHIFTL0
+                        | isa::Instruction::SHIFTL1
+                        | isa::Instruction::SHIFTR0
+                        | isa::Instruction::SHIFTR1
+                        | isa::Instruction::RTS
+                        | isa::Instruction::RTI
+                        | isa::Instruction::POP
+                        | isa::Instruction::PUSH
+                        | isa::Instruction::NOP
+                        | isa::Instruction::HALT
+                        | isa::Instruction::SETC
+                        | isa::Instruction::CLEARC
+                        | isa::Instruction::BREAKP => (),
+
+                        isa::Instruction::STOREN => {
+                            if let Some(next) = cell.next_sibling().and_downcast::<MemoryCellRow>()
+                            {
+                                cell = next;
+                                cell.update(
+                                    i,
+                                    &format!("#0x{:X}", p.mem(i).unwrap()),
+                                    p.mem(i).unwrap(),
+                                    None,
+                                );
+                                i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);
+                            }
+
+                            if let Some(next) = cell.next_sibling().and_downcast::<MemoryCellRow>()
+                            {
+                                cell = next;
+                                cell.update(
+                                    i,
+                                    &format!("#0x{:X}", p.mem(i).unwrap()),
+                                    p.mem(i).unwrap(),
+                                    None,
+                                );
+                                i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);
+                            }
+                        }
+
+                        isa::Instruction::INPUT => todo!(),
+                        isa::Instruction::OUTPUT => todo!(),
+                        isa::Instruction::SOUND => todo!(),
+                    }
+
+                    match cell.next_sibling().and_downcast::<MemoryCellRow>() {
+                        Some(next) => cell = next,
+                        None => break,
+                    }
                 }
             }
         } else {
@@ -187,10 +301,18 @@ impl Window {
         self.imp().revealer_info_top.set_reveal_child(false);
     }
 
-    pub fn show_error_dialog(&self, error: ProcError) {
+    pub fn show_error_dialog_processor(&self, error: ProcError) {
         match error {
-            ProcError::ProcessorPanic => todo!(),
-            ProcError::ChannelClosed => todo!(),
+            ProcError::ProcessorPanic => self.show_info(
+                MessageType::Error,
+                "Erro interno",
+                "Alguma <i>thread</i> que utilizava o processador falhou.",
+            ),
+            ProcError::ChannelClosed => self.show_info(
+                MessageType::Error,
+                "Erro interno",
+                "Não foi possível trocar dados entre as <i>threads</i> do programa.",
+            ),
             ProcError::ChannelEmpty => todo!(),
             ProcError::MaximumMemoryReached => self.show_info(
                 MessageType::Error,
@@ -229,16 +351,26 @@ impl Window {
     }
 }
 
+pub enum NumberFormat {
+    Binary,
+    Decimal,
+    Hexadecimal,
+}
+
 pub struct WindowData {
     pub processor_manager: ProcessorManager,
+    pub number_fomat: NumberFormat,
     pub top_index: usize,
+    pub charmap: Vec<u8>,
 }
 
 impl Default for WindowData {
     fn default() -> Self {
         Self {
             processor_manager: Default::default(),
+            number_fomat: NumberFormat::Decimal,
             top_index: 0,
+            charmap: Vec::new(),
         }
     }
 }

@@ -5,6 +5,7 @@ use adw::{gio, glib, Application};
 use gtk::gdk::Display;
 use gtk::CssProvider;
 
+mod files;
 mod mem_obj;
 mod mem_row;
 mod processor;

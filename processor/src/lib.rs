@@ -1,9 +1,12 @@
 pub mod errors;
 pub mod instructions;
+pub mod peripherals;
+
 use crate::instructions::InstructionCicle;
 
 use isa::{Instruction, MemoryCell};
 use log::{debug, error, info, warn};
+use peripherals::Video;
 use std::{
     fmt::Display,
     sync::{Arc, Mutex},
@@ -25,6 +28,8 @@ type Result<T> = std::result::Result<T, ProcError>;
 pub struct Processor {
     memory: Arc<Mutex<Vec<usize>>>, // pub temp
     registers: [usize; NUM_REGISTERS],
+
+    video: Video,
 
     rx: usize,
     ry: usize,
@@ -64,6 +69,7 @@ impl Processor {
         Self {
             memory: c_mem,
             registers: [0; NUM_REGISTERS],
+            video: Video::new(40, 30),
             rx: 0,
             ry: 0,
             rz: 0,
@@ -96,6 +102,7 @@ impl Processor {
         Self {
             memory: c_mem,
             registers: [0; NUM_REGISTERS],
+            video: Video::new(40, 30),
             rx: 0,
             ry: 0,
             rz: 0,

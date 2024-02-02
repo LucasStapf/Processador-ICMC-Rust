@@ -1,16 +1,18 @@
+use ::processor::peripherals::Color;
 use adw::glib;
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 use adw::ActionRow;
 use gtk::glib::clone;
+use gtk::DrawingArea;
 use gtk::InfoBar;
 use gtk::Revealer;
 use gtk::{gdk, CompositeTemplate, Entry, Label, ToggleButton};
-use log::info;
 use log::{debug, error};
 use std::{borrow::BorrowMut, cell::RefCell};
 
 use crate::mem_row::MemoryCellRow;
+use crate::processor::video::CHAR_SIZE_PIXELS;
 use crate::processor::RunMode;
 
 use super::WindowData;
@@ -74,6 +76,9 @@ pub struct Window {
     #[template_child]
     pub action_row_info: TemplateChild<ActionRow>,
 
+    #[template_child]
+    pub proc_screen: TemplateChild<DrawingArea>,
+
     pub data: RefCell<WindowData>,
 }
 
@@ -115,7 +120,7 @@ impl Window {
 
     #[template_callback]
     fn restart_button_clicked(&self, _button: gtk::Button) {
-        todo!()
+        self.proc_screen.queue_draw();
     }
 
     #[template_callback]
@@ -139,7 +144,7 @@ impl ObjectImpl for Window {
         glib::spawn_future_local(clone!(@strong obj as window => async move {
             while let Ok(error) = rx.recv().await {
                 match error {
-                    Some(e) => window.show_error_dialog(e),
+                    Some(e) => window.show_error_dialog_processor(e),
                     None => (),
                 }
                 window.update_ui();
@@ -179,7 +184,27 @@ impl ObjectImpl for Window {
         );
 
         self.obj().add_controller(event_controller);
+        self.proc_screen.set_draw_func(draw_pixelmap);
     }
+}
+
+fn draw_pixelmap(draw: &DrawingArea, cairo: &cairo::Context, width: i32, height: i32) {
+    cairo.rectangle(0.0, 0.0, width.into(), height.into());
+    cairo.set_source_rgba(0.0, 0.0, 0.0, 1.0);
+    cairo.fill().expect("Falha ao tentar escurecer a tela.");
+
+    let charmap = [
+        0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+        0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+        0, 0, 0, 0,
+    ];
+    // let charmap = [true; 64].to_vec();
+    let mut buf = Vec::new();
+    for _ in 0..20 {
+        buf.push((0, Color::White));
+        buf.push((0, Color::Red));
+    }
+    crate::processor::video::draw_buffer(draw, cairo, &buf, &charmap);
 }
 
 // Trait shared by all widgets

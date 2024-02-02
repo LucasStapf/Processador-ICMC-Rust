@@ -1,37 +1,144 @@
 use isa::MemoryCell;
+use processor::Processor;
 
 pub trait InstructionDisplay {
-    fn display(&self, value: MemoryCell) -> String;
+    fn display(&self, addr: MemoryCell, processor: &Processor) -> String;
+}
+
+fn rx(mem: MemoryCell) -> MemoryCell {
+    isa::bits(mem, 7..=9)
+}
+
+fn ry(mem: MemoryCell) -> MemoryCell {
+    isa::bits(mem, 4..=6)
+}
+
+fn rz(mem: MemoryCell) -> MemoryCell {
+    isa::bits(mem, 1..=3)
 }
 
 impl InstructionDisplay for isa::Instruction {
-    fn display(&self, value: MemoryCell) -> String {
+    fn display(&self, addr: MemoryCell, processor: &Processor) -> String {
         match self {
             isa::Instruction::InvalidInstruction => "Invalid Instruction".to_string(),
-            isa::Instruction::LOAD => todo!(),
-            isa::Instruction::LOADN => todo!(),
-            isa::Instruction::LOADI => todo!(),
-            isa::Instruction::STORE => todo!(),
-            isa::Instruction::STOREN => todo!(),
-            isa::Instruction::STOREI => todo!(),
+
+            isa::Instruction::LOAD => format!(
+                "LOAD R{}, {}",
+                rx(processor.mem(addr).unwrap()),
+                processor.mem(addr + 1).unwrap()
+            ),
+
+            isa::Instruction::LOADN => format!(
+                "LOADN R{}, #{}",
+                rx(processor.mem(addr).unwrap()),
+                processor.mem(addr + 1).unwrap()
+            ),
+
+            isa::Instruction::LOADI => format!(
+                "LOADI R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::STORE => format!(
+                "STORE {}, R{}",
+                processor.mem(addr + 1).unwrap(),
+                rx(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::STOREN => format!(
+                "STOREN {}, #{}",
+                processor.mem(addr + 1).unwrap(),
+                processor.mem(addr + 2).unwrap()
+            ),
+
+            isa::Instruction::STOREI => format!(
+                "STOREI R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap())
+            ),
+
             isa::Instruction::MOV => todo!(),
             isa::Instruction::INPUT => todo!(),
             isa::Instruction::OUTPUT => todo!(),
             isa::Instruction::OUTCHAR => todo!(),
             isa::Instruction::INCHAR => todo!(),
             isa::Instruction::SOUND => todo!(),
-            isa::Instruction::ADD => todo!(),
-            isa::Instruction::ADDC => todo!(),
-            isa::Instruction::SUB => todo!(),
-            isa::Instruction::SUBC => todo!(),
-            isa::Instruction::MUL => todo!(),
-            isa::Instruction::DIV => todo!(),
-            isa::Instruction::INC => todo!(),
-            isa::Instruction::DEC => todo!(),
-            isa::Instruction::MOD => todo!(),
-            isa::Instruction::AND => todo!(),
-            isa::Instruction::OR => todo!(),
-            isa::Instruction::XOR => todo!(),
+
+            isa::Instruction::ADD => format!(
+                "ADD R{}, R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap()),
+                rz(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::ADDC => format!(
+                "ADDC R{}, R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap()),
+                rz(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::SUB => format!(
+                "SUB R{}, R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap()),
+                rz(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::SUBC => format!(
+                "SUBC R{}, R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap()),
+                rz(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::MUL => format!(
+                "MUL R{}, R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap()),
+                rz(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::DIV => format!(
+                "DIV R{}, R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap()),
+                rz(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::INC => format!("INC R{}", rx(processor.mem(addr).unwrap()),),
+
+            isa::Instruction::DEC => format!("DEC R{}", rx(processor.mem(addr).unwrap()),),
+
+            isa::Instruction::MOD => format!(
+                "MOD R{}, R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap()),
+                rz(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::AND => format!(
+                "AND R{}, R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap()),
+                rz(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::OR => format!(
+                "OR R{}, R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap()),
+                rz(processor.mem(addr).unwrap())
+            ),
+
+            isa::Instruction::XOR => format!(
+                "XOR R{}, R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap()),
+                rz(processor.mem(addr).unwrap())
+            ),
+
             isa::Instruction::NOT => todo!(),
             isa::Instruction::SHIFTL0 => todo!(),
             isa::Instruction::SHIFTL1 => todo!(),

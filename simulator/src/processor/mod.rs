@@ -1,4 +1,5 @@
 pub mod instructions;
+pub mod video;
 
 use async_channel::{Receiver, Sender};
 use log::error;
@@ -88,7 +89,11 @@ impl ProcessorManager {
 
                     match processor.lock() {
                         Ok(mut p) => match p.next() {
-                            Ok(_) => p.set_mem(4, 0b101111101100000).unwrap(), // TIRAR DPS SO TEST
+                            Ok(_) => {
+                                // p.set_mem(4, 0b1011111011000000).unwrap();
+                                p.set_mem(5, 0b1110011111000000).unwrap();
+                                p.set_mem(6, 0xA2).unwrap();
+                            } // TIRAR DPS SO TEST
                             Err(e) => {
                                 error!("{e}");
                                 error = Some(e);
