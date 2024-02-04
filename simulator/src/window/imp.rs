@@ -120,7 +120,7 @@ impl Window {
 
     #[template_callback]
     fn restart_button_clicked(&self, _button: gtk::Button) {
-        self.proc_screen.queue_draw();
+        todo!();
     }
 
     #[template_callback]
@@ -134,6 +134,7 @@ impl ObjectImpl for Window {
         self.parent_constructed();
 
         let obj = self.obj();
+        // Atualiza o memory-view
         obj.update_memory_view(0);
 
         // Cria o processador

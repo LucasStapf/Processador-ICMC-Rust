@@ -1,5 +1,6 @@
 pub mod errors;
 pub mod instructions;
+pub mod io;
 pub mod peripherals;
 
 use crate::instructions::InstructionCicle;
@@ -306,9 +307,46 @@ impl Processor {
         };
     }
 
+    /// Incrementa o valor do registrador especial *Stack Pointer* de um valor `v`.
+    ///
+    /// # Erros
+    ///
+    /// Retorna o erro [`ProcError::MaximumMemoryReached`] caso o resultado da
+    /// soma seja maior que [`MEMORY_SIZE`] - 1.
+    /// É importante notar que neste caso o valor de SP **não** será atualizado.
+    pub fn inc_sp(&mut self, v: usize) -> Result<()> {
+        return if self.sp + v > MEMORY_SIZE - 1 {
+            Err(ProcError::MaximumMemoryReached)
+        } else {
+            Ok(self.sp += v)
+        };
+    }
+
+    /// Decrementa o valor do registrador especial *Stack Pointer* de um valor `v`.
+    ///
+    /// # Erros
+    ///
+    /// Retorna o erro [`ProcError::InvalidMemoryIndex`] caso o resultado da
+    /// subtração seja menor que 0.
+    /// É importante notar que neste caso o valor de SP **não** será atualizado.
+    pub fn dec_sp(&mut self, v: usize) -> Result<()> {
+        match self.sp.checked_sub(v) {
+            Some(r) => Ok(self.sp = r),
+            None => Err(ProcError::InvalidMemoryIndex(0)), // arrumar
+        }
+    }
+
     /// Retorna o valor do registrador especial *Program Counter*.
     pub fn pc(&self) -> usize {
         self.pc
+    }
+
+    pub fn set_pc(&mut self, v: usize) -> Result<()> {
+        if v > MEMORY_SIZE - 1 {
+            Err(ProcError::MaximumMemoryReached)
+        } else {
+            Ok(self.pc = v)
+        }
     }
 
     /// Incrementa o valor do registrador especial *Program Counter* de um valor `v`.
@@ -325,6 +363,18 @@ impl Processor {
             self.pc += v;
             Ok(())
         };
+    }
+
+    pub fn ula_operation(&mut self) -> Result<()> {
+        self.set_fr(isa::FlagIndex::GREATER, false)?;
+        self.set_fr(isa::FlagIndex::LESSER, false)?;
+        self.set_fr(isa::FlagIndex::EQUAL, false)?;
+        self.set_fr(isa::FlagIndex::ZERO, false)?;
+        self.set_fr(isa::FlagIndex::CARRY, false)?;
+        self.set_fr(isa::FlagIndex::ARITHMETIC_OVERFLOW, false)?;
+        self.set_fr(isa::FlagIndex::DIV_BY_ZERO, false)?;
+        self.set_fr(isa::FlagIndex::NEGATIVE, false)?;
+        Ok(())
     }
 
     /// Realiza o ciclo de busca do processador.

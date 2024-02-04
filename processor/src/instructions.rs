@@ -1,7 +1,5 @@
-use crate::MAX_VALUE_MEMORY;
-
 use super::{ProcError, Processor};
-use isa::{FlagIndex, Instruction};
+use isa::{FlagIndex, Instruction, MAX_VALUE_MEMORY};
 
 pub trait InstructionCicle {
     fn execution(&self, processor: &mut Processor) -> Result<(), ProcError>;
@@ -11,38 +9,47 @@ impl InstructionCicle for Instruction {
     fn execution(&self, p: &mut Processor) -> Result<(), ProcError> {
         match self {
             Instruction::InvalidInstruction => return Err(ProcError::InvalidInstruction(p.ir())),
+
             Instruction::LOAD => {
                 p.set_reg(p.rx(), p.mem(p.mem(p.pc())?)?)?;
                 p.inc_pc(1)?;
             }
+
             Instruction::LOADN => {
                 p.set_reg(p.rx(), p.mem(p.pc())?)?;
                 p.inc_pc(1)?;
             }
+
             Instruction::LOADI => {
                 p.set_reg(p.rx(), p.reg(p.ry())?)?;
             }
+
             Instruction::STORE => {
                 p.set_mem(p.mem(p.pc())?, p.reg(p.rx())?)?;
                 p.inc_pc(1)?;
             }
+
             Instruction::STOREN => {
                 p.set_mem(p.mem(p.pc())?, p.mem(p.pc() + 1)?)?;
                 p.inc_pc(2)?;
             }
+
             Instruction::STOREI => {
                 p.set_mem(p.reg(p.rx())?, p.reg(p.ry())?)?;
             }
+
             Instruction::MOV => match isa::bits(p.ir(), 0..=1) {
                 0 => p.set_reg(p.rx(), p.reg(p.ry())?)?,
                 1 => p.set_reg(p.rx(), p.sp())?,
                 _ => p.set_sp(p.reg(p.rx())?)?,
             },
+
             Instruction::INPUT => todo!(),
             Instruction::OUTPUT => todo!(),
             Instruction::OUTCHAR => todo!(),
             Instruction::INCHAR => todo!(),
             Instruction::SOUND => todo!(),
+
             Instruction::ADD | Instruction::ADDC => {
                 p.set_reg(p.rx(), p.reg(p.ry())? + p.reg(p.rz())?)?;
 
@@ -50,18 +57,19 @@ impl InstructionCicle for Instruction {
                     p.set_reg(p.rx(), p.reg(p.rx())? + p.fr(FlagIndex::CARRY)? as usize)?;
                 }
 
-                p.set_fr(FlagIndex::ZERO, false)?;
-                p.set_fr(FlagIndex::CARRY, false)?;
+                p.ula_operation()?; // Limpa as flags relacionadas as operações
+                                    // lógicas-aritméticas
 
                 match p.reg(p.rx())? {
-                    r if r == 0 => p.set_fr(FlagIndex::ZERO, false)?,
                     r if r > MAX_VALUE_MEMORY => {
                         p.set_fr(FlagIndex::CARRY, true)?;
+                        p.set_fr(FlagIndex::ARITHMETIC_OVERFLOW, true)?;
                         p.set_reg(p.rx(), r - MAX_VALUE_MEMORY)?;
                     }
                     _ => (),
                 };
             }
+
             Instruction::SUB | Instruction::SUBC => {
                 let sub = if *self == Instruction::SUB {
                     p.reg(p.ry())?.checked_sub(p.reg(p.rz())?)
@@ -69,6 +77,8 @@ impl InstructionCicle for Instruction {
                     p.reg(p.ry())?
                         .checked_sub(p.reg(p.rz())? + p.fr(FlagIndex::CARRY)? as usize)
                 };
+
+                p.ula_operation()?;
 
                 match sub {
                     Some(s) => {
@@ -89,30 +99,51 @@ impl InstructionCicle for Instruction {
                     }
                 }
             }
+
             Instruction::MUL => todo!(),
             Instruction::DIV => todo!(),
+
             Instruction::INC | Instruction::DEC => {
-                if *self == Instruction::INC {
-                    p.set_reg(p.rx(), p.reg(p.rx())? + 1)?;
+                let result = if *self == Instruction::INC {
+                    p.reg(p.rx())?.checked_add(1)
                 } else {
-                    p.set_reg(p.rx(), p.reg(p.rx())? - 1)?;
-                }
+                    p.reg(p.rx())?.checked_sub(1)
+                };
 
-                p.set_fr(FlagIndex::ZERO, false)?;
+                p.ula_operation()?;
 
-                if p.reg(p.rx())? == 0 {
-                    p.set_fr(FlagIndex::ZERO, true)?;
-                }
+                let r = match result {
+                    Some(r) => match r {
+                        r if r > MAX_VALUE_MEMORY => {
+                            p.set_fr(FlagIndex::CARRY, true)?;
+                            p.set_fr(FlagIndex::ARITHMETIC_OVERFLOW, true)?;
+                            r - MAX_VALUE_MEMORY
+                        }
+                        r if r == 0 => {
+                            p.set_fr(FlagIndex::ZERO, true)?;
+                            r
+                        }
+                        _ => r,
+                    },
+                    None => {
+                        p.set_fr(FlagIndex::NEGATIVE, true)?;
+                        0
+                    }
+                };
+
+                p.set_reg(p.rx(), r)?;
             }
+
             Instruction::MOD => {
                 p.set_reg(p.rx(), p.reg(p.ry())? % p.reg(p.rz())?)?;
 
-                p.set_fr(FlagIndex::ZERO, false)?;
+                p.ula_operation()?;
 
                 if p.reg(p.rx())? == 0 {
                     p.set_fr(FlagIndex::ZERO, true)?;
                 }
             }
+
             Instruction::AND | Instruction::OR | Instruction::XOR | Instruction::NOT => {
                 match self {
                     Instruction::AND => p.set_reg(p.rx(), p.reg(p.ry())? & p.reg(p.rz)?)?,
@@ -128,47 +159,152 @@ impl InstructionCicle for Instruction {
                     p.set_fr(FlagIndex::ZERO, true)?;
                 }
             }
+
             Instruction::SHIFTL0 => todo!(),
             Instruction::SHIFTL1 => todo!(),
             Instruction::SHIFTR0 => todo!(),
             Instruction::SHIFTR1 => todo!(),
             Instruction::ROTL => todo!(),
             Instruction::ROTR => todo!(),
-            Instruction::CMP => todo!(),
-            Instruction::JMP => todo!(),
-            Instruction::JEQ => todo!(),
-            Instruction::JNE => todo!(),
-            Instruction::JZ => todo!(),
-            Instruction::JNZ => todo!(),
-            Instruction::JC => todo!(),
-            Instruction::JNC => todo!(),
-            Instruction::JGR => todo!(),
-            Instruction::JLE => todo!(),
-            Instruction::JEG => todo!(),
-            Instruction::JEL => todo!(),
-            Instruction::JOV => todo!(),
-            Instruction::JNO => todo!(),
-            Instruction::JDZ => todo!(),
-            Instruction::JN => todo!(),
-            Instruction::CALL => todo!(),
-            Instruction::CEQ => todo!(),
-            Instruction::CNE => todo!(),
-            Instruction::CZ => todo!(),
-            Instruction::CNZ => todo!(),
-            Instruction::CC => todo!(),
-            Instruction::CNC => todo!(),
-            Instruction::CGR => todo!(),
-            Instruction::CLE => todo!(),
-            Instruction::CEG => todo!(),
-            Instruction::CEL => todo!(),
-            Instruction::COV => todo!(),
-            Instruction::CNO => todo!(),
-            Instruction::CDZ => todo!(),
-            Instruction::CN => todo!(),
-            Instruction::RTS => todo!(),
+
+            Instruction::CMP => {
+                p.ula_operation()?;
+                match p.reg(p.rx())?.cmp(&p.reg(p.ry())?) {
+                    std::cmp::Ordering::Less => p.set_fr(FlagIndex::LESSER, true)?,
+                    std::cmp::Ordering::Equal => p.set_fr(FlagIndex::EQUAL, true)?,
+                    std::cmp::Ordering::Greater => p.set_fr(FlagIndex::GREATER, true)?,
+                }
+            }
+
+            Instruction::JMP
+            | Instruction::JEQ
+            | Instruction::JNE
+            | Instruction::JZ
+            | Instruction::JNZ
+            | Instruction::JC
+            | Instruction::JNC
+            | Instruction::JGR
+            | Instruction::JLE
+            | Instruction::JEG
+            | Instruction::JEL
+            | Instruction::JOV
+            | Instruction::JNO
+            | Instruction::JDZ
+            | Instruction::JN => {
+                let b = match self {
+                    Instruction::JMP => true,
+                    Instruction::JEQ if p.fr(FlagIndex::EQUAL)? => true,
+                    Instruction::JNE if !p.fr(FlagIndex::EQUAL)? => true,
+                    Instruction::JZ if p.fr(FlagIndex::ZERO)? => true,
+                    Instruction::JNZ if !p.fr(FlagIndex::ZERO)? => true,
+                    Instruction::JC if p.fr(FlagIndex::CARRY)? => true,
+                    Instruction::JNC if !p.fr(FlagIndex::CARRY)? => true,
+                    Instruction::JGR if p.fr(FlagIndex::GREATER)? => true,
+                    Instruction::JLE if p.fr(FlagIndex::LESSER)? => true,
+                    Instruction::JEG if p.fr(FlagIndex::EQUAL)? || p.fr(FlagIndex::GREATER)? => {
+                        true
+                    }
+                    Instruction::JEL if p.fr(FlagIndex::EQUAL)? || p.fr(FlagIndex::LESSER)? => true,
+                    Instruction::JOV if p.fr(FlagIndex::ARITHMETIC_OVERFLOW)? => true,
+                    Instruction::JNO if !p.fr(FlagIndex::ARITHMETIC_OVERFLOW)? => true,
+                    Instruction::JDZ if p.fr(FlagIndex::DIV_BY_ZERO)? => true,
+                    Instruction::JN if p.fr(FlagIndex::NEGATIVE)? => true,
+                    _ => false,
+                };
+
+                match b {
+                    true => p.set_pc(p.mem(p.pc())?)?,
+                    false => p.inc_pc(1)?,
+                }
+            }
+
+            Instruction::CALL
+            | Instruction::CEQ
+            | Instruction::CNE
+            | Instruction::CZ
+            | Instruction::CNZ
+            | Instruction::CC
+            | Instruction::CNC
+            | Instruction::CGR
+            | Instruction::CLE
+            | Instruction::CEG
+            | Instruction::CEL
+            | Instruction::COV
+            | Instruction::CNO
+            | Instruction::CDZ
+            | Instruction::CN => {
+                let b = match self {
+                    Instruction::CALL => true,
+                    Instruction::CEQ if p.fr(FlagIndex::EQUAL)? => true,
+                    Instruction::CNE if !p.fr(FlagIndex::EQUAL)? => true,
+                    Instruction::CZ if p.fr(FlagIndex::ZERO)? => true,
+                    Instruction::CNZ if !p.fr(FlagIndex::ZERO)? => true,
+                    Instruction::CC if p.fr(FlagIndex::CARRY)? => true,
+                    Instruction::CNC if !p.fr(FlagIndex::CARRY)? => true,
+                    Instruction::CGR if p.fr(FlagIndex::GREATER)? => true,
+                    Instruction::CLE if p.fr(FlagIndex::LESSER)? => true,
+                    Instruction::CEG if p.fr(FlagIndex::EQUAL)? || p.fr(FlagIndex::GREATER)? => {
+                        true
+                    }
+                    Instruction::CEL if p.fr(FlagIndex::EQUAL)? || p.fr(FlagIndex::LESSER)? => true,
+                    Instruction::COV if p.fr(FlagIndex::ARITHMETIC_OVERFLOW)? => true,
+                    Instruction::CNO if !p.fr(FlagIndex::ARITHMETIC_OVERFLOW)? => true,
+                    Instruction::CDZ if p.fr(FlagIndex::DIV_BY_ZERO)? => true,
+                    Instruction::CN if p.fr(FlagIndex::NEGATIVE)? => true,
+                    _ => false,
+                };
+
+                match b {
+                    true => {
+                        p.set_mem(p.sp(), p.pc())?;
+                        p.dec_sp(1)?;
+                        p.set_pc(p.mem(p.pc())?)?;
+                    }
+                    false => p.inc_pc(1)?,
+                }
+            }
+
+            Instruction::RTS => {
+                p.inc_sp(1)?;
+                p.set_pc(p.mem(p.sp())?)?;
+                p.inc_pc(1)?;
+            }
+
             Instruction::RTI => todo!(),
-            Instruction::PUSH => todo!(),
-            Instruction::POP => todo!(),
+
+            Instruction::PUSH => {
+                match isa::bits(p.ir(), 6..=6) {
+                    0 => p.set_mem(p.sp(), p.reg(p.rx())?)?, // Registrador
+                    1 => {
+                        // FR
+                        let mut temp = 0;
+                        for i in 0..isa::BITS_ADDRESS {
+                            temp += (p.fr(i)? as usize) * 2usize.pow(i as u32)
+                        }
+                        p.set_mem(p.sp(), temp)?;
+                    }
+                    _ => unreachable!(),
+                };
+                p.dec_sp(1)?;
+            }
+
+            Instruction::POP => {
+                p.inc_sp(1)?;
+                match isa::bits(p.ir(), 6..=6) {
+                    0 => p.set_reg(p.rx(), p.mem(p.sp())?)?,
+                    1 => {
+                        for i in 0..isa::BITS_ADDRESS {
+                            let b = match isa::bits(p.mem(p.sp())?, i..=i) {
+                                0 => false,
+                                _ => true,
+                            };
+                            p.set_fr(i, b)?
+                        }
+                    }
+                    _ => unreachable!(),
+                };
+            }
+
             Instruction::NOP => (),
             Instruction::HALT => todo!(),
             Instruction::CLEARC => {

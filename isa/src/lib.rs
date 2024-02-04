@@ -2,9 +2,11 @@
 use std::ops::RangeInclusive;
 
 pub const BITS_ADDRESS: usize = 16;
+pub const MAX_VALUE_MEMORY: usize = 2_usize.pow(BITS_ADDRESS as u32) - 1;
 
 /// Tipo de dado utilizado para representar a memória do processador.
 pub type MemoryCell = usize;
+
 type Opcode = MemoryCell;
 
 pub struct FlagIndex;
