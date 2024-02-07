@@ -435,6 +435,7 @@
                                 <property name="orientation">vertical</property>
                                 <child>
                                   <object class="GtkScrolledWindow">
+                                    <property name="focusable">True</property>
                                     <property name="hscrollbar-policy">never</property>
                                     <property name="propagate-natural-height">True</property>
                                     <property name="valign">start</property>
@@ -535,7 +536,7 @@
                         <property name="spacing">10</property>
                         <property name="vexpand">True</property>
                         <child>
-                          <object class="GtkFrame">
+                          <object class="GtkFrame" id="frame_screen">
                             <property name="css-classes">view</property>
                             <property name="hexpand">True</property>
                             <property name="label-widget">
@@ -556,6 +557,7 @@
                                 <property name="margin-end">8</property>
                                 <property name="margin-start">8</property>
                                 <property name="valign">center</property>
+                                <property name="visible">False</property>
                               </object>
                             </child>
                           </object>

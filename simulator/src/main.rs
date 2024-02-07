@@ -9,6 +9,7 @@ mod files;
 mod mem_obj;
 mod mem_row;
 mod processor;
+mod ui;
 mod window;
 
 const APP_ID: &str = "org.ProcessadorICMC";

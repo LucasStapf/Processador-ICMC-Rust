@@ -1,4 +1,3 @@
-use ::processor::peripherals::Color;
 use adw::glib;
 use adw::prelude::*;
 use adw::subclass::prelude::*;
@@ -12,7 +11,6 @@ use log::{debug, error};
 use std::{borrow::BorrowMut, cell::RefCell};
 
 use crate::mem_row::MemoryCellRow;
-use crate::processor::video::CHAR_SIZE_PIXELS;
 use crate::processor::RunMode;
 
 use super::WindowData;
@@ -65,6 +63,8 @@ pub struct Window {
 
     #[template_child]
     pub box_memory_cells: TemplateChild<gtk::Box>,
+    #[template_child]
+    pub frame_screen: TemplateChild<gtk::Frame>,
 
     #[template_child]
     pub toggle_mode_debug: TemplateChild<ToggleButton>,
@@ -75,9 +75,6 @@ pub struct Window {
     pub info_bar_top: TemplateChild<InfoBar>,
     #[template_child]
     pub action_row_info: TemplateChild<ActionRow>,
-
-    #[template_child]
-    pub proc_screen: TemplateChild<DrawingArea>,
 
     pub data: RefCell<WindowData>,
 }
@@ -120,7 +117,7 @@ impl Window {
 
     #[template_callback]
     fn restart_button_clicked(&self, _button: gtk::Button) {
-        todo!();
+        todo!("Implementar o botão de restart!");
     }
 
     #[template_callback]
@@ -184,8 +181,20 @@ impl ObjectImpl for Window {
             }),
         );
 
+        // Screen
+        let screen = crate::ui::screen::Screen::new();
+        screen.set_content_height(480);
+        screen.set_content_width(640);
+        screen.add_css_class("frame");
+        screen.set_halign(gtk::Align::Center);
+        screen.set_valign(gtk::Align::Center);
+        screen.set_margin_bottom(8);
+        screen.set_margin_start(8);
+        screen.set_margin_end(8);
+        self.frame_screen.set_child(Some(&screen));
+
         self.obj().add_controller(event_controller);
-        self.proc_screen.set_draw_func(draw_pixelmap);
+        // self.proc_screen.set_draw_func(draw_pixelmap);
     }
 }
 
@@ -194,6 +203,7 @@ fn draw_pixelmap(draw: &DrawingArea, cairo: &cairo::Context, width: i32, height:
     cairo.set_source_rgba(0.0, 0.0, 0.0, 1.0);
     cairo.fill().expect("Falha ao tentar escurecer a tela.");
 
+    // draw.data("buffer").expect("Esperado buffer")
     let charmap = [
         0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0,
         0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
@@ -202,8 +212,8 @@ fn draw_pixelmap(draw: &DrawingArea, cairo: &cairo::Context, width: i32, height:
     // let charmap = [true; 64].to_vec();
     let mut buf = Vec::new();
     for _ in 0..20 {
-        buf.push((0, Color::White));
-        buf.push((0, Color::Red));
+        buf.push((0, processor::modules::video::Color::White));
+        buf.push((0, processor::modules::video::Color::Red));
     }
     crate::processor::video::draw_buffer(draw, cairo, &buf, &charmap);
 }

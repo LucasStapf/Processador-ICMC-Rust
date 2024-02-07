@@ -9,18 +9,12 @@ pub fn draw_pixel(
     x: f64,
     y: f64,
     size: f64,
-    color: processor::peripherals::Color,
+    color: processor::modules::video::Color,
 ) {
-    let rgb = match color {
-        processor::peripherals::Color::Black => (0.0, 0.0, 0.0),
-        processor::peripherals::Color::White => (1.0, 1.0, 1.0),
-        processor::peripherals::Color::Red => (1.0, 0.0, 0.0),
-        processor::peripherals::Color::Green => (0.0, 1.0, 0.0),
-        processor::peripherals::Color::Blue => (0.0, 0.0, 1.0),
-    };
+    let rgba = color.rgba();
 
     cairo.rectangle(x, y, size, size);
-    cairo.set_source_rgba(rgb.0, rgb.1, rgb.2, 1.0);
+    cairo.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
     cairo.fill().expect("Falha ao desenhar um pixel.");
 }
 
@@ -30,7 +24,7 @@ pub fn draw_pixelmap(
     char: &[u8],
     x: f64,
     y: f64,
-    color: processor::peripherals::Color,
+    color: processor::modules::video::Color,
 ) {
     for i in 0..CHAR_SIZE_PIXELS {
         for j in 0..CHAR_SIZE_PIXELS {
@@ -51,7 +45,7 @@ pub fn draw_pixelmap(
 pub fn draw_buffer(
     draw: &gtk::DrawingArea,
     cairo: &cairo::Context,
-    buf: &[(u8, processor::peripherals::Color)],
+    buf: &[(u8, processor::modules::video::Color)],
     charmap: &[u8],
 ) {
     for (i, (ch, color)) in buf.iter().enumerate() {

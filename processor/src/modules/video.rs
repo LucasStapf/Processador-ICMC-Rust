@@ -65,8 +65,8 @@ impl Color {
     }
 }
 
-type Pixelmap = (u8, Color);
-type VideoBuffer = Vec<Pixelmap>;
+pub type Pixelmap = (u8, Color);
+pub type VideoBuffer = Vec<Pixelmap>;
 
 #[derive(Clone, Copy, Debug)]
 pub enum VideoError {
@@ -87,16 +87,18 @@ impl Display for VideoError {
 
 impl Error for VideoError {}
 
-pub struct Video {
+pub struct VideoModule {
     /// Largura do vídeo, em pixels.
     width: u16,
     /// Altura do vídeo, em pixels.
     height: u16,
     /// Buffer de vídeo que armazena o código do *pixelmap* a ser desenhado e sua cor.
     buffer: VideoBuffer,
+
+    updated: bool,
 }
 
-impl Video {
+impl VideoModule {
     /// Cria um novo módulo de vídeo, inicializando o *buffer* com o *pixelmap* de código 0 e cor
     /// [`Color::Black`].
     pub fn new(width: u16, height: u16) -> Self {
@@ -109,6 +111,7 @@ impl Video {
             width,
             height,
             buffer,
+            updated: true,
         }
     }
 
@@ -124,6 +127,10 @@ impl Video {
         self.height
     }
 
+    pub fn updated(&self) -> bool {
+        self.updated
+    }
+
     /// Retorna uma referência do *pixelmap* presente na posicão desejada (`index`). Se o índice
     /// não for válido, retorna `None`pub fn pixelmap(&self, index: usize) -> Some(&Pixelmap) {
     pub fn pixelmap(&self, index: usize) -> Option<&Pixelmap> {
@@ -132,7 +139,10 @@ impl Video {
 
     pub fn set_pixelmap(&mut self, index: usize, pixelmap: Pixelmap) -> Result<(), VideoError> {
         match self.buffer.get_mut(index) {
-            Some(p) => Ok(*p = pixelmap),
+            Some(p) => {
+                self.updated = true;
+                Ok(*p = pixelmap)
+            }
             None => Err(VideoError::InvalidIndex(index)),
         }
     }
