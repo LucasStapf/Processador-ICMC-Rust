@@ -5,11 +5,10 @@ mod imp {
     use adw::subclass::prelude::*;
     use adw::ActionRow;
     use gtk::glib::clone;
-    use gtk::DrawingArea;
     use gtk::InfoBar;
     use gtk::Revealer;
     use gtk::{gdk, CompositeTemplate, Entry, Label, ToggleButton};
-    use log::{debug, error};
+    use log::error;
     use std::{borrow::BorrowMut, cell::RefCell};
 
     use crate::mem_row::MemoryCellRow;
@@ -18,7 +17,7 @@ mod imp {
     use super::WindowData;
 
     #[derive(CompositeTemplate, Default)]
-    #[template(resource = "/br/com/processador/sim.ui")]
+    #[template(resource = "/br/com/processador/window.ui")]
     pub struct Window {
         #[template_child]
         pub entry_r0: TemplateChild<Entry>,
@@ -83,7 +82,7 @@ mod imp {
 
     #[glib::object_subclass]
     impl ObjectSubclass for Window {
-        const NAME: &'static str = "SimDebugWindow";
+        const NAME: &'static str = "Window";
         type Type = super::Window;
         type ParentType = gtk::Window;
 
@@ -157,24 +156,30 @@ mod imp {
                 clone!(@strong self.toggle_mode_debug as toggle_debug,
                     @strong pm => move |_, key, _, _| {
                     match key {
-                        gdk::Key::Page_Up => {
+                        gdk::Key::F1 => {
                             match pm.mode.lock() {
                                 Ok(mut m) => {
-                                    debug!("Modo selecionado: Run");
-                                    *m = RunMode::Run;
-                                    toggle_debug.set_active(false);
+                                    match *m {
+                                        RunMode::Run => {
+                                            *m = RunMode::Debug(false);
+                                            toggle_debug.set_active(true);
+                                        }
+                                        RunMode::Debug(_) => {
+                                            *m = RunMode::Run;
+                                            toggle_debug.set_active(false);
+                                        }
+                                    }
                                 }
                                 Err(e) => error!("Falha ao mudar o modo para Run: {e}"),
                             }
                         }
-                        gdk::Key::Page_Down => {
+                        gdk::Key::F2 => {
                             match pm.mode.lock() {
                                 Ok(mut m) => {
-                                    debug!("Modo selecionado: Debug");
                                     *m = RunMode::Debug(true);
                                     toggle_debug.set_active(true);
                                 }
-                                Err(e) => error!("Falha ao mudar o modo para Run: {e}"),
+                                Err(e) => error!("Falha ao mudar o modo para Debug: {e}"),
                             }
                         }
                         _ => (),
@@ -182,6 +187,7 @@ mod imp {
                     glib::Propagation::Proceed
                 }),
             );
+            self.obj().add_controller(event_controller);
 
             // Screen
             let screen = crate::ui::screen::Screen::new();
@@ -194,30 +200,7 @@ mod imp {
             screen.set_margin_start(8);
             screen.set_margin_end(8);
             self.frame_screen.set_child(Some(&screen));
-
-            self.obj().add_controller(event_controller);
-            // self.proc_screen.set_draw_func(draw_pixelmap);
         }
-    }
-
-    fn draw_pixelmap(draw: &DrawingArea, cairo: &cairo::Context, width: i32, height: i32) {
-        cairo.rectangle(0.0, 0.0, width.into(), height.into());
-        cairo.set_source_rgba(0.0, 0.0, 0.0, 1.0);
-        cairo.fill().expect("Falha ao tentar escurecer a tela.");
-
-        // draw.data("buffer").expect("Esperado buffer")
-        let charmap = [
-            0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1,
-            0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0,
-            0, 0, 0, 0, 0, 0,
-        ];
-        // let charmap = [true; 64].to_vec();
-        let mut buf = Vec::new();
-        for _ in 0..20 {
-            buf.push((0, processor::modules::video::Color::White));
-            buf.push((0, processor::modules::video::Color::Red));
-        }
-        crate::processor::video::draw_buffer(draw, cairo, &buf, &charmap);
     }
 
     // Trait shared by all widgets
@@ -230,9 +213,6 @@ mod imp {
     impl ApplicationWindowImpl for Window {}
 }
 
-use std::borrow::Borrow;
-use std::borrow::BorrowMut;
-
 use crate::mem_row::MemoryCellRow;
 use adw::prelude::*;
 use adw::Application;
@@ -240,7 +220,6 @@ use adw::{gio, glib};
 use glib::Object;
 use gtk::glib::subclass::types::ObjectSubclassIsExt;
 use gtk::MessageType;
-use isa::MemoryCell;
 use log::error;
 use processor::errors::ProcError;
 
@@ -258,13 +237,13 @@ impl Window {
         Object::builder().property("application", app).build()
     }
 
-    fn number_format(&self, value: MemoryCell) -> String {
-        match self.imp().data.borrow().number_fomat {
-            NumberFormat::Binary => format!("{:016b}", value),
-            NumberFormat::Decimal => format!("{}", value),
-            NumberFormat::Hexadecimal => format!("{:#06X}", value),
-        }
-    }
+    // fn number_format(&self, value: MemoryCell) -> String {
+    //     match self.imp().data.borrow().number_fomat {
+    //         NumberFormat::Binary => format!("{:016b}", value),
+    //         NumberFormat::Decimal => format!("{}", value),
+    //         NumberFormat::Hexadecimal => format!("{:#06X}", value),
+    //     }
+    // }
 
     pub fn update_ui(&self) {
         let mut pc = 0;

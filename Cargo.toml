@@ -1,5 +1,6 @@
 [workspace]
 resolver = "2"
 members = ["assembler", "isa", "processor", "simulator"]
+default-members = ["simulator"]
 
 

@@ -10,7 +10,6 @@ mod mem_obj;
 mod mem_row;
 mod processor;
 mod ui;
-mod window;
 
 const APP_ID: &str = "org.ProcessadorICMC";
 
@@ -52,6 +51,6 @@ fn load_css() {
 }
 
 fn build_ui(app: &Application) {
-    let window = window::Window::new(app);
+    let window = ui::window::Window::new(app);
     window.present();
 }

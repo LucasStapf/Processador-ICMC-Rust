@@ -35,6 +35,7 @@
             <child>
               <object class="GtkLabel" id="label_mem_inst">
                 <property name="label">INSTRUCTION</property>
+                <property name="use-markup">True</property>
                 <property name="width-chars">30</property>
                 <property name="xalign">0.0</property>
                 <style>

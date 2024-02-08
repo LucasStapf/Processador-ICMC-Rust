@@ -91,6 +91,7 @@ impl ProcessorManager {
                         Ok(mut p) => match p.next() {
                             Ok(_) => {
                                 // p.set_mem(4, 0b1011111011000000).unwrap();
+                                p.set_mem(2, 0b1100001111000000).unwrap();
                                 p.set_mem(5, 0b1110011111000000).unwrap();
                                 p.set_mem(6, 0xA2).unwrap();
                             } // TIRAR DPS SO TEST

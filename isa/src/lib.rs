@@ -744,23 +744,328 @@ instruction_set!(
     /// JN 0x00ff 
     /// ```
     JN          "0000101110------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CALL END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CALL 0x003C
+    /// ```
     CALL        "0000110000------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::EQUAL`] do *flag register* estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CEQ END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CEQ 0x003C
+    /// ```
     CEQ         "0000110001------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::EQUAL`] do *flag register* não estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CNE END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CNE 0x003C
+    /// ```
     CNE         "0000110010------",
+    
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::ZERO`] do *flag register* estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CZ END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CZ 0x003C
+    /// ```
     CZ          "0000110011------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::ZERO`] do *flag register* não estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CNZ END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CNZ 0x003C
+    /// ```
     CNZ         "0000110100------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::CARRY`] do *flag register* estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CC END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CC 0x003C
+    /// ```
     CC          "0000110101------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::CARRY`] do *flag register* não estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CNC END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CNC 0x003C
+    /// ```
     CNC         "0000110110------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::GREATER`] do *flag register* estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CGR END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CGR 0x003C
+    /// ```
     CGR         "0000110111------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::LESSER`] do *flag register* estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CLE END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CLE 0x003C
+    /// ```
     CLE         "0000111000------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// algum dos *bits* [`FlagIndex::EQUAL`] ou [`FlagIndex::GREATER`] do *flag register* estiver
+    /// setado
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CEG END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CEG 0x003C
+    /// ```
     CEG         "0000111001------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// algum dos *bits* [`FlagIndex::EQUAL`] ou [`FlagIndex::LESSER`] do *flag register* estiver
+    /// setado
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CEL END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CEL 0x003C
+    /// ```
     CEL         "0000111010------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::ARITHMETIC_OVERFLOW`] do *flag register* estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// COV END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// COV 0x003C
+    /// ```
     COV         "0000111011------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::ARITHMETIC_OVERFLOW`] do *flag register* não estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CNO END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CNO 0x003C
+    /// ```
     CNO         "0000111100------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::DIV_BY_ZERO`] do *flag register* estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CDZ END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CDZ 0x003C
+    /// ```
     CDZ         "0000111101------",
+
+    /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
+    /// o *bit* [`FlagIndex::NEGATIVE`] do *flag register* estiver setado.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `PC`  
+    /// `PC` ← `END`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// CN END
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CN 0x003C
+    /// ```
     CN          "0000111110------",
+
+    /// Altera o valor do *PC* para o último valor salvo na *stack* somado de 1.
+    /// 
+    /// # Operação
+    /// `SP` ← `SP` + 1  
+    /// `PC` ← MEM(`SP`)  
+    /// `PC` ← `PC` + 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// RTS
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// RTS
+    /// ```
     RTS         "000100---------0",
+
+    /// Altera o valor do *PC* para o último valor salvo na *stack*.
+    /// 
+    /// # Operação
+    /// `SP` ← `SP` + 1  
+    /// `PC` ← MEM(`SP`)  
+    ///
+    /// # Uso
+    /// ```asm
+    /// RTI
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// RTI
+    /// ```
     RTI         "000100---------1",
+
     PUSH        "000101----------",
     POP         "000110----------",
     NOP         "000000----------", // Control Instructions

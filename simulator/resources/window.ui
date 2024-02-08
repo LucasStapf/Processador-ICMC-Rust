@@ -5,7 +5,7 @@
   <!-- interface-authors Lucas Stapf -->
   <requires lib="gtk" version="4.6"/>
   <requires lib="libadwaita" version="1.4"/>
-  <template class="SimDebugWindow" parent="GtkWindow">
+  <template class="Window" parent="GtkWindow">
     <property name="hexpand">True</property>
     <property name="icon-name">applications-electronics-symbolic</property>
     <property name="maximized">True</property>
@@ -547,19 +547,6 @@
                             </property>
                             <property name="label-xalign">0.5</property>
                             <property name="vexpand">True</property>
-                            <child>
-                              <object class="GtkDrawingArea" id="proc_screen">
-                                <property name="content-height">480</property>
-                                <property name="content-width">640</property>
-                                <property name="css-classes">frame</property>
-                                <property name="halign">center</property>
-                                <property name="margin-bottom">8</property>
-                                <property name="margin-end">8</property>
-                                <property name="margin-start">8</property>
-                                <property name="valign">center</property>
-                                <property name="visible">False</property>
-                              </object>
-                            </child>
                           </object>
                         </child>
                       </object>
