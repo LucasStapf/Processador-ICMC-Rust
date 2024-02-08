@@ -154,12 +154,41 @@ impl InstructionDisplay for isa::Instruction {
                 ry(processor.mem(addr).unwrap()),
             ),
 
-            isa::Instruction::SHIFTL0 => todo!(),
-            isa::Instruction::SHIFTL1 => todo!(),
-            isa::Instruction::SHIFTR0 => todo!(),
-            isa::Instruction::SHIFTR1 => todo!(),
-            isa::Instruction::ROTL => todo!(),
-            isa::Instruction::ROTR => todo!(),
+            isa::Instruction::SHIFTL0 => format!(
+                "<b>SHIFTL0</b> R{}, {}",
+                rx(processor.mem(addr).unwrap()),
+                isa::bits(processor.mem(addr).unwrap(), 0..=3)
+            ),
+
+            isa::Instruction::SHIFTL1 => format!(
+                "<b>SHIFTL1</b> R{}, {}",
+                rx(processor.mem(addr).unwrap()),
+                isa::bits(processor.mem(addr).unwrap(), 0..=3)
+            ),
+
+            isa::Instruction::SHIFTR0 => format!(
+                "<b>SHIFTR0</b> R{}, {}",
+                rx(processor.mem(addr).unwrap()),
+                isa::bits(processor.mem(addr).unwrap(), 0..=3)
+            ),
+
+            isa::Instruction::SHIFTR1 => format!(
+                "<b>SHIFTR1</b> R{}, {}",
+                rx(processor.mem(addr).unwrap()),
+                isa::bits(processor.mem(addr).unwrap(), 0..=3)
+            ),
+
+            isa::Instruction::ROTL => format!(
+                "<b>ROTL</b> R{}, {}",
+                rx(processor.mem(addr).unwrap()),
+                isa::bits(processor.mem(addr).unwrap(), 0..=3)
+            ),
+
+            isa::Instruction::ROTR => format!(
+                "<b>ROTR</b> R{}, {}",
+                rx(processor.mem(addr).unwrap()),
+                isa::bits(processor.mem(addr).unwrap(), 0..=3)
+            ),
 
             isa::Instruction::CMP => format!(
                 "<b>CMP</b> R{}, R{}",
@@ -199,17 +228,24 @@ impl InstructionDisplay for isa::Instruction {
             isa::Instruction::CDZ => format!("<b>CDZ</b> {}", processor.mem(addr + 1).unwrap(),),
             isa::Instruction::CN => format!("<b>CN</b> {}", processor.mem(addr + 1).unwrap(),),
 
-            isa::Instruction::RTS => todo!(),
-            isa::Instruction::RTI => todo!(),
-            isa::Instruction::PUSH => todo!(),
-            isa::Instruction::POP => todo!(),
+            isa::Instruction::RTS => format!("<b>RTS</b>"),
+            isa::Instruction::RTI => format!("<b>RTI</b>"),
 
-            isa::Instruction::NOP => "<b>NOP</b>".to_string(),
+            isa::Instruction::PUSH => match isa::bits(processor.mem(addr).unwrap(), 6..=6) {
+                0 => format!("<b>PUSH</b> R{}", rx(processor.mem(addr).unwrap())),
+                _ => format!("<b>PUSH</b> FR"),
+            },
 
-            isa::Instruction::HALT => todo!(),
-            isa::Instruction::CLEARC => todo!(),
-            isa::Instruction::SETC => todo!(),
-            isa::Instruction::BREAKP => todo!(),
+            isa::Instruction::POP => match isa::bits(processor.mem(addr).unwrap(), 6..=6) {
+                0 => format!("<b>POP</b> R{}", rx(processor.mem(addr).unwrap())),
+                _ => format!("<b>POP</b> FR"),
+            },
+
+            isa::Instruction::NOP => format!("<b>NOP</b>"),
+            isa::Instruction::HALT => format!("<b>HALT</b>"),
+            isa::Instruction::CLEARC => format!("<b>CLEARC</b>"),
+            isa::Instruction::SETC => format!("<b>SETC</b>"),
+            isa::Instruction::BREAKP => format!("<b>BREAKP</b>"),
         }
     }
 }

@@ -32,6 +32,10 @@ macro_rules! instruction_set {
         pub enum Instruction {
             $(
                 $(#[$doc])*
+                #[doc = "# Máscara\n"]
+                #[doc = "```txt"]
+                #[doc = $op]
+                #[doc = "```"]
                 $name
             ),+
         }
@@ -225,8 +229,8 @@ instruction_set!(
     /// Move, para um registrador `Rx` ou para o `SP`, o valor presente em outro registrador.
     ///
     /// # Operação
-    /// `Rx` ← `Ry` ou
-    /// `Rx` ← `SP` ou
+    /// `Rx` ← `Ry` ou  
+    /// `Rx` ← `SP` ou  
     /// `SP` ← `Rx`
     ///
     /// # Uso
@@ -467,11 +471,138 @@ instruction_set!(
     /// ```
     NOT         "010101----------",
 
+    /// Esta operação desliza os bits para a esquerda `N` vezes e os bits que transbordam a
+    /// extremidade esquerda desaparecem. Os espaços na direita são preenchidos com 0.
+    ///
+    /// # Operação
+    /// `Rx` ← `Rx` << `N`
+    /// ```txt
+    /// 1 0 1 0'0 1 1 1   
+    ///  ╱ ╱ ╱ ╱ ╱ ╱ ╱
+    /// 0 1 0 0'1 1 1 0  
+    /// ```
+    ///
+    /// # Uso
+    /// ```asm
+    /// SHIFTL0 Rx, N
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// SHIFTL0 R7, 9
+    /// ```
     SHIFTL0     "010000---000----",
+
+    /// Esta operação desliza os bits para a esquerda `N` vezes e os bits que transbordam a
+    /// extremidade esquerda desaparecem. Os espaços na direita são preenchidos com 1.
+    ///
+    /// # Operação
+    /// `Rx` ← !(!(`Rx`) << `N`)
+    /// ```txt
+    /// 0 0 1 0'0 1 1 1   
+    ///  ╱ ╱ ╱ ╱ ╱ ╱ ╱
+    /// 0 1 0 0'1 1 1 1  
+    /// ```
+    ///
+    /// # Uso
+    /// ```asm
+    /// SHIFTL1 Rx, N
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// SHIFTL1 R7, 9
+    /// ```
     SHIFTL1     "010000---001----",
+
+    /// Esta operação desliza os bits para a direita `N` vezes e os bits que transbordam a
+    /// extremidade direita desaparecem. Os espaços na esquerda são preenchidos com 0.
+    ///
+    /// # Operação
+    /// `Rx` ← `Rx` >> `N`
+    /// ```txt
+    /// 0 0 1 0'0 1 1 1  
+    ///  ╲ ╲ ╲ ╲ ╲ ╲ ╲    
+    /// 0 0 0 1'0 0 1 1  
+    /// ```
+    ///
+    /// # Uso
+    /// ```asm
+    /// SHIFTR0 Rx, N
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// SHIFTR0 R7, 9
+    /// ```
     SHIFTR0     "010000---010----",
+
+    /// Esta operação desliza os bits para a direita `N` vezes e os bits que transbordam a
+    /// extremidade direita desaparecem. Os espaços na esquerda são preenchidos com 1.
+    ///
+    /// # Operação
+    /// `Rx` ← !(!(`Rx`) >> `N`)
+    /// ```txt
+    /// 0 0 1 0'0 1 1 1  
+    ///  ╲ ╲ ╲ ╲ ╲ ╲ ╲    
+    /// 0 0 0 1'0 0 1 1  
+    /// ```
+    ///
+    /// # Uso
+    /// ```asm
+    /// SHIFTR1 Rx, N
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// SHIFTR1 R7, 9
+    /// ```
     SHIFTR1     "010000---011----",
+
+    /// Esta operação gira os bits para a esquerda `N` vezes e os bits que transbordam para
+    /// a extremidade esquerda são reintroduzidos no lado direito.
+    ///
+    /// # Operação
+    /// `Rx` ← (`Rx` << N) | (`Rx` >> ([`BITS_ADDRESS`] - N))
+    /// ```txt
+    /// ╭─────────────────╮  
+    /// │ 0 0 1 0'0 1 1 1 │  
+    /// ╰─╯╱ ╱ ╱ ╱ ╱ ╱ ╱╭─╯
+    ///   0 1 0 0'1 1 1 0  
+    /// ```
+    ///
+    /// # Uso
+    /// ```asm
+    /// ROTL Rx, N
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// ROTL R6, 2
+    /// ```
     ROTL        "010000---10-----",
+
+    /// Esta operação gira os bits para a direita `N` vezes e os bits que transbordam para
+    /// a extremidade direita são reintroduzidos no lado esquerdo.
+    ///
+    /// # Operação
+    /// `Rx` ← (`Rx` >> N) | (`Rx` << ([`BITS_ADDRESS`] - N))
+    /// ```txt
+    /// ╭─────────────────╮  
+    /// │ 0 0 1 0'0 1 1 1 │  
+    /// ╰─╮╲ ╲ ╲ ╲ ╲ ╲ ╲╰─╯    
+    ///   1 0 0 1'0 0 1 1  
+    /// ```
+    ///
+    /// # Uso
+    /// ```asm
+    /// ROTL Rx, N
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// ROTL R6, 2
+    /// ```
     ROTR        "010000---11-----",
 
     /// Compara os valores dos registradores `Rx` e `Ry` e atualiza o *flag register* (`FR`) de
@@ -1066,12 +1197,126 @@ instruction_set!(
     /// ```
     RTI         "000100---------1",
 
+    /// Salva na *stack* o conteúdo de um registrador ou do *flag register*.
+    ///
+    /// # Operação
+    /// MEM(`SP`) ← `Rx`  
+    /// `SP` ← `SP` - 1 ou  
+    /// MEM(`SP`) ← `FR`  
+    /// `SP` ← `SP` - 1  
+    ///
+    /// # Uso
+    /// ```asm
+    /// PUSH Rx  
+    /// PUSH FR
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// PUSH R5
+    /// PUSH FR
+    /// ```
     PUSH        "000101----------",
+
+    /// Recupera da *stack* o conteúdo de um registrador ou do *flag register*.
+    ///
+    /// # Operação
+    /// `SP` ← `SP` + 1  
+    /// `Rx` ← MEM(`SP`) ou   
+    /// `SP` ← `SP` + 1  
+    /// `FR` ← MEM(`SP`)    
+    ///
+    /// # Uso
+    /// ```asm
+    /// POP Rx  
+    /// POP FR
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// POP R5
+    /// POP FR
+    /// ```
     POP         "000110----------",
+
+    /// Sem operação. Serve apenas para consumir tempo.
+    ///
+    /// # Operação
+    /// Nenhuma
+    ///
+    /// # Uso
+    /// ```asm
+    /// NOP
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// NOP
+    /// ```
     NOP         "000000----------", // Control Instructions
+
+    /// Para a execução do programa.
+    /// 
+    /// # Operação
+    /// Para o processador
+    ///
+    /// # Uso
+    /// ```asm
+    /// HALT
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// HALT
+    /// ```
     HALT        "001111----------",
+
+    /// Limpa o bit [`FlagIndex::CARRY`] do *flag register*.
+    ///
+    /// # Operação
+    /// C ← 0
+    /// 
+    /// # Uso
+    /// ```asm
+    /// CLEARC
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// CLEARC
+    /// ```
     CLEARC      "0010000---------",
+
+    /// Seta o bit [`FlagIndex::CARRY`] do *flag register*.
+    ///
+    /// # Operação
+    /// C ← 1
+    /// 
+    /// # Uso
+    /// ```asm
+    /// SETC
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// SETC
+    /// ```
     SETC        "0010001---------",
+
+    /// Gera um *breakpoint* no código, forçando o simulador a entrar no modo *debug*.
+    ///
+    /// # Operação
+    /// Nenhuma operação lógica no processador
+    ///
+    /// # Uso
+    /// ```asm
+    /// BREAKP
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// BREAKP
+    /// ```
     BREAKP      "001110----------");
 
 /// Retorna os bits presentes no valor `mem` que estão no range `r`.

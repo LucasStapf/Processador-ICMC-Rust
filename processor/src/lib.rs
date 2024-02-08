@@ -6,7 +6,6 @@ use crate::instructions::InstructionCicle;
 
 use isa::{Instruction, MemoryCell};
 use log::{debug, info, warn};
-use modules::{video::VideoModule, Modules};
 use std::{
     fmt::Display,
     sync::{Arc, Mutex},
