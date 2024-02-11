@@ -10,6 +10,7 @@ pub enum ProcError {
     InvalidMemoryIndex(usize),
     InvalidInstruction(usize),
     InvalidRegister(usize),
+    Generic(String),
 }
 
 impl Display for ProcError {
@@ -37,6 +38,7 @@ impl Display for ProcError {
             ProcError::InvalidRegister(r) => {
                 write!(f, "Registrador inválido: {}", r)
             }
+            ProcError::Generic(s) => write!(f, "{s}"),
         }
     }
 }

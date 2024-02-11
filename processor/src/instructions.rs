@@ -1,3 +1,5 @@
+use crate::modules::video;
+
 use super::{ProcError, Processor};
 use isa::{FlagIndex, Instruction, MAX_VALUE_MEMORY};
 
@@ -46,7 +48,34 @@ impl InstructionCicle for Instruction {
 
             Instruction::INPUT => todo!(),
             Instruction::OUTPUT => todo!(),
-            Instruction::OUTCHAR => todo!(),
+
+            Instruction::OUTCHAR => {
+                let index = p.reg(p.ry())?;
+                if index > video::VIDEO_BUFFER_LENGHT {
+                    return Err(ProcError::InvalidIndex(
+                        index,
+                        Some(format!(
+                            "Índice inválido. O índice deve pertencer ao intervalo 0 até {}",
+                            video::VIDEO_BUFFER_LENGHT
+                        )),
+                    ));
+                }
+
+                let c = isa::bits(p.reg(p.rx())?, 0..=7) as u8;
+                let color_code = isa::bits(p.reg(p.rx())?, 8..=15);
+                let color = video::Color::color(color_code);
+
+                match color {
+                    Some(color) => {
+                        let pixel = ((c, color), index);
+                        p.set_pixel(Some(pixel));
+                    }
+                    None => {
+                        return Err(ProcError::Generic(format!("Cor inválida: {}", color_code)))
+                    }
+                }
+            }
+
             Instruction::INCHAR => todo!(),
             Instruction::SOUND => todo!(),
 
@@ -160,12 +189,50 @@ impl InstructionCicle for Instruction {
                 }
             }
 
-            Instruction::SHIFTL0 => todo!(),
-            Instruction::SHIFTL1 => todo!(),
-            Instruction::SHIFTR0 => todo!(),
-            Instruction::SHIFTR1 => todo!(),
-            Instruction::ROTL => todo!(),
-            Instruction::ROTR => todo!(),
+            Instruction::SHIFTL0
+            | Instruction::SHIFTL1
+            | Instruction::SHIFTR0
+            | Instruction::SHIFTR1 => {
+                p.ula_operation()?;
+
+                let mut result = match self {
+                    Instruction::SHIFTL0 => p.reg(p.rx())? << isa::bits(p.ir(), 0..=3),
+                    Instruction::SHIFTL1 => !(!(p.reg(p.rx())?) << isa::bits(p.ir(), 0..=3)),
+                    Instruction::SHIFTR0 => p.reg(p.rx())? >> isa::bits(p.ir(), 0..=3),
+                    Instruction::SHIFTR1 => !(!(p.reg(p.rx())?) >> isa::bits(p.ir(), 0..=3)),
+                    _ => unreachable!(),
+                };
+
+                if result > MAX_VALUE_MEMORY {
+                    result = result - MAX_VALUE_MEMORY;
+                }
+
+                p.set_reg(p.rx(), result)?;
+
+                if p.reg(p.rx())? == 0 {
+                    p.set_fr(FlagIndex::ZERO, true)?;
+                }
+            }
+
+            Instruction::ROTL | Instruction::ROTR => {
+                p.ula_operation()?;
+                let result = match self {
+                    Instruction::ROTL => {
+                        (p.reg(p.rx())? << isa::bits(p.ir(), 0..=3))
+                            | ((p.reg(p.rx()))? >> (isa::BITS_ADDRESS - isa::bits(p.ir(), 0..=3)))
+                    }
+                    Instruction::ROTR => {
+                        (p.reg(p.rx())? >> isa::bits(p.ir(), 0..=3))
+                            | ((p.reg(p.rx()))? << (isa::BITS_ADDRESS - isa::bits(p.ir(), 0..=3)))
+                    }
+                    _ => unreachable!(),
+                };
+
+                p.set_reg(p.rx(), result)?;
+                if p.reg(p.rx())? == 0 {
+                    p.set_fr(FlagIndex::ZERO, true)?;
+                }
+            }
 
             Instruction::CMP => {
                 p.ula_operation()?;
@@ -270,7 +337,10 @@ impl InstructionCicle for Instruction {
                 p.inc_pc(1)?;
             }
 
-            Instruction::RTI => todo!(),
+            Instruction::RTI => {
+                p.inc_sp(1)?;
+                p.set_pc(p.mem(p.sp())?)?;
+            }
 
             Instruction::PUSH => {
                 match isa::bits(p.ir(), 6..=6) {
@@ -306,14 +376,14 @@ impl InstructionCicle for Instruction {
             }
 
             Instruction::NOP => (),
-            Instruction::HALT => todo!(),
+            Instruction::HALT => p.set_halted(true),
             Instruction::CLEARC => {
                 p.set_fr(FlagIndex::CARRY, false)?;
             }
             Instruction::SETC => {
                 p.set_fr(FlagIndex::CARRY, true)?;
             }
-            Instruction::BREAKP => todo!(),
+            Instruction::BREAKP => p.set_debug(true),
         }
 
         Ok(())
@@ -327,7 +397,7 @@ mod tests {
 
     #[test]
     fn test_invalid_instruction() {
-        let mut p = Processor::debug(10);
+        let mut p = Processor::new_debug(10);
         let _ = p.set_mem(0, 0b1011110000000000);
         assert_eq!(
             ProcError::InvalidInstruction(0b1011110000000000),

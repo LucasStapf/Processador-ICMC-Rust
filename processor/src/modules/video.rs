@@ -1,5 +1,7 @@
 use std::{error::Error, fmt::Display};
 
+pub const VIDEO_BUFFER_LENGHT: usize = 1200;
+
 #[derive(Debug, Clone, Copy)]
 pub enum Color {
     Black,

@@ -70,7 +70,13 @@ impl InstructionDisplay for isa::Instruction {
 
             isa::Instruction::INPUT => todo!(),
             isa::Instruction::OUTPUT => todo!(),
-            isa::Instruction::OUTCHAR => todo!(),
+
+            isa::Instruction::OUTCHAR => format!(
+                "<b>OUTCHAR</b> R{}, R{}",
+                rx(processor.mem(addr).unwrap()),
+                ry(processor.mem(addr).unwrap())
+            ),
+
             isa::Instruction::INCHAR => todo!(),
             isa::Instruction::SOUND => todo!(),
 

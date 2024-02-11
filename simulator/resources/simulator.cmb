@@ -3,8 +3,7 @@
 <cambalache-project version="0.13.1" target_tk="gtk-4.0">
   <ui>
 	(1,458,"sim.ui","window.ui",None,None,"Lucas Stapf",None,None,None,""),
-	(2,1,"mem_row.ui","mem_row.ui",None,None,None,None,None,None,None),
-	(3,1,None,"instruction_display",None,None,None,None,None,None,None)
+	(2,1,"mem_row.ui","mem_row.ui",None,None,None,None,None,None,None)
   </ui>
   <ui_library>
 	(1,"gtk","4.6",None),
@@ -117,8 +116,7 @@
 	(2,34,"GtkSeparator",None,30,None,None,None,3,None),
 	(2,35,"GtkBox",None,30,None,None,None,4,None),
 	(2,36,"GtkLabel","label_mem_float",35,None,None,None,None,None),
-	(2,37,"GtkLabel","label_mem_raw",35,None,None,None,1,None),
-	(3,1,"GtkBox","InstructionView",None,None,None,None,-1,None)
+	(2,37,"GtkLabel","label_mem_raw",35,None,None,None,1,None)
   </object>
   <object_property>
 	(1,458,"GtkWidget","hexpand","True",None,None,None,None,None,None,None,None,None),

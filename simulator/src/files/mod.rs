@@ -1,6 +1,5 @@
 pub mod charmap;
 
-use scan_fmt::scan_fmt;
 use std::{
     fs::File,
     io::{BufRead, BufReader},

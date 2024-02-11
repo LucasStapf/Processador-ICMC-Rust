@@ -6,6 +6,7 @@ use crate::instructions::InstructionCicle;
 
 use isa::{Instruction, MemoryCell};
 use log::{debug, info, warn};
+use modules::video::Pixelmap;
 use std::{
     fmt::Display,
     sync::{Arc, Mutex},
@@ -39,6 +40,11 @@ pub struct Processor {
     ir: usize,
     // Stack Pointer
     sp: usize,
+
+    pixel: Option<(Pixelmap, usize)>,
+
+    halted: bool,
+    debug: bool,
 }
 
 impl Default for Processor {
@@ -73,6 +79,9 @@ impl Processor {
             pc: 0,
             ir: 0,
             sp: 0,
+            pixel: None,
+            halted: false,
+            debug: false,
         }
     }
 
@@ -82,7 +91,7 @@ impl Processor {
     /// # **Importante**
     ///
     /// Deve ser utilizado somente para testes!
-    pub fn debug(s: usize) -> Self {
+    pub fn new_debug(s: usize) -> Self {
         warn!(
             "Novo processador para DEBUG criado. [Tamanho da Memória {}] [Número de Registradores {}]",
             s, NUM_REGISTERS
@@ -105,6 +114,9 @@ impl Processor {
             pc: 0,
             ir: 0,
             sp: 0,
+            pixel: None,
+            halted: false,
+            debug: false,
         }
     }
 
@@ -216,7 +228,7 @@ impl Processor {
         }
     }
 
-    /// Retorna o valor presente no campo RX do registrador IR.
+    /// Retorna o valor presente no campo `RX` do registrador `IR`.
     ///
     /// # Mapeamento
     ///
@@ -227,7 +239,7 @@ impl Processor {
         self.rx
     }
 
-    /// Retorna o valor presente no campo RY do registrador IR.
+    /// Retorna o valor presente no campo `RY` do registrador `IR`.
     ///
     /// # Mapeamento
     ///
@@ -238,7 +250,7 @@ impl Processor {
         self.ry
     }
 
-    /// Retorna o valor presente no campo RZ do registrador IR.
+    /// Retorna o valor presente no campo `RZ` do registrador `IR`.
     ///
     /// # Mapeamento
     ///
@@ -251,8 +263,14 @@ impl Processor {
 
     /// Retorna o valor da `i`-ésima *flag* do registrador *Flag Register*.
     ///
-    /// > ⚠️  **Atenção** :É recomendo utilizar os índices mapeados em [`isa::FlagIndex`] para evitar
-    /// erros e comportamentos indesejados.
+    /// > ⚠️ **Atenção**  
+    /// >
+    /// > É recomendado utilizar os índices mapeados em [`isa::FlagIndex`] para evitar erros e
+    /// > comportamentos indesejados.
+    ///
+    /// # Erros
+    ///
+    /// Retorna o erro [`ProcError::InvalidIndex`] caso o valor `i` seja inválido.
     pub fn fr(&self, i: usize) -> Result<bool> {
         match self.fr.get(i) {
             Some(&f) => Ok(f),
@@ -263,6 +281,16 @@ impl Processor {
         }
     }
 
+    /// Altera o valor do *bit* `i` do registrador *Flag Register* para o valor `v`.
+    ///
+    /// > ⚠️ **Atenção**
+    /// >
+    /// > É recomendado utilizar os índices mapeados em [`isa::FlagIndex`] para evitar erros e
+    /// > comportamentos indesejados.
+    ///
+    /// # Erros
+    ///
+    /// Retorna o erro [`ProcError::InvalidIndex`] caso o valor `i` seja inválido.
     pub fn set_fr(&mut self, i: usize, v: bool) -> Result<()> {
         match self.fr.get_mut(i) {
             Some(f) => {
@@ -335,6 +363,7 @@ impl Processor {
         self.pc
     }
 
+    #[warn(missing_docs)]
     pub fn set_pc(&mut self, v: usize) -> Result<()> {
         if v > MEMORY_SIZE - 1 {
             Err(ProcError::MaximumMemoryReached)
@@ -359,6 +388,39 @@ impl Processor {
         };
     }
 
+    #[warn(missing_docs)]
+    pub fn set_halted(&mut self, value: bool) {
+        self.halted = value
+    }
+
+    #[warn(missing_docs)]
+    pub fn halted(&self) -> bool {
+        self.halted
+    }
+
+    #[warn(missing_docs)]
+    pub fn set_debug(&mut self, value: bool) {
+        self.debug = value
+    }
+
+    #[warn(missing_docs)]
+    pub fn debug(&self) -> bool {
+        self.halted
+    }
+
+    #[warn(missing_docs)]
+    pub fn set_pixel(&mut self, value: Option<(Pixelmap, usize)>) {
+        self.pixel = value
+    }
+
+    #[warn(missing_docs)]
+    pub fn pixel(&mut self) -> Option<(Pixelmap, usize)> {
+        let p = self.pixel;
+        self.pixel = None;
+        p
+    }
+
+    #[warn(missing_docs)]
     pub fn ula_operation(&mut self) -> Result<()> {
         self.set_fr(isa::FlagIndex::GREATER, false)?;
         self.set_fr(isa::FlagIndex::LESSER, false)?;
@@ -393,6 +455,7 @@ impl Processor {
         Ok(())
     }
 
+    #[warn(missing_docs)]
     fn execution_cicle(&mut self) -> Result<()> {
         self.rx = isa::bits(self.ir, 7..=9);
         self.ry = isa::bits(self.ir, 4..=6);
@@ -400,45 +463,19 @@ impl Processor {
 
         let instruction = Instruction::get_instruction(self.ir);
         debug!("Execution Cicle [{} {}]", instruction, instruction.mask());
-        instruction.execution(self)?;
-        Ok(())
+        instruction.execution(self)
     }
 
+    #[warn(missing_docs)]
     pub fn next(&mut self) -> Result<()> {
-        self.search_cicle()?;
-        self.execution_cicle()?;
-        debug!("{self}");
-        Ok(())
-    }
-
-    pub fn state(
-        &self,
-    ) -> (
-        usize,
-        usize,
-        usize,
-        usize,
-        usize,
-        usize,
-        usize,
-        usize,
-        usize,
-        usize,
-        usize,
-    ) {
-        (
-            self.registers[0],
-            self.registers[1],
-            self.registers[2],
-            self.registers[3],
-            self.registers[4],
-            self.registers[5],
-            self.registers[6],
-            self.registers[7],
-            self.pc,
-            self.sp,
-            self.ir,
-        )
+        if !self.halted {
+            self.search_cicle()?;
+            let r = self.execution_cicle();
+            debug!("{self}");
+            r
+        } else {
+            Ok(())
+        }
     }
 }
 

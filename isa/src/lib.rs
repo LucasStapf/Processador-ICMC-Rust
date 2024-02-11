@@ -181,7 +181,7 @@ instruction_set!(
     /// Salva no endereço `END` da memória o valor presente no registrador `Rx`.
     ///
     /// # Operação
-    /// MEM(`END`) ← Rx
+    /// MEM(`END`) ← `Rx`
     ///
     /// # Uso
     /// ```asm
@@ -250,7 +250,50 @@ instruction_set!(
 
     INPUT       "111110----------", // Peripheric Instructions
     OUTPUT      "111111----------",
+
+    /// Imprime na tela do processador um *char* mapeado de um arquivo *charmap*. O código do
+    /// *pixelmap* que representa o desenho do *char* está codificado no *low-byte* do registrador
+    /// `Rx`, enquanto que sua cor se encontra no *high-byte*. A posição do *char* é armazenada
+    /// no registrador `Ry`.
+    ///
+    /// # Cores
+    /// As cores mapeadas atualmente com seus respectivos códigos são:
+    /// 1. <span style="background-color:white">⠀⠀</span> White --- 0
+    /// 2. <span style="background-color:brown">⠀⠀</span> Brown --- 256
+    /// 3. <span style="background-color:green">⠀⠀</span> Green --- 512
+    /// 4. <span style="background-color:olive">⠀⠀</span> Olive --- 768
+    /// 5. <span style="background-color:navy">⠀⠀</span> Navy --- 1024
+    /// 6. <span style="background-color:purple">⠀⠀</span> Purple --- 1280
+    /// 7. <span style="background-color:teal">⠀⠀</span> Teal --- 1536
+    /// 8. <span style="background-color:silver">⠀⠀</span> Silver --- 1792
+    /// 9. <span style="background-color:gray">⠀⠀</span> Gray --- 2048
+    /// 10. <span style="background-color:red">⠀⠀</span> Red --- 2304
+    /// 11. <span style="background-color:lime">⠀⠀</span> Lime --- 2560
+    /// 12. <span style="background-color:yellow">⠀⠀</span> Yellow --- 2816
+    /// 13. <span style="background-color:blue">⠀⠀</span> Blue --- 3072
+    /// 14. <span style="background-color:fuchsia">⠀⠀</span> Fuchsia --- 3328
+    /// 15. <span style="background-color:aqua">⠀⠀</span> Aqua --- 3584
+    /// 16. <span style="background-color:black">⠀⠀</span> Black --- 3840
+    ///
+    /// Para imprimir o caracter colorido, basta somar o código do *char* ao código da cor.
+    ///
+    /// ## Exemplo
+    /// * <span style="color:blue">A</span> --- 37 (código da letra A) + 3072 (código da cor azul).
+    /// 
+    /// # Operação
+    /// VÍDEO(`Ry`) ← CHAR(`Rx`)
+    ///
+    /// # Uso
+    /// ```asm
+    /// OUTCHAR Rx, Ry
+    /// ```
+    ///
+    /// # Exemplo
+    /// ```asm
+    /// OUTCHAR R1, R0
+    /// ```
     OUTCHAR     "110010----------", // IO Instructions
+
     INCHAR      "110101----------",
     SOUND       "110100----------",
 
