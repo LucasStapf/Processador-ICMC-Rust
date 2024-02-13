@@ -18,29 +18,72 @@
             <property name="margin-top">8</property>
             <property name="spacing">10</property>
             <child>
-              <object class="GtkLabel" id="label_mem_addr">
-                <property name="halign">start</property>
-                <property name="label">0x0000</property>
-                <property name="margin-start">10</property>
-                <property name="width-chars">7</property>
-                <property name="xalign">0.0</property>
-                <style>
-                  <class name="row"/>
-                </style>
+              <object class="GtkBox">
+                <property name="margin-end">10</property>
+                <property name="orientation">vertical</property>
+                <property name="valign">end</property>
+                <child>
+                  <object class="GtkLabel" id="label_mem_float_addr">
+                    <property name="justify">center</property>
+                    <property name="label">ADDR_PROG_AND_VAR</property>
+                    <property name="margin-start">10</property>
+                    <property name="use-markup">True</property>
+                    <property name="width-chars">20</property>
+                    <property name="xalign">0.0</property>
+                    <property name="yalign">0.0</property>
+                    <style>
+                      <class name="float"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_mem_addr">
+                    <property name="halign">start</property>
+                    <property name="label">0x0000</property>
+                    <property name="margin-start">10</property>
+                    <property name="valign">end</property>
+                    <property name="width-chars">7</property>
+                    <property name="xalign">0.0</property>
+                    <style>
+                      <class name="row"/>
+                    </style>
+                  </object>
+                </child>
               </object>
             </child>
             <child>
               <object class="GtkSeparator"/>
             </child>
             <child>
-              <object class="GtkLabel" id="label_mem_inst">
-                <property name="label">INSTRUCTION</property>
-                <property name="use-markup">True</property>
-                <property name="width-chars">30</property>
-                <property name="xalign">0.0</property>
-                <style>
-                  <class name="row"/>
-                </style>
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <property name="valign">end</property>
+                <child>
+                  <object class="GtkLabel" id="label_mem_float_inst">
+                    <property name="justify">center</property>
+                    <property name="label">Instruction</property>
+                    <property name="use-markup">True</property>
+                    <property name="width-chars">20</property>
+                    <property name="xalign">0.0</property>
+                    <property name="yalign">0.0</property>
+                    <style>
+                      <class name="float"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_mem_inst">
+                    <property name="label">INSTRUCTION</property>
+                    <property name="use-markup">True</property>
+                    <property name="valign">end</property>
+                    <property name="width-chars">30</property>
+                    <property name="xalign">0.0</property>
+                    <property name="yalign">0.0</property>
+                    <style>
+                      <class name="row"/>
+                    </style>
+                  </object>
+                </child>
               </object>
             </child>
             <child>
@@ -50,12 +93,12 @@
               <object class="GtkBox">
                 <property name="margin-end">10</property>
                 <property name="orientation">vertical</property>
+                <property name="valign">end</property>
                 <child>
-                  <object class="GtkLabel" id="label_mem_float">
+                  <object class="GtkLabel" id="label_mem_float_raw">
                     <property name="justify">center</property>
                     <property name="label">&lt;b&gt;SP&lt;/b&gt;</property>
                     <property name="use-markup">True</property>
-                    <property name="visible">False</property>
                     <property name="xalign">0.0</property>
                     <property name="yalign">0.0</property>
                     <style>

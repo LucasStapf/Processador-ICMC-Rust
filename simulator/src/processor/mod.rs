@@ -5,7 +5,7 @@ use async_channel::{Receiver, Sender};
 use cairo::glib::clone;
 use log::{debug, error};
 use once_cell::sync::Lazy;
-use processor::{errors::ProcError, Processor};
+use processor::{errors::ProcessorError, Processor};
 use std::{
     sync::{Arc, Mutex},
     thread,
@@ -34,8 +34,8 @@ impl Default for RunMode {
 pub struct ProcessorManager {
     pub mode: Arc<Mutex<Option<RunMode>>>,
     pub processor: Arc<Mutex<Processor>>,
-    pub error: Arc<Mutex<Option<ProcError>>>,
-    pub tx: Option<Sender<Option<ProcError>>>,
+    pub error: Arc<Mutex<Option<ProcessorError>>>,
+    pub tx: Option<Sender<Option<ProcessorError>>>,
     pub rx: Option<Receiver<bool>>,
 }
 
@@ -52,16 +52,21 @@ impl Default for ProcessorManager {
 }
 
 impl ProcessorManager {
-    pub fn new(tx: Option<Sender<Option<ProcError>>>, rx: Option<Receiver<bool>>) -> Self {
+    pub fn new(tx: Option<Sender<Option<ProcessorError>>>, rx: Option<Receiver<bool>>) -> Self {
         let mut pm = ProcessorManager::default();
         pm.tx = tx;
         pm.rx = rx;
         pm
     }
 
-    pub fn run(&self, tx: Sender<InfoType<ProcError>>) {
+    pub fn run(&self, tx: Sender<InfoType<ProcessorError>>) {
         let m = self.mode.clone();
         let p = self.processor.clone();
+
+        if let Ok(mut p) = p.lock() {
+            p.set_mem(4, 0b1110010000000000);
+            p.set_mem(5, 0b0000110000000000);
+        }
 
         RUNTIME.spawn(async move {
             loop {
@@ -79,8 +84,11 @@ impl ProcessorManager {
                     },
                     Err(e) => {
                         error!("{e}");
-                        tx.send_blocking(InfoType::Error(ProcError::ProcessorPanic))
-                            .expect("Falha ao enviar o erro!");
+                        tx.send_blocking(InfoType::Error(ProcessorError::Generic {
+                            title: "Erro inesperado".to_string(),
+                            description: e.to_string(),
+                        }))
+                        .expect("Falha ao enviar o erro!");
                         break;
                     }
                 }
@@ -98,8 +106,11 @@ impl ProcessorManager {
                     },
                     Err(e) => {
                         error!("{e}");
-                        tx.send_blocking(InfoType::Error(ProcError::ProcessorPanic))
-                            .expect("Falha ao enviar o erro!");
+                        tx.send_blocking(InfoType::Error(ProcessorError::Generic {
+                            title: "Erro inesperado".to_string(),
+                            description: e.to_string(),
+                        }))
+                        .expect("Falha ao enviar o erro!");
                         break;
                     }
                 }

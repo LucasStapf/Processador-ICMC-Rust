@@ -1,9 +1,12 @@
+#![allow(dead_code, unused_imports, missing_docs)]
+
 pub mod errors;
 pub mod instructions;
 pub mod modules;
 
 use crate::instructions::InstructionCicle;
 
+use errors::ProcessorError;
 use isa::{Instruction, MemoryCell};
 use log::{debug, info, warn};
 use modules::video::Pixelmap;
@@ -11,8 +14,6 @@ use std::{
     fmt::Display,
     sync::{Arc, Mutex},
 };
-
-use self::errors::ProcError;
 
 /// Tamanho da memória do processador, ou seja, número de endereços disponíveis para o
 /// funcionamento do dispositivo.
@@ -23,7 +24,7 @@ pub const NUM_REGISTERS: usize = 8;
 
 pub const MAX_VALUE_MEMORY: usize = 2_usize.pow(isa::BITS_ADDRESS as u32) - 1;
 
-type Result<T> = std::result::Result<T, ProcError>;
+type Result<T> = std::result::Result<T, ProcessorError>;
 
 pub struct Processor {
     memory: Arc<Mutex<Vec<usize>>>, // pub temp
@@ -124,11 +125,12 @@ impl Processor {
         self.memory.clone()
     }
 
-    /// Retorna o valor presente na memória de índice `i`.
+    /// Retorna o valor presente no endereço `addr` da memória.
     ///
     /// # Erros
     ///
-    /// Retorna o erro [`ProcError::InvalidMemoryIndex`] caso o índice seja inválido.
+    /// - [`ProcessorError::InvalidAddress`] caso o endereço seja inválido.
+    /// - [`ProcessorError::Generic`] em caso de [`std::sync::PoisonError`].
     ///
     /// # Exemplo
     ///
@@ -139,22 +141,25 @@ impl Processor {
     /// assert_eq!(0x0, p.mem(0).unwrap());
     ///
     /// ```
-    pub fn mem(&self, i: usize) -> Result<usize> {
+    pub fn mem(&self, addr: MemoryCell) -> Result<MemoryCell> {
         match self.memory.lock() {
-            Ok(m) => match m.get(i) {
+            Ok(m) => match m.get(addr) {
                 Some(&v) => Ok(v),
-                None => Err(ProcError::InvalidMemoryIndex(i)),
+                None => Err(ProcessorError::InvalidAddress(addr)),
             },
-            Err(_) => Err(ProcError::ProcessorPanic),
+            Err(e) => Err(ProcessorError::Generic {
+                title: "Erro inesperado".to_string(),
+                description: e.to_string(),
+            }),
         }
     }
 
-    /// Altera o valor da memória no índice `i` para `v`.
+    /// Altera o valor salvo no endereço `addr` para `v`.
     ///
     /// # Erros
     ///
-    /// Retorna o erro [`ProcError::InvalidMemoryIndex`] caso o índice `i` seja
-    /// inválido.
+    /// - [`ProcessorError::InvalidAddress`] caso o endereço seja inválido.
+    /// - [`ProcessorError::Generic`] em caso de [`std::sync::PoisonError`].
     ///
     /// # Exemplo
     ///
@@ -166,24 +171,27 @@ impl Processor {
     /// p.set_mem(0, 0x1);
     /// assert_eq!(0x1, p.mem(0).unwrap());
     /// ```
-    pub fn set_mem(&mut self, i: usize, v: usize) -> Result<()> {
+    pub fn set_mem(&mut self, adrr: MemoryCell, v: MemoryCell) -> Result<()> {
         match self.memory.lock() {
-            Ok(mut m) => match m.get_mut(i) {
+            Ok(mut m) => match m.get_mut(adrr) {
                 Some(m) => {
                     *m = v;
                     Ok(())
                 }
-                None => Err(ProcError::InvalidMemoryIndex(i)),
+                None => Err(ProcessorError::InvalidAddress(adrr)),
             },
-            Err(_) => Err(ProcError::ProcessorPanic),
+            Err(e) => Err(ProcessorError::Generic {
+                title: "Erro inesperado".to_string(),
+                description: e.to_string(),
+            }),
         }
     }
 
-    /// Retorna o valor do registrador `n` (`n` é o índice do vetor de registradores).
+    /// Retorna o valor do registrador `n`.
     ///
     /// # Erros
     ///
-    /// Retorna o erro [`ProcError::InvalidRegister`] caso o registrador `n` seja
+    /// Retorna o erro [`ProcessorError::InvalidRegister`] caso o registrador `n` seja
     /// inválido.
     ///
     /// # Exemplo
@@ -194,10 +202,10 @@ impl Processor {
     /// let mut p = Processor::new();
     /// assert_eq!(0x0, p.reg(0).unwrap());
     /// ```
-    pub fn reg(&self, n: usize) -> Result<usize> {
+    pub fn reg(&self, n: MemoryCell) -> Result<MemoryCell> {
         match self.registers.get(n) {
             Some(&r) => Ok(r),
-            None => Err(ProcError::InvalidRegister(n)),
+            None => Err(ProcessorError::InvalidRegister(n)),
         }
     }
 
@@ -205,7 +213,7 @@ impl Processor {
     ///
     /// # Erros
     ///
-    /// Retorna o erro [`ProcError::InvalidRegister`] caso o registrador `n` seja
+    /// Retorna o erro [`ProcessorError::InvalidRegister`] caso o registrador `n` seja
     /// invalido.
     ///
     /// # Exemplo
@@ -218,13 +226,13 @@ impl Processor {
     /// p.set_reg(0, 0x1);
     /// assert_eq!(0x1, p.reg(0).unwrap());
     /// ```
-    pub fn set_reg(&mut self, n: usize, v: usize) -> Result<()> {
+    pub fn set_reg(&mut self, n: MemoryCell, v: MemoryCell) -> Result<()> {
         match self.registers.get_mut(n) {
             Some(r) => {
                 *r = v;
                 Ok(())
             }
-            None => Err(ProcError::InvalidRegister(n)),
+            None => Err(ProcessorError::InvalidRegister(n)),
         }
     }
 
@@ -235,7 +243,7 @@ impl Processor {
     /// | Nº | 15 | 14 | 13 | 12 | 11 | 10 | 09 | 08 | 07 | 06 | 05 | 04 | 03 | 02 | 01 | 00 |
     /// |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
     /// | IR | -- | -- | -- | -- | -- | -- | RX | RX | RX | -- | -- | -- | -- | -- | -- | -- |
-    pub fn rx(&self) -> usize {
+    pub fn rx(&self) -> MemoryCell {
         self.rx
     }
 
@@ -246,7 +254,7 @@ impl Processor {
     /// | Nº | 15 | 14 | 13 | 12 | 11 | 10 | 09 | 08 | 07 | 06 | 05 | 04 | 03 | 02 | 01 | 00 |
     /// |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
     /// | IR | -- | -- | -- | -- | -- | -- | -- | -- | -- | RY | RY | RY | -- | -- | -- | -- |
-    pub fn ry(&self) -> usize {
+    pub fn ry(&self) -> MemoryCell {
         self.ry
     }
 
@@ -257,7 +265,7 @@ impl Processor {
     /// | Nº | 15 | 14 | 13 | 12 | 11 | 10 | 09 | 08 | 07 | 06 | 05 | 04 | 03 | 02 | 01 | 00 |
     /// |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
     /// | IR | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | RZ | RZ | RZ | -- |
-    pub fn rz(&self) -> usize {
+    pub fn rz(&self) -> MemoryCell {
         self.rz
     }
 
@@ -270,14 +278,11 @@ impl Processor {
     ///
     /// # Erros
     ///
-    /// Retorna o erro [`ProcError::InvalidIndex`] caso o valor `i` seja inválido.
+    /// Retorna o erro [`ProcessorError::InvalidFlag`] caso o valor `i` seja inválido.
     pub fn fr(&self, i: usize) -> Result<bool> {
         match self.fr.get(i) {
             Some(&f) => Ok(f),
-            None => Err(ProcError::InvalidIndex(
-                i,
-                Some("Índice do Flag Register inválido".to_string()),
-            )),
+            None => Err(ProcessorError::InvalidFlag(i)),
         }
     }
 
@@ -290,85 +295,86 @@ impl Processor {
     ///
     /// # Erros
     ///
-    /// Retorna o erro [`ProcError::InvalidIndex`] caso o valor `i` seja inválido.
+    /// Retorna o erro [`ProcessorError::InvalidFlag`] caso o valor `i` seja inválido.
     pub fn set_fr(&mut self, i: usize, v: bool) -> Result<()> {
         match self.fr.get_mut(i) {
             Some(f) => {
                 *f = v;
                 Ok(())
             }
-            None => Err(ProcError::InvalidIndex(
-                i,
-                Some("Índice do Flag Register inválido".to_string()),
-            )),
+            None => Err(ProcessorError::InvalidFlag(i)),
         }
     }
 
     /// Retorna o valor do registrador especial *Instruction Register*.
-    pub fn ir(&self) -> usize {
+    pub fn ir(&self) -> MemoryCell {
         self.ir
     }
 
     /// Retorna o valor do registrador especial *Stack Pointer*.
-    pub fn sp(&self) -> usize {
+    pub fn sp(&self) -> MemoryCell {
         self.sp
     }
 
-    /// Altera o valor do registrador especial *Stack Pointer* para `v`.
+    /// Altera o valor do registrador especial *Stack Pointer* para `addr`.
     ///
     /// # Erros
     ///
-    /// Retorna o erro [`ProcError::MaximumMemoryReached`] caso o valor `v` seja
-    /// maior que [`MEMORY_SIZE`].
-    pub fn set_sp(&mut self, v: usize) -> Result<()> {
-        return if v > MEMORY_SIZE {
-            Err(ProcError::MaximumMemoryReached)
-        } else {
-            self.sp = v;
-            Ok(())
-        };
+    /// - [`ProcessorError::StackOverflow`] caso o `addr` seja menor que o topo da pilha.
+    /// - [`ProcessorError::StackUnderflow`] caso o `addr` seja maior que a base da pilha.
+    ///
+    pub fn set_sp(&mut self, addr: MemoryCell) -> Result<()> {
+        self.sp = addr;
+        match addr {
+            a if isa::memory::layout::ADDR_STACK.contains(&a) => Ok(()),
+            a if a < *isa::memory::layout::ADDR_STACK.start() => {
+                Err(ProcessorError::StackOverflow(addr))
+            }
+            a if a > *isa::memory::layout::ADDR_STACK.end() => {
+                Err(ProcessorError::StackUnderflow(addr))
+            }
+            _ => unreachable!(),
+        }
     }
 
     /// Incrementa o valor do registrador especial *Stack Pointer* de um valor `v`.
     ///
     /// # Erros
     ///
-    /// Retorna o erro [`ProcError::MaximumMemoryReached`] caso o resultado da
-    /// soma seja maior que [`MEMORY_SIZE`] - 1.
-    /// É importante notar que neste caso o valor de SP **não** será atualizado.
-    pub fn inc_sp(&mut self, v: usize) -> Result<()> {
-        return if self.sp + v > MEMORY_SIZE - 1 {
-            Err(ProcError::MaximumMemoryReached)
-        } else {
-            Ok(self.sp += v)
-        };
+    /// - [`ProcessorError::StackOverflow`] caso o resultado seja menor que o topo da pilha.
+    /// - [`ProcessorError::StackUnderflow`] caso o resultado seja maior que a base da pilha.
+    pub fn inc_sp(&mut self, v: MemoryCell) -> Result<()> {
+        self.set_sp(self.sp() + v)
     }
 
     /// Decrementa o valor do registrador especial *Stack Pointer* de um valor `v`.
     ///
     /// # Erros
     ///
-    /// Retorna o erro [`ProcError::InvalidMemoryIndex`] caso o resultado da
-    /// subtração seja menor que 0.
-    /// É importante notar que neste caso o valor de SP **não** será atualizado.
+    /// - [`ProcessorError::StackOverflow`] caso o resultado seja menor que o topo da pilha.
+    /// - [`ProcessorError::StackUnderflow`] caso o resultado seja maior que a base da pilha.
+    /// - [`ProcessorError::InvalidAddress`] caso o resultado seja negativo.
     pub fn dec_sp(&mut self, v: usize) -> Result<()> {
         match self.sp.checked_sub(v) {
-            Some(r) => Ok(self.sp = r),
-            None => Err(ProcError::InvalidMemoryIndex(0)), // arrumar
+            Some(r) => self.set_sp(r),
+            None => Err(ProcessorError::InvalidAddress(0)), // arrumar
         }
     }
 
     /// Retorna o valor do registrador especial *Program Counter*.
-    pub fn pc(&self) -> usize {
+    pub fn pc(&self) -> MemoryCell {
         self.pc
     }
 
     #[warn(missing_docs)]
-    pub fn set_pc(&mut self, v: usize) -> Result<()> {
-        if v > MEMORY_SIZE - 1 {
-            Err(ProcError::MaximumMemoryReached)
-        } else {
-            Ok(self.pc = v)
+    pub fn set_pc(&mut self, addr: usize) -> Result<()> {
+        self.pc = addr;
+        match addr {
+            a if isa::memory::layout::ADDR_PROG_AND_VAR.contains(&a) => Ok(()),
+            _ => Err(ProcessorError::SegmentationFault {
+                pc: addr,
+                data_area: isa::memory::layout::data_area(addr),
+            }),
         }
     }
 
@@ -376,16 +382,10 @@ impl Processor {
     ///
     /// # Erros
     ///
-    /// Retorna o erro [`ProcError::MaximumMemoryReached`] caso o resultado da
-    /// soma seja maior que [`MEMORY_SIZE`].
-    /// É importante notar que neste caso o valor de PC **não** será atualizado.
+    /// Retorna [`ProcessorError::SegmentationFault`] caso o resultado esteja fora da área de
+    /// programa e variáveis.
     pub fn inc_pc(&mut self, v: usize) -> Result<()> {
-        return if self.pc + v > MEMORY_SIZE - 1 {
-            Err(ProcError::MaximumMemoryReached)
-        } else {
-            self.pc += v;
-            Ok(())
-        };
+        self.set_pc(self.pc + v)
     }
 
     #[warn(missing_docs)]

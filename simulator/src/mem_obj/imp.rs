@@ -11,6 +11,7 @@ use std::cell::RefCell;
 #[properties(wrapper_type = super::MemObject)]
 pub struct MemObject {
     #[property(name = "addr", get, set, type = String, member = addr)]
+    #[property(name = "faddr", get, set, type = String, member = faddr)]
     #[property(name = "inst", get, set, type = String, member = inst)]
     #[property(name = "raw", get, set, type = String, member = raw)]
     #[property(name = "float", get, set, type = Option<String>, member = float)]

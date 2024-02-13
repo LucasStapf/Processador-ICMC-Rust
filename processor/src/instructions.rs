@@ -1,16 +1,18 @@
-use crate::modules::video;
+use crate::{errors::ProcessorError, modules::video};
 
-use super::{ProcError, Processor};
+use super::Processor;
 use isa::{FlagIndex, Instruction, MAX_VALUE_MEMORY};
 
 pub trait InstructionCicle {
-    fn execution(&self, processor: &mut Processor) -> Result<(), ProcError>;
+    fn execution(&self, processor: &mut Processor) -> Result<(), ProcessorError>;
 }
 
 impl InstructionCicle for Instruction {
-    fn execution(&self, p: &mut Processor) -> Result<(), ProcError> {
+    fn execution(&self, p: &mut Processor) -> Result<(), ProcessorError> {
         match self {
-            Instruction::InvalidInstruction => return Err(ProcError::InvalidInstruction(p.ir())),
+            Instruction::InvalidInstruction => {
+                return Err(ProcessorError::InvalidInstruction(p.ir()))
+            }
 
             Instruction::LOAD => {
                 p.set_reg(p.rx(), p.mem(p.mem(p.pc())?)?)?;
@@ -52,13 +54,14 @@ impl InstructionCicle for Instruction {
             Instruction::OUTCHAR => {
                 let index = p.reg(p.ry())?;
                 if index > video::VIDEO_BUFFER_LENGHT {
-                    return Err(ProcError::InvalidIndex(
-                        index,
-                        Some(format!(
-                            "Índice inválido. O índice deve pertencer ao intervalo 0 até {}",
+                    return Err(ProcessorError::Generic {
+                        title: "Índice inválido na Mémoria de Vídeo".to_string(),
+                        description: format!(
+                            "O índice {} não pertence ao intervalo de 0 a {}.",
+                            index,
                             video::VIDEO_BUFFER_LENGHT
-                        )),
-                    ));
+                        ),
+                    });
                 }
 
                 let c = isa::bits(p.reg(p.rx())?, 0..=7) as u8;
@@ -71,7 +74,13 @@ impl InstructionCicle for Instruction {
                         p.set_pixel(Some(pixel));
                     }
                     None => {
-                        return Err(ProcError::Generic(format!("Cor inválida: {}", color_code)))
+                        return Err(ProcessorError::Generic {
+                            title: "Cor inválida".to_string(),
+                            description: format!(
+                                "O código {} não representa nenhuma cor mapeada.",
+                                color_code
+                            ),
+                        });
                     }
                 }
             }
@@ -400,7 +409,7 @@ mod tests {
         let mut p = Processor::new_debug(10);
         let _ = p.set_mem(0, 0b1011110000000000);
         assert_eq!(
-            ProcError::InvalidInstruction(0b1011110000000000),
+            ProcessorError::InvalidInstruction(0b1011110000000000),
             p.next().err().unwrap()
         )
     }

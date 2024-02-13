@@ -9,6 +9,7 @@ impl MemObject {
     pub fn new(addr: String, inst: String, raw: String, float: Option<String>) -> Self {
         Object::builder()
             .property("addr", addr)
+            // .property("faddr", faddr)
             .property("inst", inst)
             .property("raw", raw)
             .property("float", float)
@@ -19,6 +20,7 @@ impl MemObject {
 #[derive(Default)]
 pub struct MemData {
     pub addr: String,
+    pub faddr: String,
     pub inst: String,
     pub raw: String,
     pub float: Option<String>,

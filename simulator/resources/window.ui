@@ -476,12 +476,6 @@
                                         <child>
                                           <object class="MemoryCellRow"/>
                                         </child>
-                                        <child>
-                                          <object class="MemoryCellRow"/>
-                                        </child>
-                                        <child>
-                                          <object class="MemoryCellRow"/>
-                                        </child>
                                       </object>
                                     </child>
                                   </object>
@@ -491,10 +485,10 @@
                                     <property name="hexpand">True</property>
                                     <child type="center">
                                       <object class="GtkBox">
-                                        <property name="spacing">10</property>
+                                        <property name="css-classes">linked</property>
                                         <property name="vexpand">True</property>
                                         <child>
-                                          <object class="GtkSearchEntry">
+                                          <object class="GtkSearchEntry" id="search_addr">
                                             <property name="placeholder-text">Address</property>
                                           </object>
                                         </child>

@@ -1,6 +1,8 @@
 ///! *Instruction Set Architecture - ISA*
 use std::ops::RangeInclusive;
 
+pub mod memory;
+
 pub const BITS_ADDRESS: usize = 16;
 pub const MAX_VALUE_MEMORY: usize = 2_usize.pow(BITS_ADDRESS as u32) - 1;
 

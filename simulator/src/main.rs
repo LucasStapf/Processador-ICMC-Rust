@@ -1,3 +1,5 @@
+#![allow(dead_code, unused_imports)]
+
 use env_logger::{Builder, Target};
 
 use adw::prelude::*;
@@ -6,7 +8,7 @@ use gtk::gdk::Display;
 use gtk::CssProvider;
 
 mod files;
-mod mem_obj;
+// mod mem_obj;
 mod mem_row;
 mod processor;
 mod ui;
@@ -34,7 +36,7 @@ fn load_css() {
     provider.load_from_data(include_str!("../resources/sim.css"));
 
     let mem = CssProvider::new();
-    mem.load_from_data(include_str!("../resources/memcell.css"));
+    mem.load_from_data(include_str!("../resources/row.css"));
 
     // Add the provider to the default screen
     gtk::style_context_add_provider_for_display(

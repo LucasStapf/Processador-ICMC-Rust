@@ -11,11 +11,15 @@ pub struct MemoryCellRow {
     #[template_child]
     pub label_mem_addr: TemplateChild<Label>,
     #[template_child]
+    pub label_mem_float_addr: TemplateChild<Label>,
+    #[template_child]
     pub label_mem_inst: TemplateChild<Label>,
+    #[template_child]
+    pub label_mem_float_inst: TemplateChild<Label>,
     #[template_child]
     pub label_mem_raw: TemplateChild<Label>,
     #[template_child]
-    pub label_mem_float: TemplateChild<Label>,
+    pub label_mem_float_raw: TemplateChild<Label>,
 }
 
 // The central trait for subclassing a GObject
