@@ -78,7 +78,7 @@
 	(1,789,"GtkFrame",None,788,None,None,None,None,None),
 	(1,790,"GtkLabel",None,789,None,None,None,None,None),
 	(1,791,"GtkBox",None,789,None,None,None,None,None),
-	(1,792,"GtkScrolledWindow",None,791,None,None,None,None,None),
+	(1,792,"GtkScrolledWindow","scrolled_memory_view",791,None,None,None,None,None),
 	(1,793,"GtkBox","box_memory_cells",792,None,None,None,None,None),
 	(1,794,"MemoryCellRow",None,793,None,None,None,None,None),
 	(1,795,"MemoryCellRow",None,793,None,None,None,1,None),
@@ -385,12 +385,14 @@
 	(2,50,"GtkLabel","width-chars","17",None,None,None,None,None,None,None,None,None),
 	(2,50,"GtkLabel","xalign","0.0",None,None,None,None,None,None,None,None,None),
 	(2,50,"GtkLabel","yalign","0.0",None,None,None,None,None,None,None,None,None),
+	(2,50,"GtkWidget","css-classes","numeric",None,None,None,None,None,None,None,None,None),
 	(2,51,"GtkOrientable","orientation","vertical",None,None,None,None,None,None,None,None,None),
 	(2,51,"GtkWidget","margin-end","10",None,None,None,None,None,None,None,None,None),
 	(2,51,"GtkWidget","valign","end",None,None,None,None,None,None,None,None,None),
 	(2,53,"GtkLabel","label","0x0000",None,None,None,None,None,None,None,None,None),
 	(2,53,"GtkLabel","width-chars","7",None,None,None,None,None,None,None,None,None),
 	(2,53,"GtkLabel","xalign","0.0",None,None,None,None,None,None,None,None,None),
+	(2,53,"GtkWidget","css-classes","numeric",None,None,None,None,None,None,None,None,None),
 	(2,53,"GtkWidget","halign","start",None,None,None,None,None,None,None,None,None),
 	(2,53,"GtkWidget","margin-start","10",None,None,None,None,None,None,None,None,None),
 	(2,53,"GtkWidget","valign","end",None,None,None,None,None,None,None,None,None),
@@ -420,7 +422,8 @@
 	(13,1,739,"GtkInfoBar","response","button_info_close_clicked",None,None,"yes",None,None),
 	(14,1,809,"GtkButton","clicked","mem_button_down_clicked",None,None,"yes",None,None),
 	(15,1,810,"GtkButton","clicked","mem_button_up_clicked",None,None,"yes",None,None),
-	(16,1,817,"GtkButton","clicked","restart_button_clicked",None,None,"yes",None,None)
+	(16,1,817,"GtkButton","clicked","restart_button_clicked",None,None,"yes",None,None),
+	(17,1,808,"GtkSearchEntry","search-changed","search_changed",None,None,1,None,None)
   </object_signal>
   <object_data>
 	(2,21,"GtkWidget",1,1,None,None,None,None,None,None),

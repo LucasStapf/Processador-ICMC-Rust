@@ -11,7 +11,9 @@ use isa::{Instruction, MemoryCell};
 use log::{debug, info, warn};
 use modules::video::Pixelmap;
 use std::{
+    borrow::Borrow,
     fmt::Display,
+    ops::Deref,
     sync::{Arc, Mutex},
 };
 
@@ -77,9 +79,9 @@ impl Processor {
             ry: 0,
             rz: 0,
             fr: [false; 16],
-            pc: 0,
+            pc: *isa::memory::layout::ADDR_PROG_AND_VAR.start(),
             ir: 0,
-            sp: 0,
+            sp: *isa::memory::layout::ADDR_STACK.end(),
             pixel: None,
             halted: false,
             debug: false,

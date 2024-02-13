@@ -74,7 +74,10 @@ mod imp {
         pub label_val_ir: TemplateChild<Label>,
 
         #[template_child]
+        pub scrolled_memory_view: TemplateChild<gtk::ScrolledWindow>,
+        #[template_child]
         pub box_memory_cells: TemplateChild<gtk::Box>,
+
         #[template_child]
         pub frame_screen: TemplateChild<gtk::Frame>,
 
@@ -87,6 +90,9 @@ mod imp {
         pub info_bar_top: TemplateChild<InfoBar>,
         #[template_child]
         pub action_row_info: TemplateChild<ActionRow>,
+
+        #[template_child]
+        pub search_addr: TemplateChild<gtk::SearchEntry>,
 
         pub data: RefCell<WindowData>,
     }
@@ -135,6 +141,50 @@ mod imp {
         #[template_callback]
         fn button_info_close_clicked(&self) {
             self.obj().close_info();
+        }
+
+        #[template_callback]
+        fn search_changed(&self, entry: gtk::SearchEntry) {
+            let text = entry.text().to_string();
+            match text.len() {
+                0 => entry.remove_css_class("error"),
+                1..=2 => {
+                    // Decimal
+                    let number = usize::from_str_radix(&text, 10);
+                    match number {
+                        Ok(n) => {
+                            entry.remove_css_class("error");
+                            self.obj().update_memory_view(n);
+                        }
+                        Err(_) => entry.add_css_class("error"),
+                    }
+                }
+                3.. => {
+                    // Decimal ou Hexadecimal
+                    match &text[0..2] {
+                        "0x" | "0X" => {
+                            let number = usize::from_str_radix(&text[2..], 16);
+                            match number {
+                                Ok(n) => {
+                                    entry.remove_css_class("error");
+                                    self.obj().update_memory_view(n);
+                                }
+                                Err(_) => entry.add_css_class("error"),
+                            }
+                        }
+                        _ => {
+                            let number = usize::from_str_radix(&text, 10);
+                            match number {
+                                Ok(n) => {
+                                    entry.remove_css_class("error");
+                                    self.obj().update_memory_view(n);
+                                }
+                                Err(_) => entry.add_css_class("error"),
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -404,7 +454,7 @@ impl Window {
                             );
 
                             let inst = isa::Instruction::get_instruction(raw);
-                            cell.update(i, &inst.display(i, &p), raw, float);
+                            cell.update(Some(inst), i, &inst.display(i, &p), raw, float);
                             cell.set_float_address(&isa::memory::layout::data_area(i));
                             cell.set_float_instruction("Instruction");
                             i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);
@@ -449,6 +499,7 @@ impl Window {
                                     {
                                         cell = n;
                                         cell.update(
+                                            None,
                                             i,
                                             &format!("#0x{:X}", p.mem(i).unwrap()),
                                             p.mem(i).unwrap(),
@@ -503,6 +554,7 @@ impl Window {
                                     {
                                         cell = n;
                                         cell.update(
+                                            None,
                                             i,
                                             &format!("#0x{:X}", p.mem(i).unwrap()),
                                             p.mem(i).unwrap(),
@@ -522,6 +574,7 @@ impl Window {
                                     {
                                         cell = next;
                                         cell.update(
+                                            None,
                                             i,
                                             &format!("#0x{:X}", p.mem(i).unwrap()),
                                             p.mem(i).unwrap(),
@@ -539,6 +592,7 @@ impl Window {
                                     {
                                         cell = next;
                                         cell.update(
+                                            None,
                                             i,
                                             &format!("#0x{:X}", p.mem(i).unwrap()),
                                             p.mem(i).unwrap(),
@@ -559,7 +613,7 @@ impl Window {
                         }
                         _ => {
                             let value = p.mem(i).unwrap();
-                            cell.update(i, &format!("#{}", value), value, float);
+                            cell.update(None, i, &format!("#{}", value), value, float);
                             cell.set_float_address(&isa::memory::layout::data_area(i));
                             cell.set_float_instruction("Data");
                             i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);

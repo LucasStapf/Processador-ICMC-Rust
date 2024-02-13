@@ -39,14 +39,41 @@ impl MemoryCellRow {
         mem
     }
 
-    pub fn update(&self, addr: usize, inst: &str, raw: usize, float: Option<&str>) {
+    pub fn update(
+        &self,
+        instruction: Option<isa::Instruction>,
+        addr: usize,
+        inst: &str,
+        raw: usize,
+        float: Option<&str>,
+    ) {
         self.imp()
             .label_mem_addr
             .set_markup(&format!("{:#06X}", addr));
         self.imp().label_mem_inst.set_markup(inst);
-        self.imp()
-            .label_mem_raw
-            .set_markup(&format!("{:016b}", raw));
+
+        match instruction {
+            Some(i) => {
+                let mask = i.mask();
+                let raw_str = format!("{:016b}", raw);
+                let result = mask
+                    .chars()
+                    .zip(raw_str.chars())
+                    .map(|(c_m, c_r)| {
+                        if c_m != '-' {
+                            format!("<b>{}</b>", c_r)
+                        } else {
+                            c_r.to_string()
+                        }
+                    })
+                    .collect::<String>();
+                self.imp().label_mem_raw.set_markup(&result)
+            }
+            None => self
+                .imp()
+                .label_mem_raw
+                .set_markup(&format!("{:016b}", raw)),
+        }
 
         match float {
             Some(s) => {

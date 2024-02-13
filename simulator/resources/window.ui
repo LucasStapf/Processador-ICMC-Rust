@@ -434,7 +434,7 @@
                               <object class="GtkBox">
                                 <property name="orientation">vertical</property>
                                 <child>
-                                  <object class="GtkScrolledWindow">
+                                  <object class="GtkScrolledWindow" id="scrolled_memory_view">
                                     <property name="focusable">True</property>
                                     <property name="hscrollbar-policy">never</property>
                                     <property name="propagate-natural-height">True</property>
@@ -490,6 +490,7 @@
                                         <child>
                                           <object class="GtkSearchEntry" id="search_addr">
                                             <property name="placeholder-text">Address</property>
+                                            <signal name="search-changed" handler="search_changed" swapped="yes"/>
                                           </object>
                                         </child>
                                         <child>

@@ -16,7 +16,7 @@ mod ui;
 const APP_ID: &str = "org.ProcessadorICMC";
 
 fn main() -> glib::ExitCode {
-    std::env::set_var("RUST_LOG", "info");
+    std::env::set_var("RUST_LOG", "debug");
 
     gio::resources_register_include!("compile.gresource")
         .expect("Falha ao carregar os recursos de UI.");
