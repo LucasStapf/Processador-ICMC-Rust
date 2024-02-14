@@ -622,8 +622,13 @@ impl Window {
                                     }
                                 }
 
-                                isa::Instruction::INPUT => todo!(),
-                                isa::Instruction::OUTPUT => todo!(),
+                                isa::Instruction::INPUT => {
+                                    unimplemented!("A instrução INPUT não foi implementada!")
+                                }
+                                isa::Instruction::OUTPUT => {
+                                    unimplemented!("A instrução OUTPUT não foi implementada!")
+                                }
+
                                 isa::Instruction::SOUND => todo!(),
                             }
                         }
