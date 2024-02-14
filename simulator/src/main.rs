@@ -6,6 +6,7 @@ use adw::prelude::*;
 use adw::{gio, glib, Application};
 use gtk::gdk::Display;
 use gtk::CssProvider;
+use log::info;
 
 mod files;
 // mod mem_obj;
@@ -16,15 +17,17 @@ mod ui;
 const APP_ID: &str = "org.ProcessadorICMC";
 
 fn main() -> glib::ExitCode {
-    std::env::set_var("RUST_LOG", "debug");
+    std::env::set_var("RUST_LOG", "info");
 
     gio::resources_register_include!("compile.gresource")
         .expect("Falha ao carregar os recursos de UI.");
     // log config
+
     let mut builder = Builder::from_default_env();
     builder.target(Target::Stdout);
     builder.init();
 
+    info!("Iniciando o simulador");
     let app = Application::builder().application_id(APP_ID).build();
     app.connect_startup(|_| load_css());
     app.connect_activate(build_ui);

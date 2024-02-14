@@ -407,7 +407,7 @@
 	(2,57,"GtkLabel","justify","center",None,None,None,None,None,None,None,None,None),
 	(2,57,"GtkLabel","label","ADDR_PROG_AND_VAR",None,None,None,None,None,None,None,None,None),
 	(2,57,"GtkLabel","use-markup","True",None,None,None,None,None,None,None,None,None),
-	(2,57,"GtkLabel","width-chars","20",None,None,None,None,None,None,None,None,None),
+	(2,57,"GtkLabel","width-chars","25",None,None,None,None,None,None,None,None,None),
 	(2,57,"GtkLabel","xalign","0.0",None,None,None,None,None,None,None,None,None),
 	(2,57,"GtkLabel","yalign","0.0",None,None,None,None,None,None,None,None,None),
 	(2,57,"GtkWidget","margin-start","10",None,None,None,None,None,None,None,None,None),
@@ -423,7 +423,8 @@
 	(14,1,809,"GtkButton","clicked","mem_button_down_clicked",None,None,"yes",None,None),
 	(15,1,810,"GtkButton","clicked","mem_button_up_clicked",None,None,"yes",None,None),
 	(16,1,817,"GtkButton","clicked","restart_button_clicked",None,None,"yes",None,None),
-	(17,1,808,"GtkSearchEntry","search-changed","search_changed",None,None,1,None,None)
+	(17,1,808,"GtkSearchEntry","search-changed","search_changed",None,None,1,None,None),
+	(18,1,819,"GtkToggleButton","toggled","toggled_debug",None,None,1,None,None)
   </object_signal>
   <object_data>
 	(2,21,"GtkWidget",1,1,None,None,None,None,None,None),

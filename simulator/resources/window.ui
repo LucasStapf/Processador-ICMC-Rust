@@ -577,6 +577,7 @@
                         <property name="halign">center</property>
                         <property name="label">DEBUG</property>
                         <property name="valign">center</property>
+                        <signal name="toggled" handler="toggled_debug" swapped="yes"/>
                         <style>
                           <class name="toggle-left"/>
                         </style>

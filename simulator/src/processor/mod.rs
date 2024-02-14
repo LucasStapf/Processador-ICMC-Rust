@@ -66,6 +66,7 @@ impl ProcessorManager {
         if let Ok(mut p) = p.lock() {
             p.set_mem(4, 0b1110010000000000);
             p.set_mem(5, 0b0000110000000000);
+            p.set_mem(7, 0b1011110000000000);
         }
 
         RUNTIME.spawn(async move {

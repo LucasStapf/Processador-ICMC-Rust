@@ -13,6 +13,7 @@ mod imp {
     use gtk::{gdk, CompositeTemplate, Entry, Label, ToggleButton};
     use log::debug;
     use log::error;
+    use log::info;
     use processor::errors::ProcessorError;
     use std::sync::Arc;
     use std::sync::Mutex;
@@ -30,6 +31,7 @@ mod imp {
     #[derive(CompositeTemplate, Default)]
     #[template(resource = "/br/com/processador/window.ui")]
     pub struct Window {
+        // Campos dos Registradores 0-7
         #[template_child]
         pub entry_r0: TemplateChild<Entry>,
         #[template_child]
@@ -46,6 +48,8 @@ mod imp {
         pub entry_r6: TemplateChild<Entry>,
         #[template_child]
         pub entry_r7: TemplateChild<Entry>,
+
+        // Label do Flag Register - Uma label para cada bit.
         #[template_child]
         pub label_fr_0: TemplateChild<Label>,
         #[template_child]
@@ -66,21 +70,28 @@ mod imp {
         pub label_fr_8: TemplateChild<Label>,
         #[template_child]
         pub label_fr_9: TemplateChild<Label>,
+
+        // Label do Program Counter
         #[template_child]
         pub label_val_pc: TemplateChild<Label>,
+
+        // Label do Stack Pointer
         #[template_child]
         pub label_val_sp: TemplateChild<Label>,
+
+        // Label do Instruction Register
         #[template_child]
         pub label_val_ir: TemplateChild<Label>,
 
-        #[template_child]
-        pub scrolled_memory_view: TemplateChild<gtk::ScrolledWindow>,
+        // Box onde é mostrado os dados de alguns endereços da memória
         #[template_child]
         pub box_memory_cells: TemplateChild<gtk::Box>,
 
+        // Frame onde a tela do processador é colocada.
         #[template_child]
         pub frame_screen: TemplateChild<gtk::Frame>,
 
+        // Botão do Modo Debug
         #[template_child]
         pub toggle_mode_debug: TemplateChild<ToggleButton>,
 
@@ -137,6 +148,9 @@ mod imp {
         fn restart_button_clicked(&self, _button: gtk::Button) {
             todo!("Implementar o botão de restart!");
         }
+
+        #[template_callback]
+        fn toggled_debug(&self, button: gtk::ToggleButton) {}
 
         #[template_callback]
         fn button_info_close_clicked(&self) {
@@ -286,6 +300,7 @@ mod imp {
     impl ApplicationWindowImpl for Window {}
 }
 
+use std::error::Error;
 use std::ops::RangeBounds;
 
 use crate::mem_row::MemoryCellRow;
@@ -293,6 +308,7 @@ use crate::processor::RunMode;
 use adw::prelude::*;
 use adw::Application;
 use adw::{gio, glib};
+use async_channel::Sender;
 use glib::Object;
 use gtk::glib::subclass::types::ObjectSubclassIsExt;
 use gtk::MessageType;
@@ -651,63 +667,58 @@ impl Window {
 
     pub fn show_error_dialog_processor(&self, error: ProcessorError) {
         match error {
-            ProcessorError::SegmentationFault { pc, data_area } => self.show_info(
+            ProcessorError::SegmentationFault { .. } => self.show_info(
                 MessageType::Error,
                 "Segmentation fault",
                 "O registrador <b>PC</b> está apontando para um endereço de uma região da memória não permitida.",
             ),
-            ProcessorError::StackOverflow(_) => todo!(),
-            ProcessorError::StackUnderflow(_) => todo!(),
-            ProcessorError::InvalidAddress(_) => todo!(),
-            ProcessorError::InvalidInstruction(_) => todo!(),
-            ProcessorError::InvalidRegister(_) => todo!(),
-            ProcessorError::InvalidFlag(_) => todo!(),
-            ProcessorError::Generic { title, description } => todo!(),
-            // ProcError::ProcessorPanic => self.show_info(
-            //     MessageType::Error,
-            //     "Erro interno",
-            //     "Alguma <i>thread</i> que utilizava o processador falhou.",
-            // ),
-            // ProcError::ChannelClosed => self.show_info(
-            //     MessageType::Error,
-            //     "Erro interno",
-            //     "Não foi possível trocar dados entre as <i>threads</i> do programa.",
-            // ),
-            // ProcError::ChannelEmpty => todo!(),
-            // ProcError::MaximumMemoryReached => self.show_info(
-            //     MessageType::Error,
-            //     "Limite máximo da memória atingido",
-            //     &format!(
-            //         "O registrador <b>PC</b> tentou ultrapassar o limite da memória ({}). \
-            //         Dica: utilize a instrução <i>HALT</i> no fim do seu programa para evitar \
-            //         esse problema.",
-            //         processor::MEMORY_SIZE - 1
-            //     ),
-            // ),
-            // ProcError::InvalidIndex(_, _) => todo!(),
-            // ProcError::InvalidMemoryIndex(i) => self.show_info(
-            //     MessageType::Error,
-            //     "Índice inválido",
-            //     &format!(
-            //         "O índice {}, utilizado para acessar a memória do processador, é inválido. \
-            //         Índices válidos estão entre 0 e {}.",
-            //         i,
-            //         processor::MEMORY_SIZE - 1
-            //     ),
-            // ),
-            //
-            // ProcError::InvalidInstruction(i) => self.show_info(
-            //     MessageType::Error,
-            //     "Instrução inválida",
-            //     &format!(
-            //         "O valor {:016b} não corresponde a nenhuma instrução válida. \
-            //         Verifique se o arquivo <b>.mif</b> está correto ou se o \
-            //         conjunto de instruções utilizado é compatível com a versão do simulador.",
-            //         i
-            //     ),
-            // ),
-            // ProcError::InvalidRegister(_) => todo!(),
-            // ProcError::Generic(s) => self.show_info(MessageType::Error, "Erro", &format!("{s}")),
+
+            ProcessorError::StackOverflow(_) => self.show_info(
+                MessageType::Error,
+                "Stack Overflow",
+                "O registrador <b>SP</b> está apontando para um endereço menor que o topo da pilha."
+            ),
+
+            ProcessorError::StackUnderflow(_) => self.show_info(
+                MessageType::Error,
+                "Stack Underflow",
+                "O registrador <b>SP</b> está apontando para um endereço maior que a base da pilha."
+            ),
+
+            ProcessorError::InvalidAddress(addr) => self.show_info(
+                MessageType::Error,
+                "Endereço inválido",
+                &format!("O endereço {:06x} não é um endereço válido.", addr)
+            ),
+
+            ProcessorError::InvalidInstruction(inst) => self.show_info(
+                MessageType::Error,
+                "Instrução inválida",
+                &format!(
+                    "O valor {:016b} não corresponde a nenhuma instrução válida. \
+                    Verifique se o arquivo <b>.mif</b> está correto ou se o \
+                    conjunto de instruções utilizado é compatível com a versão do simulador.",
+                    inst
+                ),
+            ),
+
+            ProcessorError::InvalidRegister(reg) => self.show_info(
+                MessageType::Error,
+                "Registrador inválido",
+                &format!("O registrador {} não existe.", reg)
+            ),
+
+            ProcessorError::InvalidFlag(bit) => self.show_info(
+                MessageType::Error,
+                "<i>Flag</i> inválida",
+                &format!("O <i>bit</i> {} não representa nenhuma <i>flag</i> do <i>Flag Register</i>.", bit)
+            ),
+
+            ProcessorError::Generic { title, description } => self.show_info(
+                MessageType::Error,
+                &title,
+                &description
+            ),
         }
     }
 }
