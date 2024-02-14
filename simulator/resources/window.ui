@@ -16,7 +16,7 @@
         <child>
           <object class="AdwSplitButton">
             <property name="css-classes">raised</property>
-            <property name="icon-name">folder-open-symbolic</property>
+            <property name="icon-name">folder</property>
             <property name="tooltip-markup">Abrir novo arquivo (&lt;b&gt;.asm&lt;/b&gt; ou &lt;b&gt;.mif&lt;/b&gt;)</property>
           </object>
         </child>
@@ -44,9 +44,11 @@
                   <object class="GtkInfoBar" id="info_bar_top">
                     <property name="message-type">error</property>
                     <property name="show-close-button">True</property>
+                    <property name="visible">False</property>
                     <signal name="response" handler="button_info_close_clicked" swapped="yes"/>
                     <child>
                       <object class="AdwActionRow" id="action_row_info">
+                        <property name="css-classes">heading</property>
                         <property name="subtitle">Um erro acabou de acontecer!</property>
                         <property name="title">&lt;b&gt;ERRO&lt;/b&gt;</property>
                       </object>
@@ -67,9 +69,11 @@
                 <property name="vexpand">True</property>
                 <child>
                   <object class="GtkFrame">
-                    <property name="css-classes">view</property>
+                    <property name="css-classes">view
+frame</property>
                     <property name="label-widget">
                       <object class="GtkLabel">
+                        <property name="css-classes">title-4</property>
                         <property name="label">&lt;b&gt;Registers&lt;/b&gt;</property>
                         <property name="use-markup">True</property>
                       </object>
@@ -88,6 +92,7 @@
                             <property name="spacing">6</property>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;PC&lt;/b&gt;</property>
                                 <property name="tooltip-text">Program Counter</property>
                                 <property name="use-markup">True</property>
@@ -96,6 +101,8 @@
                             </child>
                             <child>
                               <object class="GtkLabel" id="label_val_pc">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="justify">right</property>
                                 <property name="label">0x0000</property>
                                 <property name="width-chars">9</property>
@@ -104,6 +111,7 @@
                             </child>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;SP&lt;/b&gt;</property>
                                 <property name="tooltip-text">Stack Pointer</property>
                                 <property name="use-markup">True</property>
@@ -112,6 +120,8 @@
                             </child>
                             <child>
                               <object class="GtkLabel" id="label_val_sp">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="justify">right</property>
                                 <property name="label">0x0000</property>
                                 <property name="width-chars">9</property>
@@ -119,6 +129,7 @@
                             </child>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;IR&lt;/b&gt;</property>
                                 <property name="tooltip-text">Instruction Register</property>
                                 <property name="use-markup">True</property>
@@ -127,6 +138,8 @@
                             </child>
                             <child>
                               <object class="GtkLabel" id="label_val_ir">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="justify">right</property>
                                 <property name="label">0000000000000000</property>
                                 <property name="width-chars">16</property>
@@ -134,6 +147,7 @@
                             </child>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;FR&lt;/b&gt;</property>
                                 <property name="tooltip-text">Flag Register</property>
                                 <property name="use-markup">True</property>
@@ -145,6 +159,8 @@
                                 <property name="spacing">4</property>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_15">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="width-chars">1</property>
@@ -152,6 +168,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_14">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="width-chars">1</property>
@@ -159,6 +177,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_13">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="width-chars">1</property>
@@ -166,6 +186,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_12">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="width-chars">1</property>
@@ -173,6 +195,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_11">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="width-chars">1</property>
@@ -180,6 +204,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_10">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="width-chars">1</property>
@@ -187,6 +213,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_9">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="tooltip-text">Negative</property>
@@ -195,6 +223,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_8">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="tooltip-text">StackUnderflow</property>
@@ -203,6 +233,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_7">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="tooltip-text">StackOverflow</property>
@@ -211,6 +243,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_6">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="tooltip-text">Div by Zero</property>
@@ -219,6 +253,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_5">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="tooltip-text">Arithmetic Overflow</property>
@@ -227,6 +263,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_4">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="tooltip-text">Carry</property>
@@ -235,6 +273,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_3">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="tooltip-text">Zero</property>
@@ -243,6 +283,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_2">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="tooltip-text">Equal</property>
@@ -251,6 +293,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_1">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="tooltip-text">Lesser</property>
@@ -259,6 +303,8 @@
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label_fr_0">
+                                    <property name="css-classes">body
+numeric</property>
                                     <property name="justify">right</property>
                                     <property name="label">0</property>
                                     <property name="tooltip-text">Greater</property>
@@ -275,6 +321,7 @@
                             <property name="spacing">6</property>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;R0&lt;/b&gt;</property>
                                 <property name="tooltip-text">Register 0</property>
                                 <property name="use-markup">True</property>
@@ -282,6 +329,8 @@
                             </child>
                             <child>
                               <object class="GtkEntry" id="entry_r0">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="input-purpose">number</property>
                                 <property name="max-width-chars">0</property>
                                 <property name="width-chars">7</property>
@@ -291,6 +340,7 @@
                             </child>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;R1&lt;/b&gt;</property>
                                 <property name="tooltip-text">Register 1</property>
                                 <property name="use-markup">True</property>
@@ -298,6 +348,8 @@
                             </child>
                             <child>
                               <object class="GtkEntry" id="entry_r1">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="input-purpose">number</property>
                                 <property name="max-width-chars">0</property>
                                 <property name="width-chars">7</property>
@@ -307,6 +359,7 @@
                             </child>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;R2&lt;/b&gt;</property>
                                 <property name="tooltip-text">Register 2</property>
                                 <property name="use-markup">True</property>
@@ -314,6 +367,8 @@
                             </child>
                             <child>
                               <object class="GtkEntry" id="entry_r2">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="input-purpose">number</property>
                                 <property name="max-width-chars">0</property>
                                 <property name="width-chars">7</property>
@@ -323,6 +378,7 @@
                             </child>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;R3&lt;/b&gt;</property>
                                 <property name="tooltip-text">Register 3</property>
                                 <property name="use-markup">True</property>
@@ -330,6 +386,8 @@
                             </child>
                             <child>
                               <object class="GtkEntry" id="entry_r3">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="input-purpose">number</property>
                                 <property name="max-width-chars">0</property>
                                 <property name="width-chars">7</property>
@@ -339,6 +397,7 @@
                             </child>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;R4&lt;/b&gt;</property>
                                 <property name="tooltip-text">Register 4</property>
                                 <property name="use-markup">True</property>
@@ -346,6 +405,8 @@
                             </child>
                             <child>
                               <object class="GtkEntry" id="entry_r4">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="input-purpose">number</property>
                                 <property name="max-width-chars">0</property>
                                 <property name="width-chars">7</property>
@@ -355,6 +416,7 @@
                             </child>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;R5&lt;/b&gt;</property>
                                 <property name="tooltip-text">Register 5</property>
                                 <property name="use-markup">True</property>
@@ -362,6 +424,8 @@
                             </child>
                             <child>
                               <object class="GtkEntry" id="entry_r5">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="input-purpose">number</property>
                                 <property name="max-width-chars">0</property>
                                 <property name="width-chars">7</property>
@@ -371,6 +435,7 @@
                             </child>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;R6&lt;/b&gt;</property>
                                 <property name="tooltip-text">Register 6</property>
                                 <property name="use-markup">True</property>
@@ -378,6 +443,8 @@
                             </child>
                             <child>
                               <object class="GtkEntry" id="entry_r6">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="input-purpose">number</property>
                                 <property name="max-width-chars">0</property>
                                 <property name="width-chars">7</property>
@@ -387,6 +454,7 @@
                             </child>
                             <child>
                               <object class="GtkLabel">
+                                <property name="css-classes">body</property>
                                 <property name="label">&lt;b&gt;R7&lt;/b&gt;</property>
                                 <property name="tooltip-text">Register 7</property>
                                 <property name="use-markup">True</property>
@@ -394,6 +462,8 @@
                             </child>
                             <child>
                               <object class="GtkEntry" id="entry_r7">
+                                <property name="css-classes">body
+numeric</property>
                                 <property name="input-purpose">number</property>
                                 <property name="max-width-chars">0</property>
                                 <property name="width-chars">7</property>
@@ -421,9 +491,11 @@
                         <property name="visible" bind-source="toggle_mode_debug" bind-property="active" bind-flags="default">True</property>
                         <child>
                           <object class="GtkFrame">
-                            <property name="css-classes">view</property>
+                            <property name="css-classes">view
+frame</property>
                             <property name="label-widget">
                               <object class="GtkLabel">
+                                <property name="css-classes">title-4</property>
                                 <property name="label">&lt;b&gt;Memory&lt;/b&gt;</property>
                                 <property name="use-markup">True</property>
                               </object>
@@ -489,6 +561,8 @@
                                         <property name="vexpand">True</property>
                                         <child>
                                           <object class="GtkSearchEntry" id="search_addr">
+                                            <property name="css-classes">body
+numeric</property>
                                             <property name="placeholder-text">Address</property>
                                             <signal name="search-changed" handler="search_changed" swapped="yes"/>
                                           </object>
@@ -511,7 +585,7 @@
                                           <object class="GtkMenuButton">
                                             <property name="css-classes">raised</property>
                                             <property name="direction">up</property>
-                                            <property name="icon-name">configure-symbolic</property>
+                                            <property name="icon-name">configure</property>
                                           </object>
                                         </child>
                                       </object>
@@ -532,10 +606,12 @@
                         <property name="vexpand">True</property>
                         <child>
                           <object class="GtkFrame" id="frame_screen">
-                            <property name="css-classes">view</property>
+                            <property name="css-classes">view
+frame</property>
                             <property name="hexpand">True</property>
                             <property name="label-widget">
                               <object class="GtkLabel">
+                                <property name="css-classes">title-4</property>
                                 <property name="label">&lt;b&gt;Video&lt;/b&gt;</property>
                                 <property name="use-markup">True</property>
                               </object>
@@ -554,7 +630,8 @@
                     <property name="valign">center</property>
                     <child>
                       <object class="GtkButton" id="button-restart">
-                        <property name="icon-name">view-refresh-symbolic</property>
+                        <property name="css-classes">destructive-action</property>
+                        <property name="icon-name">system-restart-symbolic</property>
                         <property name="margin-end">10</property>
                         <property name="tooltip-text">Reset</property>
                         <signal name="clicked" handler="restart_button_clicked" swapped="yes"/>
@@ -585,7 +662,7 @@
                     </child>
                     <child>
                       <object class="GtkButton">
-                        <property name="icon-name">go-jump-symbolic</property>
+                        <property name="icon-name">edit-redo-symbolic</property>
                         <property name="margin-start">10</property>
                         <property name="tooltip-text">Next step</property>
                       </object>
