@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.16.0 -->
+<interface>
+  <requires lib="gtk" version="4.12"/>
+  <template class="MemoryView" parent="GtkBox">
+    <property name="css-classes">frame</property>
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkScrolledWindow" id="scrolled_memory_view">
+        <property name="focusable">True</property>
+        <property name="hscrollbar-policy">never</property>
+        <property name="propagate-natural-height">True</property>
+        <property name="valign">start</property>
+        <property name="vexpand">True</property>
+        <child>
+          <object class="GtkBox" id="box_memory_cells">
+            <property name="margin-end">4</property>
+            <property name="margin-start">4</property>
+            <property name="orientation">vertical</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="MemoryCellRow"/>
+            </child>
+            <child>
+              <object class="MemoryCellRow"/>
+            </child>
+            <child>
+              <object class="MemoryCellRow"/>
+            </child>
+            <child>
+              <object class="MemoryCellRow"/>
+            </child>
+            <child>
+              <object class="MemoryCellRow"/>
+            </child>
+            <child>
+              <object class="MemoryCellRow"/>
+            </child>
+            <child>
+              <object class="MemoryCellRow"/>
+            </child>
+            <child>
+              <object class="MemoryCellRow"/>
+            </child>
+            <child>
+              <object class="MemoryCellRow"/>
+            </child>
+            <child>
+              <object class="MemoryCellRow"/>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkActionBar">
+        <property name="hexpand">True</property>
+        <child type="center">
+          <object class="GtkBox">
+            <property name="css-classes">linked</property>
+            <property name="halign">center</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="GtkSearchEntry" id="search_addr">
+                <property name="css-classes">body
+numeric</property>
+                <property name="placeholder-text">Address</property>
+                <signal name="search-changed" handler="search_changed" swapped="yes"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton">
+                <property name="icon-name">go-down-symbolic</property>
+                <signal name="clicked" handler="mem_button_down_clicked" swapped="yes"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton">
+                <property name="icon-name">go-up-symbolic</property>
+                <signal name="clicked" handler="mem_button_up_clicked" swapped="yes"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuButton">
+                <property name="direction">up</property>
+                <property name="icon-name">configure</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

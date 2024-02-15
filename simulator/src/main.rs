@@ -56,6 +56,7 @@ fn load_css() {
 }
 
 fn build_ui(app: &Application) {
-    let window = ui::window::Window::new(app);
+    // let window = ui::window::Window::new(app);
+    let window = ui::simulator_window::SimulatorWindow::new(app);
     window.present();
 }

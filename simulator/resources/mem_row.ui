@@ -4,12 +4,12 @@
   <!-- interface-name mem_row.ui -->
   <requires lib="gtk" version="4.6"/>
   <template class="MemoryCellRow" parent="GtkBox">
+    <property name="css-classes">frame</property>
     <property name="halign">center</property>
     <property name="margin-end">4</property>
     <property name="margin-start">4</property>
     <child>
       <object class="GtkBox">
-        <property name="css-classes">frame</property>
         <property name="halign">center</property>
         <property name="vexpand">True</property>
         <child>
