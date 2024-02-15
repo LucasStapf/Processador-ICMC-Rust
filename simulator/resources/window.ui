@@ -44,7 +44,6 @@
                   <object class="GtkInfoBar" id="info_bar_top">
                     <property name="message-type">error</property>
                     <property name="show-close-button">True</property>
-                    <property name="visible">False</property>
                     <signal name="response" handler="button_info_close_clicked" swapped="yes"/>
                     <child>
                       <object class="AdwActionRow" id="action_row_info">
@@ -69,8 +68,7 @@
                 <property name="vexpand">True</property>
                 <child>
                   <object class="GtkFrame">
-                    <property name="css-classes">view
-frame</property>
+                    <property name="css-classes">frame</property>
                     <property name="label-widget">
                       <object class="GtkLabel">
                         <property name="css-classes">title-4</property>
@@ -491,8 +489,7 @@ numeric</property>
                         <property name="visible" bind-source="toggle_mode_debug" bind-property="active" bind-flags="default">True</property>
                         <child>
                           <object class="GtkFrame">
-                            <property name="css-classes">view
-frame</property>
+                            <property name="css-classes">frame</property>
                             <property name="label-widget">
                               <object class="GtkLabel">
                                 <property name="css-classes">title-4</property>
@@ -606,8 +603,7 @@ numeric</property>
                         <property name="vexpand">True</property>
                         <child>
                           <object class="GtkFrame" id="frame_screen">
-                            <property name="css-classes">view
-frame</property>
+                            <property name="css-classes">frame</property>
                             <property name="hexpand">True</property>
                             <property name="label-widget">
                               <object class="GtkLabel">

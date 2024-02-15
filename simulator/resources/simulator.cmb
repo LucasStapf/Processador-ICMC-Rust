@@ -15,6 +15,7 @@
   </css>
   <css_ui>
 	(3,1),
+	(3,2),
 	(4,2)
   </css_ui>
   <object>
@@ -138,7 +139,6 @@
 	(1,738,"GtkWidget","valign","start",None,None,None,None,None,None,None,None,None),
 	(1,739,"GtkInfoBar","message-type","error",None,None,None,None,None,None,None,None,None),
 	(1,739,"GtkInfoBar","show-close-button","True",None,None,None,None,None,None,None,None,None),
-	(1,739,"GtkWidget","visible","False",None,None,None,None,None,None,None,None,None),
 	(1,740,"AdwActionRow","subtitle","Um erro acabou de acontecer!",None,None,None,None,None,None,None,None,None),
 	(1,740,"AdwPreferencesRow","title","&lt;b&gt;ERRO&lt;/b&gt;",None,None,None,None,None,None,None,None,None),
 	(1,740,"GtkWidget","css-classes","heading",None,None,None,None,None,None,None,None,None),
@@ -152,7 +152,7 @@
 	(1,741,"GtkWidget","vexpand","True",None,None,None,None,None,None,None,None,None),
 	(1,742,"GtkFrame","label-widget",None,None,None,None,None,743,None,None,None,None),
 	(1,742,"GtkFrame","label-xalign","0.5",None,None,None,None,None,None,None,None,None),
-	(1,742,"GtkWidget","css-classes","view\nframe",None,None,None,None,None,None,None,None,None),
+	(1,742,"GtkWidget","css-classes","frame",None,None,None,None,None,None,None,None,None),
 	(1,742,"GtkWidget","visible","True",None,None,None,None,None,819,"GtkToggleButton","active","default"),
 	(1,743,"GtkLabel","label","&lt;b&gt;Registers&lt;/b&gt;",None,None,None,None,None,None,None,None,None),
 	(1,743,"GtkLabel","use-markup","True",None,None,None,None,None,None,None,None,None),
@@ -354,7 +354,7 @@
 	(1,788,"GtkWidget","visible","True",None,None,None,None,None,819,"GtkToggleButton","active","default"),
 	(1,789,"GtkFrame","label-widget",None,None,None,None,None,790,None,None,None,None),
 	(1,789,"GtkFrame","label-xalign","0.5",None,None,None,None,None,None,None,None,None),
-	(1,789,"GtkWidget","css-classes","view\nframe",None,None,None,None,None,None,None,None,None),
+	(1,789,"GtkWidget","css-classes","frame",None,None,None,None,None,None,None,None,None),
 	(1,789,"GtkWidget","vexpand","True",None,None,None,None,None,None,None,None,None),
 	(1,790,"GtkLabel","label","&lt;b&gt;Memory&lt;/b&gt;",None,None,None,None,None,None,None,None,None),
 	(1,790,"GtkLabel","use-markup","True",None,None,None,None,None,None,None,None,None),
@@ -387,7 +387,7 @@
 	(1,812,"GtkWidget","vexpand","True",None,None,None,None,None,None,None,None,None),
 	(1,813,"GtkFrame","label-widget",None,None,None,None,None,814,None,None,None,None),
 	(1,813,"GtkFrame","label-xalign","0.5",None,None,None,None,None,None,None,None,None),
-	(1,813,"GtkWidget","css-classes","view\nframe",None,None,None,None,None,None,None,None,None),
+	(1,813,"GtkWidget","css-classes","frame",None,None,None,None,None,None,None,None,None),
 	(1,813,"GtkWidget","hexpand","True",None,None,None,None,None,None,None,None,None),
 	(1,813,"GtkWidget","vexpand","True",None,None,None,None,None,None,None,None,None),
 	(1,814,"GtkLabel","label","&lt;b&gt;Video&lt;/b&gt;",None,None,None,None,None,None,None,None,None),

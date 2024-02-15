@@ -13,3 +13,7 @@ label.value {
 listview {
 	border-radius: 5px;
 }
+
+label {
+	font-family: sans-serif, Verdana,  Arial;
+}
