@@ -53,6 +53,15 @@ fn load_css() {
         &mem,
         gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
+
+    let css = CssProvider::new();
+    css.load_from_data(include_str!("../resources/entry-register.css"));
+
+    gtk::style_context_add_provider_for_display(
+        &Display::default().expect("Could not connect to a display."),
+        &css,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
 }
 
 fn build_ui(app: &Application) {

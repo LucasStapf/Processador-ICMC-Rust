@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.16.0 -->
+<interface>
+  <requires lib="gtk" version="4.12"/>
+  <template class="ProcessorScreen" parent="GtkDrawingArea">
+    <property name="content-height">480</property>
+    <property name="content-width">640</property>
+    <property name="halign">center</property>
+    <property name="valign">center</property>
+  </template>
+</interface>

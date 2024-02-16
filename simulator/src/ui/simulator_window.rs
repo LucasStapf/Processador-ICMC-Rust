@@ -17,6 +17,7 @@ mod imp {
         type ParentType = gtk::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
+            super::super::processor_window::ProcessorWindow::ensure_type();
             klass.bind_template();
         }
 

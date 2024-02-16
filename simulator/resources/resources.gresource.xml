@@ -2,8 +2,12 @@
 <gresources>
   <gresource prefix="/br/com/processador/">
     <file compressed="true" preprocess="xml-stripblanks">window.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">processor-screen.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">simulator-window.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">processor-window.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">memory-view.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">mem_row.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">entry-register.ui</file>
   </gresource>
 </gresources>
 

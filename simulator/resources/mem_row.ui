@@ -6,8 +6,6 @@
   <template class="MemoryCellRow" parent="GtkBox">
     <property name="css-classes">frame</property>
     <property name="halign">center</property>
-    <property name="margin-end">4</property>
-    <property name="margin-start">4</property>
     <child>
       <object class="GtkBox">
         <property name="halign">center</property>

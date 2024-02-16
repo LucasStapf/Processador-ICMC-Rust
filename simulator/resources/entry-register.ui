@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.16.0 -->
+<interface>
+  <requires lib="gtk" version="4.12"/>
+  <requires lib="libadwaita" version="1.4"/>
+  <template class="EntryRegister" parent="GtkBox">
+    <property name="css-classes">
+caption</property>
+    <property name="halign">center</property>
+    <property name="orientation">vertical</property>
+    <property name="valign">center</property>
+    <child>
+      <object class="GtkBox">
+        <property name="halign">center</property>
+        <property name="margin-bottom">6</property>
+        <property name="margin-end">6</property>
+        <property name="margin-start">6</property>
+        <property name="margin-top">6</property>
+        <property name="spacing">4</property>
+        <property name="valign">center</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="halign">start</property>
+            <property name="label">&lt;b&gt;RX&lt;/b&gt;</property>
+            <property name="use-markup">True</property>
+            <style>
+              <class name="tiny"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkEntry">
+            <property name="halign">center</property>
+            <property name="max-length">6</property>
+            <property name="max-width-chars">6</property>
+            <property name="placeholder-text">0x0000</property>
+            <property name="valign">center</property>
+            <property name="width-chars">6</property>
+            <style>
+              <class name="tiny"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

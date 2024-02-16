@@ -1,0 +1,425 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.16.0 -->
+<interface>
+  <requires lib="gtk" version="4.12"/>
+  <requires lib="libadwaita" version="1.4"/>
+  <template class="ProcessorWindow" parent="GtkBox">
+    <property name="hexpand">True</property>
+    <property name="orientation">vertical</property>
+    <property name="vexpand">True</property>
+    <child>
+      <object class="GtkBox">
+        <property name="spacing">10</property>
+        <property name="valign">start</property>
+        <child>
+          <object class="GtkBox" id="BoxMemoryRegisters">
+            <property name="orientation">vertical</property>
+            <property name="spacing">10</property>
+            <child>
+              <object class="GtkBox" id="BoxRegister">
+                <property name="css-classes">card</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">10</property>
+                <property name="valign">center</property>
+                <child>
+                  <object class="GtkBox" id="HeaderRegisters">
+                    <property name="css-classes">card</property>
+                    <property name="margin-bottom">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="halign">center</property>
+                        <property name="hexpand">True</property>
+                        <property name="label">&lt;b&gt;Registers&lt;/b&gt;</property>
+                        <property name="margin-bottom">10</property>
+                        <property name="margin-top">10</property>
+                        <property name="use-markup">True</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="halign">center</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="css-classes">body</property>
+                        <property name="label">&lt;b&gt;PC&lt;/b&gt;</property>
+                        <property name="tooltip-text">Program Counter</property>
+                        <property name="use-markup">True</property>
+                        <property name="width-chars">4</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label_val_pc">
+                        <property name="css-classes">body
+numeric
+card</property>
+                        <property name="justify">right</property>
+                        <property name="label">0x0000</property>
+                        <property name="valign">center</property>
+                        <property name="width-chars">9</property>
+                        <style/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="css-classes">body</property>
+                        <property name="label">&lt;b&gt;SP&lt;/b&gt;</property>
+                        <property name="tooltip-text">Stack Pointer</property>
+                        <property name="use-markup">True</property>
+                        <property name="width-chars">4</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label_val_sp">
+                        <property name="css-classes">body
+numeric
+card</property>
+                        <property name="justify">right</property>
+                        <property name="label">0x0000</property>
+                        <property name="valign">center</property>
+                        <property name="width-chars">9</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="css-classes">body</property>
+                        <property name="label">&lt;b&gt;IR&lt;/b&gt;</property>
+                        <property name="tooltip-text">Instruction Register</property>
+                        <property name="use-markup">True</property>
+                        <property name="width-chars">4</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label_val_ir">
+                        <property name="css-classes">body
+numeric
+card</property>
+                        <property name="justify">right</property>
+                        <property name="label">0000000000000000</property>
+                        <property name="valign">center</property>
+                        <property name="width-chars">19</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="css-classes">body</property>
+                        <property name="label">&lt;b&gt;FR&lt;/b&gt;</property>
+                        <property name="tooltip-text">Flag Register</property>
+                        <property name="use-markup">True</property>
+                        <property name="width-chars">4</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <child>
+                          <object class="GtkLabel" id="label_fr_15">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_14">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_13">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_12">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_11">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_10">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_9">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Negative</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_8">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">StackUnderflow</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_7">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">StackOverflow</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_6">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Div by Zero</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_5">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Arithmetic Overflow</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_4">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Carry</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_3">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Zero</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_2">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Equal</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_1">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Lesser</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="label_fr_0">
+                            <property name="css-classes">body
+numeric
+card</property>
+                            <property name="justify">right</property>
+                            <property name="label">0</property>
+                            <property name="tooltip-text">Greater</property>
+                            <property name="valign">center</property>
+                            <property name="width-chars">2</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="halign">center</property>
+                    <child>
+                      <object class="EntryRegister"/>
+                    </child>
+                    <child>
+                      <object class="EntryRegister"/>
+                    </child>
+                    <child>
+                      <object class="EntryRegister"/>
+                    </child>
+                    <child>
+                      <object class="EntryRegister"/>
+                    </child>
+                    <child>
+                      <object class="EntryRegister"/>
+                    </child>
+                    <child>
+                      <object class="EntryRegister"/>
+                    </child>
+                    <child>
+                      <object class="EntryRegister"/>
+                    </child>
+                    <child>
+                      <object class="EntryRegister"/>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="MemoryView"/>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox" id="BoxScreen">
+            <property name="css-classes">card</property>
+            <property name="halign">center</property>
+            <property name="orientation">vertical</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="GtkBox" id="HeaderScreen">
+                <property name="css-classes">card</property>
+                <property name="margin-bottom">10</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="halign">center</property>
+                    <property name="hexpand">True</property>
+                    <property name="label">&lt;b&gt;Screen&lt;/b&gt;</property>
+                    <property name="margin-bottom">10</property>
+                    <property name="margin-top">10</property>
+                    <property name="use-markup">True</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="ProcessorScreen">
+                <property name="halign">center</property>
+                <property name="hexpand">True</property>
+                <property name="valign">center</property>
+                <property name="vexpand">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkActionBar">
+                <property name="hexpand">True</property>
+                <property name="valign">end</property>
+                <property name="vexpand">True</property>
+                <child type="center">
+                  <object class="GtkBox">
+                    <property name="css-classes">linked</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <child>
+                      <object class="GtkButton" id="button-restart">
+                        <property name="css-classes">destructive-action</property>
+                        <property name="icon-name">system-restart-symbolic</property>
+                        <property name="tooltip-text">Reset</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkToggleButton" id="toggle_mode_run">
+                        <property name="active" bind-source="toggle_mode_debug" bind-property="active" bind-flags="bidirectional | invert-boolean">False</property>
+                        <property name="halign">center</property>
+                        <property name="label">RUN</property>
+                        <property name="valign">center</property>
+                        <style>
+                          <class name="toggle-right"/>
+                        </style>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkToggleButton" id="toggle_mode_debug">
+                        <property name="active" bind-source="toggle_mode_run" bind-property="active" bind-flags="bidirectional | invert-boolean">True</property>
+                        <property name="halign">center</property>
+                        <property name="label">DEBUG</property>
+                        <property name="valign">center</property>
+                        <style>
+                          <class name="toggle-left"/>
+                        </style>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="icon-name">edit-redo-symbolic</property>
+                        <property name="tooltip-text">Next step</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
