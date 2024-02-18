@@ -4,8 +4,9 @@
   <!-- interface-name mem_row.ui -->
   <requires lib="gtk" version="4.6"/>
   <template class="MemoryCellRow" parent="GtkBox">
-    <property name="css-classes">frame</property>
     <property name="halign">center</property>
+    <property name="valign">start</property>
+    <property name="vexpand">True</property>
     <child>
       <object class="GtkBox">
         <property name="halign">center</property>
@@ -13,6 +14,7 @@
         <child>
           <object class="GtkBox">
             <property name="margin-bottom">8</property>
+            <property name="margin-start">10</property>
             <property name="margin-top">8</property>
             <property name="spacing">10</property>
             <child>
@@ -21,18 +23,26 @@
                 <property name="orientation">vertical</property>
                 <property name="valign">end</property>
                 <child>
-                  <object class="GtkLabel" id="label_mem_float_addr">
-                    <property name="css-classes">body</property>
-                    <property name="justify">center</property>
-                    <property name="label">ADDR_PROG_AND_VAR</property>
-                    <property name="margin-start">10</property>
-                    <property name="use-markup">True</property>
-                    <property name="width-chars">25</property>
-                    <property name="xalign">0.0</property>
-                    <property name="yalign">0.0</property>
-                    <style>
-                      <class name="float"/>
-                    </style>
+                  <object class="GtkBox">
+                    <property name="css-classes">card</property>
+                    <property name="halign">start</property>
+                    <child>
+                      <object class="GtkLabel" id="label_mem_float_addr">
+                        <property name="css-classes">body</property>
+                        <property name="halign">start</property>
+                        <property name="hexpand">True</property>
+                        <property name="justify">center</property>
+                        <property name="label">ADDR_PROG_AND_VAR</property>
+                        <property name="margin-end">2</property>
+                        <property name="margin-start">2</property>
+                        <property name="use-markup">True</property>
+                        <property name="xalign">0.0</property>
+                        <property name="yalign">0.0</property>
+                        <style>
+                          <class name="float"/>
+                        </style>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <child>
@@ -41,9 +51,9 @@
 body</property>
                     <property name="halign">start</property>
                     <property name="label">0x0000</property>
-                    <property name="margin-start">10</property>
+                    <property name="margin-start">2</property>
                     <property name="valign">end</property>
-                    <property name="width-chars">7</property>
+                    <property name="width-chars">19</property>
                     <property name="xalign">0.0</property>
                     <style>
                       <class name="row"/>
@@ -60,22 +70,34 @@ body</property>
                 <property name="orientation">vertical</property>
                 <property name="valign">end</property>
                 <child>
-                  <object class="GtkLabel" id="label_mem_float_inst">
-                    <property name="css-classes">body</property>
-                    <property name="justify">center</property>
-                    <property name="label">Instruction</property>
-                    <property name="use-markup">True</property>
-                    <property name="width-chars">20</property>
-                    <property name="xalign">0.0</property>
-                    <property name="yalign">0.0</property>
-                    <style>
-                      <class name="float"/>
-                    </style>
+                  <object class="GtkBox">
+                    <property name="css-classes">card</property>
+                    <property name="halign">start</property>
+                    <property name="hexpand">True</property>
+                    <child>
+                      <object class="GtkLabel" id="label_mem_float_inst">
+                        <property name="css-classes">body</property>
+                        <property name="halign">start</property>
+                        <property name="hexpand">True</property>
+                        <property name="justify">center</property>
+                        <property name="label">Instruction</property>
+                        <property name="margin-end">2</property>
+                        <property name="margin-start">2</property>
+                        <property name="use-markup">True</property>
+                        <property name="valign">center</property>
+                        <property name="vexpand">True</property>
+                        <property name="xalign">0.0</property>
+                        <property name="yalign">0.0</property>
+                        <style>
+                          <class name="float"/>
+                        </style>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <child>
                   <object class="GtkLabel" id="label_mem_inst">
-                    <property name="css-classes">body</property>
+                    <property name="css-classes">monospace</property>
                     <property name="label">INSTRUCTION</property>
                     <property name="use-markup">True</property>
                     <property name="valign">end</property>
@@ -98,16 +120,28 @@ body</property>
                 <property name="orientation">vertical</property>
                 <property name="valign">end</property>
                 <child>
-                  <object class="GtkLabel" id="label_mem_float_raw">
-                    <property name="css-classes">body</property>
-                    <property name="justify">center</property>
-                    <property name="label">&lt;b&gt;SP&lt;/b&gt;</property>
-                    <property name="use-markup">True</property>
-                    <property name="xalign">0.0</property>
-                    <property name="yalign">0.0</property>
-                    <style>
-                      <class name="float"/>
-                    </style>
+                  <object class="GtkBox">
+                    <property name="css-classes">card</property>
+                    <property name="halign">start</property>
+                    <property name="hexpand">True</property>
+                    <child>
+                      <object class="GtkLabel" id="label_mem_float_raw">
+                        <property name="css-classes">body</property>
+                        <property name="halign">start</property>
+                        <property name="justify">center</property>
+                        <property name="label">&lt;b&gt;SP&lt;/b&gt;</property>
+                        <property name="margin-end">2</property>
+                        <property name="margin-start">2</property>
+                        <property name="use-markup">True</property>
+                        <property name="valign">center</property>
+                        <property name="vexpand">True</property>
+                        <property name="xalign">0.0</property>
+                        <property name="yalign">0.0</property>
+                        <style>
+                          <class name="float"/>
+                        </style>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <child>

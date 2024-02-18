@@ -479,6 +479,35 @@ impl Processor {
             Ok(())
         }
     }
+
+    #[warn(missing_docs)]
+    pub fn load_memory(&mut self, memory: &[MemoryCell]) -> Result<()> {
+        match memory.len() {
+            MEMORY_SIZE => match self.memory.lock() {
+                Ok(mut m) => {
+                    m.clear();
+                    m.copy_from_slice(memory);
+                    Ok(())
+                }
+                Err(e) => Err(ProcessorError::Generic {
+                    title: "Poison error".to_string(),
+                    description:
+                        format!("Uma thread entrou em pânico enquanto acessava a memória do processador: {e}"),
+                }),
+            },
+            _ => Err(ProcessorError::Generic {
+                title: "Tamanho inválido de memória".to_string(),
+                description:
+                    "Uma memória de tamanho não permitido tentou ser carregada no processador."
+                        .to_string(),
+            }),
+        }
+    }
+
+    #[warn(missing_docs)]
+    pub fn restart(&mut self, memory: &[MemoryCell]) -> Result<()> {
+        todo!("Implementar restart")
+    }
 }
 
 impl Display for Processor {

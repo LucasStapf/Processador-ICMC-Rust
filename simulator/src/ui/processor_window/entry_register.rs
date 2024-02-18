@@ -7,7 +7,13 @@ mod imp {
 
     #[derive(Default, CompositeTemplate)]
     #[template(resource = "/br/com/processador/entry-register.ui")]
-    pub struct EntryRegister {}
+    pub struct EntryRegister {
+        #[template_child]
+        pub label: TemplateChild<gtk::Label>,
+
+        #[template_child]
+        pub entry: TemplateChild<gtk::Entry>,
+    }
 
     #[glib::object_subclass]
     impl ObjectSubclass for EntryRegister {
@@ -46,5 +52,13 @@ glib::wrapper! {
 impl EntryRegister {
     pub fn build() -> Self {
         glib::Object::builder().build()
+    }
+
+    pub fn set_name(&self, str: &str) {
+        self.imp().label.set_label(str);
+    }
+
+    pub fn set_text(&self, str: &str) {
+        self.imp().entry.set_text(str);
     }
 }

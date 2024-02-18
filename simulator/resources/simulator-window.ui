@@ -6,6 +6,8 @@
   <template class="SimulatorWindow" parent="GtkApplicationWindow">
     <property name="default-height">-1</property>
     <property name="default-width">-1</property>
+    <property name="icon-name">computer-chip-symbolic</property>
+    <property name="title">Processador ICMC</property>
     <property name="titlebar">
       <object class="AdwHeaderBar">
         <property name="title-widget">
@@ -14,6 +16,23 @@
             <property name="title">Processador ICMC</property>
           </object>
         </property>
+        <child type="end">
+          <object class="GtkButton">
+            <property name="icon-name">help-app-symbolic</property>
+            <property name="tooltip-text">Shortcuts</property>
+          </object>
+        </child>
+        <child type="end">
+          <object class="GtkMenuButton">
+            <property name="css-classes">raised</property>
+          </object>
+        </child>
+        <child type="start">
+          <object class="AdwSplitButton">
+            <property name="css-classes">raised</property>
+            <property name="icon-name">file-manager</property>
+          </object>
+        </child>
       </object>
     </property>
     <child>

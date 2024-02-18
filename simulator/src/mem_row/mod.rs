@@ -45,7 +45,6 @@ impl MemoryCellRow {
         addr: usize,
         inst: &str,
         raw: usize,
-        float: Option<&str>,
     ) {
         self.imp()
             .label_mem_addr
@@ -75,7 +74,32 @@ impl MemoryCellRow {
                 .set_markup(&format!("{:016b}", raw)),
         }
 
-        match float {
+        // match float {
+        //     Some(s) => {
+        //         self.imp().label_mem_float_raw.set_markup(s);
+        //         self.imp().label_mem_float_raw.set_visible(true);
+        //     }
+        //     None => {
+        //         self.imp().label_mem_float_raw.set_text("");
+        //         self.imp().label_mem_float_raw.set_visible(false);
+        //     }
+        // }
+    }
+
+    pub fn set_float_address(&self, s: &str) {
+        self.imp()
+            .label_mem_float_addr
+            .set_markup(&format!("<b>{s}</b>"))
+    }
+
+    pub fn set_float_instruction(&self, s: &str) {
+        self.imp()
+            .label_mem_float_inst
+            .set_markup(&format!("<b>{s}</b>"))
+    }
+
+    pub fn set_float_raw(&self, s: Option<&str>) {
+        match s {
             Some(s) => {
                 self.imp().label_mem_float_raw.set_markup(s);
                 self.imp().label_mem_float_raw.set_visible(true);
@@ -85,13 +109,5 @@ impl MemoryCellRow {
                 self.imp().label_mem_float_raw.set_visible(false);
             }
         }
-    }
-
-    pub fn set_float_address(&self, s: &str) {
-        self.imp().label_mem_float_addr.set_markup(s)
-    }
-
-    pub fn set_float_instruction(&self, s: &str) {
-        self.imp().label_mem_float_inst.set_markup(s)
     }
 }

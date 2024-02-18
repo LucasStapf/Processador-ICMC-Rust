@@ -32,6 +32,7 @@ pub mod layout {
     pub const ADDR_TIMER: Range = 32748..=32748;
     pub const ADDR_ARGS: Range = 32749..=32758;
     pub const ADDR_RETURN: Range = 32759..=32759;
+    pub const ADDR_INTERRUPTIONS: Range = 32760..=32767;
 
     pub fn data_area(addr: MemoryCell) -> String {
         match addr {
@@ -49,6 +50,7 @@ pub mod layout {
             a if ADDR_TIMER.contains(&a) => stringify!(ADDR_TIMER).to_string(),
             a if ADDR_ARGS.contains(&a) => stringify!(ADDR_ARGS).to_string(),
             a if ADDR_RETURN.contains(&a) => stringify!(ADDR_RETURN).to_string(),
+            a if ADDR_INTERRUPTIONS.contains(&a) => stringify!(ADDR_INTERRUPTIONS).to_string(),
             _ => "Invalid Data Area".to_string(),
         }
     }

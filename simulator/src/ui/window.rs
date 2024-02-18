@@ -22,8 +22,8 @@ mod imp {
 
     use crate::mem_row::MemoryCellRow;
     use crate::processor::RunMode;
-    use crate::processor::RUNTIME;
     use crate::ui::screen::Screen;
+    use crate::RUNTIME;
 
     use super::InfoType;
     use super::WindowData;
@@ -445,214 +445,214 @@ impl Window {
     }
 
     pub fn update_memory_view(&self, addr: usize) {
-        let mut i = addr.clamp(0, processor::MEMORY_SIZE - 1);
-
-        if let Ok(p) = self.imp().data.borrow().processor_manager.processor.lock() {
-            if let Some(mut cell) = self
-                .imp()
-                .box_memory_cells
-                .first_child()
-                .and_downcast::<MemoryCellRow>()
-            {
-                loop {
-                    // Label do PC ou SP
-                    let float = match i {
-                        n if n == p.pc() => Some("<b>PC</b>"),
-                        n if n == p.sp() => Some("<b>SP</b>"),
-                        _ => None,
-                    };
-
-                    // Verifica qual área da memória será mostrada.
-                    match i {
-                        addr if isa::memory::layout::ADDR_PROG_AND_VAR.contains(&addr) => {
-                            let raw = p.mem(i).expect(
-                                "Foi utilizado um índice inválido para atualizar o memory-view.",
-                            );
-
-                            let inst = isa::Instruction::get_instruction(raw);
-                            cell.update(Some(inst), i, &inst.display(i, &p), raw, float);
-                            cell.set_float_address(&isa::memory::layout::data_area(i));
-                            cell.set_float_instruction("Instruction");
-                            i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);
-                            cell.remove_css_class("error");
-
-                            match inst {
-                                isa::Instruction::InvalidInstruction => cell.add_css_class("error"),
-                                isa::Instruction::LOAD
-                                | isa::Instruction::STORE
-                                | isa::Instruction::JZ
-                                | isa::Instruction::JC
-                                | isa::Instruction::JN
-                                | isa::Instruction::JMP
-                                | isa::Instruction::JEQ
-                                | isa::Instruction::JNE
-                                | isa::Instruction::JNZ
-                                | isa::Instruction::JNC
-                                | isa::Instruction::JGR
-                                | isa::Instruction::JLE
-                                | isa::Instruction::JEG
-                                | isa::Instruction::JEL
-                                | isa::Instruction::JOV
-                                | isa::Instruction::JNO
-                                | isa::Instruction::JDZ
-                                | isa::Instruction::CZ
-                                | isa::Instruction::CC
-                                | isa::Instruction::CN
-                                | isa::Instruction::CEQ
-                                | isa::Instruction::CNE
-                                | isa::Instruction::CNZ
-                                | isa::Instruction::CNC
-                                | isa::Instruction::CGR
-                                | isa::Instruction::CEG
-                                | isa::Instruction::CEL
-                                | isa::Instruction::COV
-                                | isa::Instruction::CNO
-                                | isa::Instruction::CDZ
-                                | isa::Instruction::CLE
-                                | isa::Instruction::CALL => {
-                                    if let Some(n) =
-                                        cell.next_sibling().and_downcast::<MemoryCellRow>()
-                                    {
-                                        cell = n;
-                                        cell.update(
-                                            None,
-                                            i,
-                                            &format!("#0x{:X}", p.mem(i).unwrap()),
-                                            p.mem(i).unwrap(),
-                                            None,
-                                        );
-                                        cell.set_float_address(&isa::memory::layout::data_area(i));
-                                        cell.set_float_instruction("Address");
-                                        i = i
-                                            .saturating_add(1)
-                                            .clamp(0, processor::MEMORY_SIZE - 1);
-                                    }
-                                }
-
-                                isa::Instruction::LOADI
-                                | isa::Instruction::STOREI
-                                | isa::Instruction::MOV
-                                | isa::Instruction::INCHAR
-                                | isa::Instruction::OUTCHAR
-                                | isa::Instruction::ADD
-                                | isa::Instruction::SUB
-                                | isa::Instruction::ADDC
-                                | isa::Instruction::SUBC
-                                | isa::Instruction::MUL
-                                | isa::Instruction::DIV
-                                | isa::Instruction::INC
-                                | isa::Instruction::DEC
-                                | isa::Instruction::MOD
-                                | isa::Instruction::AND
-                                | isa::Instruction::OR
-                                | isa::Instruction::XOR
-                                | isa::Instruction::NOT
-                                | isa::Instruction::CMP
-                                | isa::Instruction::ROTL
-                                | isa::Instruction::ROTR
-                                | isa::Instruction::SHIFTL0
-                                | isa::Instruction::SHIFTL1
-                                | isa::Instruction::SHIFTR0
-                                | isa::Instruction::SHIFTR1
-                                | isa::Instruction::RTS
-                                | isa::Instruction::RTI
-                                | isa::Instruction::POP
-                                | isa::Instruction::PUSH
-                                | isa::Instruction::NOP
-                                | isa::Instruction::HALT
-                                | isa::Instruction::SETC
-                                | isa::Instruction::CLEARC
-                                | isa::Instruction::BREAKP => (),
-
-                                isa::Instruction::LOADN => {
-                                    if let Some(n) =
-                                        cell.next_sibling().and_downcast::<MemoryCellRow>()
-                                    {
-                                        cell = n;
-                                        cell.update(
-                                            None,
-                                            i,
-                                            &format!("#0x{:X}", p.mem(i).unwrap()),
-                                            p.mem(i).unwrap(),
-                                            None,
-                                        );
-                                        cell.set_float_address(&isa::memory::layout::data_area(i));
-                                        cell.set_float_instruction("Data");
-                                        i = i
-                                            .saturating_add(1)
-                                            .clamp(0, processor::MEMORY_SIZE - 1);
-                                    }
-                                }
-
-                                isa::Instruction::STOREN => {
-                                    if let Some(next) =
-                                        cell.next_sibling().and_downcast::<MemoryCellRow>()
-                                    {
-                                        cell = next;
-                                        cell.update(
-                                            None,
-                                            i,
-                                            &format!("#0x{:X}", p.mem(i).unwrap()),
-                                            p.mem(i).unwrap(),
-                                            None,
-                                        );
-                                        cell.set_float_address(&isa::memory::layout::data_area(i));
-                                        cell.set_float_instruction("Address");
-                                        i = i
-                                            .saturating_add(1)
-                                            .clamp(0, processor::MEMORY_SIZE - 1);
-                                    }
-
-                                    if let Some(next) =
-                                        cell.next_sibling().and_downcast::<MemoryCellRow>()
-                                    {
-                                        cell = next;
-                                        cell.update(
-                                            None,
-                                            i,
-                                            &format!("#0x{:X}", p.mem(i).unwrap()),
-                                            p.mem(i).unwrap(),
-                                            None,
-                                        );
-                                        cell.set_float_address(&isa::memory::layout::data_area(i));
-                                        cell.set_float_instruction("Data");
-                                        i = i
-                                            .saturating_add(1)
-                                            .clamp(0, processor::MEMORY_SIZE - 1);
-                                    }
-                                }
-
-                                isa::Instruction::INPUT => {
-                                    unimplemented!("A instrução INPUT não foi implementada!")
-                                }
-                                isa::Instruction::OUTPUT => {
-                                    unimplemented!("A instrução OUTPUT não foi implementada!")
-                                }
-
-                                isa::Instruction::SOUND => todo!(),
-                            }
-                        }
-                        _ => {
-                            let value = p.mem(i).unwrap();
-                            cell.update(None, i, &format!("#{}", value), value, float);
-                            cell.set_float_address(&isa::memory::layout::data_area(i));
-                            cell.set_float_instruction("Data");
-                            i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);
-                            cell.remove_css_class("error");
-                        }
-                    }
-
-                    match cell.next_sibling().and_downcast::<MemoryCellRow>() {
-                        Some(next) => cell = next,
-                        None => break,
-                    }
-                }
-            }
-        } else {
-            return;
-        }
-
-        self.imp().data.borrow_mut().top_index = addr.clamp(0, processor::MEMORY_SIZE - 1);
+        // let mut i = addr.clamp(0, processor::MEMORY_SIZE - 1);
+        //
+        // if let Ok(p) = self.imp().data.borrow().processor_manager.processor.lock() {
+        //     if let Some(mut cell) = self
+        //         .imp()
+        //         .box_memory_cells
+        //         .first_child()
+        //         .and_downcast::<MemoryCellRow>()
+        //     {
+        //         loop {
+        //             // Label do PC ou SP
+        //             let float = match i {
+        //                 n if n == p.pc() => Some("<b>PC</b>"),
+        //                 n if n == p.sp() => Some("<b>SP</b>"),
+        //                 _ => None,
+        //             };
+        //
+        //             // Verifica qual área da memória será mostrada.
+        //             match i {
+        //                 addr if isa::memory::layout::ADDR_PROG_AND_VAR.contains(&addr) => {
+        //                     let raw = p.mem(i).expect(
+        //                         "Foi utilizado um índice inválido para atualizar o memory-view.",
+        //                     );
+        //
+        //                     let inst = isa::Instruction::get_instruction(raw);
+        //                     cell.update(Some(inst), i, &inst.display(i, &p), raw, float);
+        //                     cell.set_float_address(&isa::memory::layout::data_area(i));
+        //                     cell.set_float_instruction("Instruction");
+        //                     i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);
+        //                     cell.remove_css_class("error");
+        //
+        //                     match inst {
+        //                         isa::Instruction::InvalidInstruction => cell.add_css_class("error"),
+        //                         isa::Instruction::LOAD
+        //                         | isa::Instruction::STORE
+        //                         | isa::Instruction::JZ
+        //                         | isa::Instruction::JC
+        //                         | isa::Instruction::JN
+        //                         | isa::Instruction::JMP
+        //                         | isa::Instruction::JEQ
+        //                         | isa::Instruction::JNE
+        //                         | isa::Instruction::JNZ
+        //                         | isa::Instruction::JNC
+        //                         | isa::Instruction::JGR
+        //                         | isa::Instruction::JLE
+        //                         | isa::Instruction::JEG
+        //                         | isa::Instruction::JEL
+        //                         | isa::Instruction::JOV
+        //                         | isa::Instruction::JNO
+        //                         | isa::Instruction::JDZ
+        //                         | isa::Instruction::CZ
+        //                         | isa::Instruction::CC
+        //                         | isa::Instruction::CN
+        //                         | isa::Instruction::CEQ
+        //                         | isa::Instruction::CNE
+        //                         | isa::Instruction::CNZ
+        //                         | isa::Instruction::CNC
+        //                         | isa::Instruction::CGR
+        //                         | isa::Instruction::CEG
+        //                         | isa::Instruction::CEL
+        //                         | isa::Instruction::COV
+        //                         | isa::Instruction::CNO
+        //                         | isa::Instruction::CDZ
+        //                         | isa::Instruction::CLE
+        //                         | isa::Instruction::CALL => {
+        //                             if let Some(n) =
+        //                                 cell.next_sibling().and_downcast::<MemoryCellRow>()
+        //                             {
+        //                                 cell = n;
+        //                                 cell.update(
+        //                                     None,
+        //                                     i,
+        //                                     &format!("#0x{:X}", p.mem(i).unwrap()),
+        //                                     p.mem(i).unwrap(),
+        //                                     None,
+        //                                 );
+        //                                 cell.set_float_address(&isa::memory::layout::data_area(i));
+        //                                 cell.set_float_instruction("Address");
+        //                                 i = i
+        //                                     .saturating_add(1)
+        //                                     .clamp(0, processor::MEMORY_SIZE - 1);
+        //                             }
+        //                         }
+        //
+        //                         isa::Instruction::LOADI
+        //                         | isa::Instruction::STOREI
+        //                         | isa::Instruction::MOV
+        //                         | isa::Instruction::INCHAR
+        //                         | isa::Instruction::OUTCHAR
+        //                         | isa::Instruction::ADD
+        //                         | isa::Instruction::SUB
+        //                         | isa::Instruction::ADDC
+        //                         | isa::Instruction::SUBC
+        //                         | isa::Instruction::MUL
+        //                         | isa::Instruction::DIV
+        //                         | isa::Instruction::INC
+        //                         | isa::Instruction::DEC
+        //                         | isa::Instruction::MOD
+        //                         | isa::Instruction::AND
+        //                         | isa::Instruction::OR
+        //                         | isa::Instruction::XOR
+        //                         | isa::Instruction::NOT
+        //                         | isa::Instruction::CMP
+        //                         | isa::Instruction::ROTL
+        //                         | isa::Instruction::ROTR
+        //                         | isa::Instruction::SHIFTL0
+        //                         | isa::Instruction::SHIFTL1
+        //                         | isa::Instruction::SHIFTR0
+        //                         | isa::Instruction::SHIFTR1
+        //                         | isa::Instruction::RTS
+        //                         | isa::Instruction::RTI
+        //                         | isa::Instruction::POP
+        //                         | isa::Instruction::PUSH
+        //                         | isa::Instruction::NOP
+        //                         | isa::Instruction::HALT
+        //                         | isa::Instruction::SETC
+        //                         | isa::Instruction::CLEARC
+        //                         | isa::Instruction::BREAKP => (),
+        //
+        //                         isa::Instruction::LOADN => {
+        //                             if let Some(n) =
+        //                                 cell.next_sibling().and_downcast::<MemoryCellRow>()
+        //                             {
+        //                                 cell = n;
+        //                                 cell.update(
+        //                                     None,
+        //                                     i,
+        //                                     &format!("#0x{:X}", p.mem(i).unwrap()),
+        //                                     p.mem(i).unwrap(),
+        //                                     None,
+        //                                 );
+        //                                 cell.set_float_address(&isa::memory::layout::data_area(i));
+        //                                 cell.set_float_instruction("Data");
+        //                                 i = i
+        //                                     .saturating_add(1)
+        //                                     .clamp(0, processor::MEMORY_SIZE - 1);
+        //                             }
+        //                         }
+        //
+        //                         isa::Instruction::STOREN => {
+        //                             if let Some(next) =
+        //                                 cell.next_sibling().and_downcast::<MemoryCellRow>()
+        //                             {
+        //                                 cell = next;
+        //                                 cell.update(
+        //                                     None,
+        //                                     i,
+        //                                     &format!("#0x{:X}", p.mem(i).unwrap()),
+        //                                     p.mem(i).unwrap(),
+        //                                     None,
+        //                                 );
+        //                                 cell.set_float_address(&isa::memory::layout::data_area(i));
+        //                                 cell.set_float_instruction("Address");
+        //                                 i = i
+        //                                     .saturating_add(1)
+        //                                     .clamp(0, processor::MEMORY_SIZE - 1);
+        //                             }
+        //
+        //                             if let Some(next) =
+        //                                 cell.next_sibling().and_downcast::<MemoryCellRow>()
+        //                             {
+        //                                 cell = next;
+        //                                 cell.update(
+        //                                     None,
+        //                                     i,
+        //                                     &format!("#0x{:X}", p.mem(i).unwrap()),
+        //                                     p.mem(i).unwrap(),
+        //                                     None,
+        //                                 );
+        //                                 cell.set_float_address(&isa::memory::layout::data_area(i));
+        //                                 cell.set_float_instruction("Data");
+        //                                 i = i
+        //                                     .saturating_add(1)
+        //                                     .clamp(0, processor::MEMORY_SIZE - 1);
+        //                             }
+        //                         }
+        //
+        //                         isa::Instruction::INPUT => {
+        //                             unimplemented!("A instrução INPUT não foi implementada!")
+        //                         }
+        //                         isa::Instruction::OUTPUT => {
+        //                             unimplemented!("A instrução OUTPUT não foi implementada!")
+        //                         }
+        //
+        //                         isa::Instruction::SOUND => todo!(),
+        //                     }
+        //                 }
+        //                 _ => {
+        //                     let value = p.mem(i).unwrap();
+        //                     cell.update(None, i, &format!("#{}", value), value, float);
+        //                     cell.set_float_address(&isa::memory::layout::data_area(i));
+        //                     cell.set_float_instruction("Data");
+        //                     i = i.saturating_add(1).clamp(0, processor::MEMORY_SIZE - 1);
+        //                     cell.remove_css_class("error");
+        //                 }
+        //             }
+        //
+        //             match cell.next_sibling().and_downcast::<MemoryCellRow>() {
+        //                 Some(next) => cell = next,
+        //                 None => break,
+        //             }
+        //         }
+        //     }
+        // } else {
+        //     return;
+        // }
+        //
+        // self.imp().data.borrow_mut().top_index = addr.clamp(0, processor::MEMORY_SIZE - 1);
     }
 
     pub fn show_info(&self, msg_type: MessageType, title: &str, subtitle: &str) {

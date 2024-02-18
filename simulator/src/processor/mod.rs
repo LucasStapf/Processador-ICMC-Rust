@@ -13,10 +13,10 @@ use std::{
 };
 use tokio::runtime::Runtime;
 
-use crate::ui::window::InfoType;
+use crate::{ui::window::InfoType, RUNTIME};
 
-pub static RUNTIME: Lazy<Runtime> =
-    Lazy::new(|| Runtime::new().expect("Setting up tokio runtime needs to succeed."));
+// pub static RUNTIME: Lazy<Runtime> =
+// Lazy::new(|| Runtime::new().expect("Setting up tokio runtime needs to succeed."));
 
 #[derive(Clone)]
 pub enum RunMode {

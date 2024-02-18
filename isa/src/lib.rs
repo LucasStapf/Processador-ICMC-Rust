@@ -52,12 +52,6 @@ macro_rules! instruction_set {
 
         impl Instruction {
 
-            pub fn vec() -> Vec<Instruction> {
-                let mut vec = Vec::new();
-                $(vec.push(Instruction::$name);)+
-                vec
-            }
-
             /// Retorna o OPCODE da instrução.
             pub fn opcode(&self) -> Opcode {
                 let code = match self {
@@ -120,7 +114,7 @@ macro_rules! instruction_set {
                     return Instruction::$name;
                 })+
 
-                return Instruction::InvalidInstruction;
+                Instruction::InvalidInstruction
             }
 
         }
