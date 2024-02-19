@@ -30,13 +30,14 @@ type Result<T> = std::result::Result<T, ProcessorError>;
 
 pub struct Processor {
     memory: Arc<Mutex<Vec<usize>>>, // pub temp
+
     registers: [usize; NUM_REGISTERS],
 
     rx: usize,
     ry: usize,
     rz: usize,
     // Flag Register
-    fr: [bool; 16],
+    fr: [bool; isa::BITS_ADDRESS],
     // Program Counter
     pc: usize,
     // Instruction Register
@@ -52,13 +53,44 @@ pub struct Processor {
 
 impl Default for Processor {
     fn default() -> Self {
-        Processor::new()
+        info!(
+            "Novo processador padrão criado. [Tamanho da Memória {}] [Número de Registradores {}]",
+            MEMORY_SIZE, NUM_REGISTERS
+        );
+
+        let mem = Arc::new(Mutex::new(Vec::with_capacity(MEMORY_SIZE)));
+        let mut guard = mem.lock().unwrap();
+        for _ in 0..MEMORY_SIZE {
+            guard.push(0);
+        }
+        drop(guard);
+
+        Self {
+            memory: mem,
+            registers: [0; NUM_REGISTERS],
+            rx: 0,
+            ry: 0,
+            rz: 0,
+            fr: [false; isa::BITS_ADDRESS],
+            pc: *isa::memory::layout::ADDR_PROG_AND_VAR.start(),
+            ir: 0,
+            sp: *isa::memory::layout::ADDR_STACK.end(),
+            pixel: None,
+            halted: false,
+            debug: false,
+        }
     }
 }
 
 impl Processor {
-    /// Cria um novo processador com [`NUM_REGISTERS`] registradores, memória de tamanho [`MEMORY_SIZE`] e mais 4 registradores especiais que são: *Flag Register* (FR), *Program Counter* (PC), *Stack Pointer* (SP) e *Instruction Register* (IR).
-    /// Inicialmente, todos os endereços da memória e todos os registradores guardam o valor 0x0.
+    /// Cria um novo processado com [`NUM_REGISTERS`] registradores, memória de tamanho
+    /// [`MEMORY_SIZE`], iniciada com zeros, e mais 4 registradores especiais:
+    ///
+    /// * *Program Counter* (PC): 0
+    /// * *Stack Pointer* (SP): 32738
+    /// * *Instruction Register* (IR): 0
+    /// * *Flag Register* (FR): 0
+    ///
     pub fn new() -> Self {
         info!(
             "Novo processador criado. [Tamanho da Memória {}] [Número de Registradores {}]",
@@ -78,7 +110,7 @@ impl Processor {
             rx: 0,
             ry: 0,
             rz: 0,
-            fr: [false; 16],
+            fr: [false; isa::BITS_ADDRESS],
             pc: *isa::memory::layout::ADDR_PROG_AND_VAR.start(),
             ir: 0,
             sp: *isa::memory::layout::ADDR_STACK.end(),
@@ -88,19 +120,24 @@ impl Processor {
         }
     }
 
-    /// Cria um novo processador para DEBUG com [`NUM_REGISTERS`] registradores, memória de tamanho `s` e mais 4 registradores especiais que são: *Flag Register* (FR), *Program Counter* (PC), *Stack Pointer* (SP) e *Instruction Register* (IR).
-    /// Inicialmente, todos os endereços da memória e todos os registradores guardam o valor 0x0.
+    /// Cria um novo processado com [`NUM_REGISTERS`] registradores, memória de tamanho
+    /// `s`, iniciada com zeros, e mais 4 registradores especiais:
+    ///
+    /// * *Program Counter* (PC): 0
+    /// * *Stack Pointer* (SP): 32738
+    /// * *Instruction Register* (IR): 0
+    /// * *Flag Register* (FR): 0
     ///
     /// # **Importante**
     ///
     /// Deve ser utilizado somente para testes!
-    pub fn new_debug(s: usize) -> Self {
+    pub fn with_capacity(s: usize) -> Self {
         warn!(
             "Novo processador para DEBUG criado. [Tamanho da Memória {}] [Número de Registradores {}]",
             s, NUM_REGISTERS
         );
 
-        let mem = Arc::new(Mutex::new(Vec::with_capacity(MEMORY_SIZE)));
+        let mem = Arc::new(Mutex::new(Vec::with_capacity(s)));
         let c_mem = mem.clone();
         let mut guard = mem.lock().unwrap();
         for _ in 0..s {
@@ -113,18 +150,15 @@ impl Processor {
             rx: 0,
             ry: 0,
             rz: 0,
-            fr: [false; 16],
-            pc: 0,
+            fr: [false; isa::BITS_ADDRESS],
+            pc: *isa::memory::layout::ADDR_PROG_AND_VAR.start(),
             ir: 0,
-            sp: 0,
+            sp: *isa::memory::layout::ADDR_STACK.end(),
             pixel: None,
             halted: false,
             debug: false,
+            ..Default::default()
         }
-    }
-
-    pub fn arc_mem(&self) -> Arc<Mutex<Vec<MemoryCell>>> {
-        self.memory.clone()
     }
 
     /// Retorna o valor presente no endereço `addr` da memória.
@@ -139,9 +173,8 @@ impl Processor {
     /// ```
     /// use crate::processor::Processor;
     ///
-    /// let mut p = Processor::new();
+    /// let mut p = Processor::with_capacity(10);
     /// assert_eq!(0x0, p.mem(0).unwrap());
-    ///
     /// ```
     pub fn mem(&self, addr: MemoryCell) -> Result<MemoryCell> {
         match self.memory.lock() {
@@ -168,7 +201,7 @@ impl Processor {
     /// ```
     /// use crate::processor::Processor;
     ///
-    /// let mut p = Processor::new();
+    /// let mut p = Processor::with_capacity(10);
     /// assert_eq!(0x0, p.mem(0).unwrap());
     /// p.set_mem(0, 0x1);
     /// assert_eq!(0x1, p.mem(0).unwrap());
@@ -201,7 +234,7 @@ impl Processor {
     /// ```
     /// use crate::processor::Processor;
     ///
-    /// let mut p = Processor::new();
+    /// let mut p = Processor::with_capacity(10);
     /// assert_eq!(0x0, p.reg(0).unwrap());
     /// ```
     pub fn reg(&self, n: MemoryCell) -> Result<MemoryCell> {
@@ -223,7 +256,7 @@ impl Processor {
     /// ```
     /// use crate::processor::Processor;
     ///
-    /// let mut p = Processor::new();
+    /// let mut p = Processor::with_capacity(10);
     /// assert_eq!(0x0, p.reg(0).unwrap());
     /// p.set_reg(0, 0x1);
     /// assert_eq!(0x1, p.reg(0).unwrap());
@@ -368,7 +401,12 @@ impl Processor {
         self.pc
     }
 
-    #[warn(missing_docs)]
+    /// Altera o valor do registrador especial *Program Counter* para `addr`.
+    ///
+    /// # Erros
+    ///
+    /// Retorna o erro [`ProcessorError::SegmentationFault`] caso o **PC** aponte para uma área
+    /// proibida para ele.
     pub fn set_pc(&mut self, addr: usize) -> Result<()> {
         self.pc = addr;
         match addr {
@@ -395,7 +433,7 @@ impl Processor {
         self.halted = value
     }
 
-    #[warn(missing_docs)]
+    /// Retorna se o processador está parado ou não.
     pub fn halted(&self) -> bool {
         self.halted
     }
@@ -405,7 +443,7 @@ impl Processor {
         self.debug = value
     }
 
-    #[warn(missing_docs)]
+    /// Retorna se o processador está em modo *debug* ou não.
     pub fn debug(&self) -> bool {
         self.halted
     }
@@ -415,7 +453,19 @@ impl Processor {
         self.pixel = value
     }
 
-    #[warn(missing_docs)]
+    /// Retorna o último *pixel* modificado pelo processador. Após a leitura, o *pixel* é descartado.
+    ///
+    /// # Exemplo
+    ///
+    /// ```
+    /// use crate::processor::Processor;
+    /// use crate::processor::modules::video::Color;   
+    ///
+    /// let mut p = Processor::with_capacity(10);
+    /// p.set_pixel(Some(((2, Color::Black), 0)));
+    /// assert!(p.pixel().is_some());
+    /// assert!(p.pixel().is_none());
+    /// ```
     pub fn pixel(&mut self) -> Option<(Pixelmap, usize)> {
         let p = self.pixel;
         self.pixel = None;
@@ -435,26 +485,50 @@ impl Processor {
         Ok(())
     }
 
-    /// Realiza o ciclo de busca do processador.
+    /// Realiza a etapa de busca do processador.
     ///
     /// # Erros
     ///
     /// Esta função pode retornar qualquer um dos erros abaixo:
     ///
-    /// - [`ProcError::InvalidMemoryIndex`] - Caso o ciclo de busca ocorra sobre um índice
+    /// - [`ProcError::InvalidMemoryIndex`] - Caso a etapa de busca ocorra sobre um índice
     /// inválido.
     /// - [`ProcError::MaximumMemoryReached`] - Caso o limite de memória seja atingido.
-    fn search_cicle(&mut self) -> Result<()> {
+    fn fetch_stage(&mut self) -> Result<()> {
         self.ir = self.mem(self.pc)?;
-
         debug!(
-            "Search Cicle [Instruction Register {:016b}] [Program Counter {}]",
+            "Fetch Stage [Instruction Register {:016b}] [Program Counter {}]",
             self.ir, self.pc
         );
-
         self.inc_pc(1)?;
-
         Ok(())
+    }
+
+    #[warn(missing_docs)]
+    fn decode_stage(&mut self) -> Result<Instruction> {
+        self.rx = isa::bits(self.ir, 7..=9);
+        self.ry = isa::bits(self.ir, 4..=6);
+        self.rz = isa::bits(self.ir, 1..=3);
+
+        let instruction = Instruction::get_instruction(self.ir);
+        debug!("Decode Stage [{} {}]", instruction, instruction.mask());
+        match instruction {
+            Instruction::InvalidInstruction => Err(ProcessorError::InvalidInstruction(self.ir)),
+            _ => Ok(instruction),
+        }
+    }
+
+    #[warn(missing_docs)]
+    fn execution_stage(&mut self, instruction: Instruction) -> Result<()> {
+        debug!("Execution Stage [{}]", instruction);
+        instruction.execution(self)
+    }
+
+    #[warn(missing_docs)]
+    fn instruction_cicle(&mut self) -> Result<()> {
+        self.fetch_stage()?;
+        let inst = self.decode_stage()?;
+        self.execution_stage(inst)
     }
 
     #[warn(missing_docs)]
@@ -471,13 +545,10 @@ impl Processor {
     #[warn(missing_docs)]
     pub fn next(&mut self) -> Result<()> {
         if !self.halted {
-            self.search_cicle()?;
-            let r = self.execution_cicle();
-            debug!("{self}");
-            r
-        } else {
-            Ok(())
+            self.instruction_cicle()?;
         }
+
+        Ok(())
     }
 
     #[warn(missing_docs)]
@@ -505,8 +576,42 @@ impl Processor {
     }
 
     #[warn(missing_docs)]
-    pub fn restart(&mut self, memory: &[MemoryCell]) -> Result<()> {
-        todo!("Implementar restart")
+    fn reset_fields(&mut self) {
+        self.pc = *isa::memory::layout::ADDR_PROG_AND_VAR.start();
+        self.ir = 0;
+        self.sp = *isa::memory::layout::ADDR_STACK.end();
+        self.fr = [false; isa::BITS_ADDRESS];
+        self.rx = 0;
+        self.ry = 0;
+        self.rz = 0;
+        self.pixel = None;
+        self.halted = false;
+        self.debug = false;
+    }
+
+    #[warn(missing_docs)]
+    pub fn reset(&mut self, memory: &[MemoryCell]) -> Result<()> {
+        self.reset_fields();
+        match memory.len() {
+            MEMORY_SIZE => match self.memory.lock() {
+                Ok(mut m) => {
+                    m.clear();
+                    m.copy_from_slice(memory);
+                    Ok(())
+                }
+                Err(e) => Err(ProcessorError::Generic {
+                    title: "Poison error".to_string(),
+                    description:
+                        format!("Uma thread entrou em pânico enquanto acessava a memória do processador: {e}"),
+                }),
+            },
+            _ => Err(ProcessorError::Generic {
+                title: "Tamanho inválido de memória".to_string(),
+                description:
+                    "Uma memória de tamanho não permitido tentou ser carregada no processador."
+                        .to_string(),
+            }),
+        }
     }
 }
 

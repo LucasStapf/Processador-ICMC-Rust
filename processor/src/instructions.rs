@@ -406,7 +406,7 @@ mod tests {
 
     #[test]
     fn test_invalid_instruction() {
-        let mut p = Processor::new_debug(10);
+        let mut p = Processor::with_capacity(10);
         let _ = p.set_mem(0, 0b1011110000000000);
         assert_eq!(
             ProcessorError::InvalidInstruction(0b1011110000000000),
