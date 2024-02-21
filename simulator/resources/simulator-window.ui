@@ -59,78 +59,100 @@
               </object>
             </child>
             <child>
-              <object class="AdwToolbarView">
-                <property name="content">
-                  <object class="AdwViewStack" id="stack_toolbar">
+              <object class="GtkOverlay">
+                <child type="overlay">
+                  <object class="GtkRevealer" id="revealer_info_top">
+                    <property name="valign">start</property>
                     <child>
-                      <object class="AdwViewStackPage">
-                        <property name="child">
-                          <object class="GtkLabel">
-                            <property name="label">Home</property>
+                      <object class="GtkInfoBar" id="info_bar_top">
+                        <property name="message-type">error</property>
+                        <property name="show-close-button">True</property>
+                        <signal name="response" handler="button_info_close_clicked" swapped="yes"/>
+                        <child>
+                          <object class="AdwActionRow" id="action_row_info">
+                            <property name="subtitle">Um erro acabou de acontecer!</property>
+                            <property name="title">&lt;b&gt;ERRO&lt;/b&gt;</property>
                           </object>
-                        </property>
-                        <property name="icon-name">go-home-symbolic</property>
-                        <property name="name">page_home</property>
-                        <property name="title">_Home</property>
-                        <property name="use-underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwViewStackPage">
-                        <property name="child">
-                          <object class="ProcessorWindow">
-                            <property name="margin-bottom">10</property>
-                            <property name="margin-end">10</property>
-                            <property name="margin-start">10</property>
-                            <property name="margin-top">10</property>
-                          </object>
-                        </property>
-                        <property name="icon-name">computer-chip-symbolic</property>
-                        <property name="name">page_processor</property>
-                        <property name="title">_Processor</property>
-                        <property name="use-underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwViewStackPage">
-                        <property name="child">
-                          <object class="GtkLabel">
-                            <property name="label">Asm Editor</property>
-                            <property name="margin-bottom">24</property>
-                            <property name="margin-end">24</property>
-                            <property name="margin-start">24</property>
-                            <property name="margin-top">24</property>
-                          </object>
-                        </property>
-                        <property name="icon-name">accessories-text-editor-symbolic</property>
-                        <property name="name">page_asm</property>
-                        <property name="title">_Asm Editor</property>
-                        <property name="use-underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwViewStackPage">
-                        <property name="child">
-                          <object class="GtkLabel">
-                            <property name="label">Charmap Editor</property>
-                            <property name="margin-bottom">24</property>
-                            <property name="margin-end">24</property>
-                            <property name="margin-start">24</property>
-                            <property name="margin-top">24</property>
-                          </object>
-                        </property>
-                        <property name="icon-name">accessories-character-map-symbolic</property>
-                        <property name="name">page_charmap</property>
-                        <property name="title">_Charmap Editor</property>
-                        <property name="use-underline">True</property>
+                        </child>
                       </object>
                     </child>
                   </object>
-                </property>
-                <property name="hexpand">True</property>
-                <property name="reveal-bottom-bars">False</property>
-                <property name="reveal-top-bars">False</property>
-                <property name="vexpand">True</property>
+                </child>
+                <child>
+                  <object class="AdwToolbarView">
+                    <property name="content">
+                      <object class="AdwViewStack" id="stack_toolbar">
+                        <child>
+                          <object class="AdwViewStackPage" id="stack_home_page">
+                            <property name="child">
+                              <object class="GtkLabel">
+                                <property name="label">Home</property>
+                              </object>
+                            </property>
+                            <property name="icon-name">go-home-symbolic</property>
+                            <property name="name">page_home</property>
+                            <property name="title">_Home</property>
+                            <property name="use-underline">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="AdwViewStackPage" id="stack_processor_page">
+                            <property name="child">
+                              <object class="ProcessorWindow">
+                                <property name="margin-bottom">10</property>
+                                <property name="margin-end">10</property>
+                                <property name="margin-start">10</property>
+                                <property name="margin-top">10</property>
+                              </object>
+                            </property>
+                            <property name="icon-name">computer-chip-symbolic</property>
+                            <property name="name">page_processor</property>
+                            <property name="title">_Processor</property>
+                            <property name="use-underline">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="AdwViewStackPage" id="stack_asm_page">
+                            <property name="child">
+                              <object class="GtkLabel">
+                                <property name="label">Asm Editor</property>
+                                <property name="margin-bottom">24</property>
+                                <property name="margin-end">24</property>
+                                <property name="margin-start">24</property>
+                                <property name="margin-top">24</property>
+                              </object>
+                            </property>
+                            <property name="icon-name">accessories-text-editor-symbolic</property>
+                            <property name="name">page_asm</property>
+                            <property name="title">_Asm Editor</property>
+                            <property name="use-underline">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="AdwViewStackPage" id="stack_charmap_page">
+                            <property name="child">
+                              <object class="GtkLabel">
+                                <property name="label">Charmap Editor</property>
+                                <property name="margin-bottom">24</property>
+                                <property name="margin-end">24</property>
+                                <property name="margin-start">24</property>
+                                <property name="margin-top">24</property>
+                              </object>
+                            </property>
+                            <property name="icon-name">accessories-character-map-symbolic</property>
+                            <property name="name">page_charmap</property>
+                            <property name="title">_Charmap Editor</property>
+                            <property name="use-underline">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                    <property name="hexpand">True</property>
+                    <property name="reveal-bottom-bars">False</property>
+                    <property name="reveal-top-bars">False</property>
+                    <property name="vexpand">True</property>
+                  </object>
+                </child>
               </object>
             </child>
           </object>

@@ -155,64 +155,17 @@ mod imp {
             } else {
                 entry.remove_css_class("error");
             }
-            // let text = entry.text().to_string();
-            // match text.len() {
-            //     0 => entry.remove_css_class("error"),
-            //     1..=2 => {
-            //         // Decimal
-            //         let number = usize::from_str_radix(&text, 10);
-            //         match number {
-            //             Ok(n) => {
-            //                 entry.remove_css_class("error");
-            //                 self.obj().update_memory_view(n);
-            //             }
-            //             Err(_) => entry.add_css_class("error"),
-            //         }
-            //     }
-            //     3.. => {
-            //         // Decimal ou Hexadecimal
-            //         match &text[0..2] {
-            //             "0x" | "0X" => {
-            //                 let number = usize::from_str_radix(&text[2..], 16);
-            //                 match number {
-            //                     Ok(n) => {
-            //                         entry.remove_css_class("error");
-            //                         self.obj().update_memory_view(n);
-            //                     }
-            //                     Err(_) => entry.add_css_class("error"),
-            //                 }
-            //             }
-            //             _ => {
-            //                 let number = usize::from_str_radix(&text, 10);
-            //                 match number {
-            //                     Ok(n) => {
-            //                         entry.remove_css_class("error");
-            //                         self.obj().update_memory_view(n);
-            //                     }
-            //                     Err(_) => entry.add_css_class("error"),
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
         }
     }
+
     // Trait shared by all GObjects
     impl ObjectImpl for ProcessorWindow {
         fn constructed(&self) {
             self.parent_constructed();
-            // self.memory_view
-            //     .imp()
-            //     .scrolled_memory_cells
-            //     .connect_closure(
-            //         "edge-overshot",
-            //         false,
-            //         closure_local!(|| log::debug!("Scroll")),
-            //     );
-            //
-            let processor = self.processor_manager.borrow().processor.clone();
+            let pw = self.obj();
 
             // Scroll do Memory-View
+            let processor = self.processor_manager.borrow().processor.clone();
             self.memory_view
                 .imp()
                 .scrolled_memory_cells
@@ -245,6 +198,7 @@ mod imp {
                     }),
                 );
 
+            // Retirar depois
             if let Ok(mut p) = self.processor_manager.borrow().processor.lock() {
                 p.set_mem(4, 0b1110010000000000);
                 p.set_mem(1, 0b0111111111111111);
@@ -263,6 +217,7 @@ mod imp {
 }
 
 use std::borrow::Borrow;
+use std::thread;
 
 use adw::prelude::*;
 use adw::subclass::prelude::*;
@@ -279,6 +234,24 @@ impl ProcessorWindow {
         glib::Object::builder().build()
     }
 
+    // fn run_mode(&self) {
+    //     let pm = self.imp().processor_manager.borrow().clone();
+    //     thread::spawn(move || {});
+    // }
+
+    fn debug_mode(&self) {
+        match self.imp().processor_manager.borrow().processor.lock() {
+            Ok(mut p) => {
+                if let Err(e) = p.instruction_cicle() {
+                    todo!()
+                }
+                self.update_ui();
+            }
+            Err(_) => todo!(),
+        }
+    }
+
+    /// Atualiza o conteúdo dos registradores (**UI**) com base nos seus valores no processador.
     fn update_registers(&self, p: &processor::Processor) {
         let imp = self.imp();
         // Registradores 0-7
@@ -369,6 +342,7 @@ impl ProcessorWindow {
         );
     }
 
+    /// Atualiza a **UI** (registradores, memory-view).
     pub fn update_ui(&self) {
         if let Ok(p) = self.imp().processor_manager.borrow().processor.lock() {
             self.update_registers(&p);

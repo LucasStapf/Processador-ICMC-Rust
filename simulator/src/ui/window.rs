@@ -203,90 +203,90 @@ mod imp {
     }
 
     impl Window {
-        fn processor_start(
-            &self,
-            tx: Sender<InfoType<ProcessorError>>,
-            rx: Receiver<InfoType<ProcessorError>>,
-        ) {
-            self.data.borrow_mut().processor_manager.run(tx);
-
-            let obj = self.obj();
-            let pm = self
-                .data
-                .borrow_mut()
-                .processor_manager
-                .borrow_mut()
-                .clone();
-            glib::spawn_future_local(clone!(@strong obj as win => async move {
-                while let Ok(info) = rx.recv().await {
-                    match info {
-                        InfoType::UpdateUI => win.update_ui(),
-                        InfoType::UpdateScreen(pixel, index) => {
-                            if let Some(screen) = win.imp().frame_screen.child().and_downcast::<Screen>() {
-                                screen.set_pixelmap(pixel, index);
-                                screen.draw();
-                            }
-                        }
-                        InfoType::UpdateMode(mode) => {
-                            if let Ok(mut m) = pm.mode.lock() {
-                                *m = mode;
-                            }
-                        }
-                        InfoType::Error(e) => {
-                            win.show_error_dialog_processor(e);
-                            win.update_ui()
-                        }
-                        InfoType::None => (),
-                    }
-                }
-            }));
-        }
+        // fn processor_start(
+        //     &self,
+        //     tx: Sender<InfoType<ProcessorError>>,
+        //     rx: Receiver<InfoType<ProcessorError>>,
+        // ) {
+        //     self.data.borrow_mut().processor_manager.run(tx);
+        //
+        //     let obj = self.obj();
+        //     let pm = self
+        //         .data
+        //         .borrow_mut()
+        //         .processor_manager
+        //         .borrow_mut()
+        //         .clone();
+        //     glib::spawn_future_local(clone!(@strong obj as win => async move {
+        //         while let Ok(info) = rx.recv().await {
+        //             match info {
+        //                 InfoType::UpdateUI => win.update_ui(),
+        //                 InfoType::UpdateScreen(pixel, index) => {
+        //                     if let Some(screen) = win.imp().frame_screen.child().and_downcast::<Screen>() {
+        //                         screen.set_pixelmap(pixel, index);
+        //                         screen.draw();
+        //                     }
+        //                 }
+        //                 InfoType::UpdateMode(mode) => {
+        //                     if let Ok(mut m) = pm.mode.lock() {
+        //                         *m = mode;
+        //                     }
+        //                 }
+        //                 InfoType::Error(e) => {
+        //                     win.show_error_dialog_processor(e);
+        //                     win.update_ui()
+        //                 }
+        //                 InfoType::None => (),
+        //             }
+        //         }
+        //     }));
+        // }
     }
 
     impl ObjectImpl for Window {
         fn constructed(&self) {
             self.parent_constructed();
 
-            let obj = self.obj();
-            obj.update_memory_view(0); // Atualiza o memory-view
-
-            let (tx, rx) = async_channel::bounded(1);
-            self.processor_start(tx.clone(), rx);
-
-            let event_controller = gtk::EventControllerKey::new();
-            event_controller.connect_key_pressed(
-                clone!(@strong self.toggle_mode_debug as toggle_debug, @strong obj as win,
-                    @strong tx
-                    => move |_, key, _, _| {
-                    match key {
-                        gdk::Key::F1 => {
-                            tx.
-                            send_blocking(InfoType::UpdateMode(Some(RunMode::Run))).unwrap();
-                            toggle_debug.set_active(false);
-                        }
-                        gdk::Key::F2 => {
-                            tx.
-                            send_blocking(InfoType::UpdateMode(Some(RunMode::Debug))).unwrap();
-                            toggle_debug.set_active(true);
-                        }
-                        _ => (),
-                    };
-                    glib::Propagation::Proceed
-                }),
-            );
-            self.obj().add_controller(event_controller);
-
-            // Processor Screen
-            let screen = crate::ui::screen::Screen::new();
-            screen.set_content_height(480);
-            screen.set_content_width(640);
-            screen.add_css_class("frame");
-            screen.set_halign(gtk::Align::Center);
-            screen.set_valign(gtk::Align::Center);
-            screen.set_margin_bottom(8);
-            screen.set_margin_start(8);
-            screen.set_margin_end(8);
-            self.frame_screen.set_child(Some(&screen));
+            //     let obj = self.obj();
+            //     obj.update_memory_view(0); // Atualiza o memory-view
+            //
+            //     let (tx, rx) = async_channel::bounded(1);
+            //     // self.processor_start(tx.clone(), rx);
+            //
+            //     let event_controller = gtk::EventControllerKey::new();
+            //     event_controller.connect_key_pressed(
+            //         clone!(@strong self.toggle_mode_debug as toggle_debug, @strong obj as win,
+            //             @strong tx
+            //             => move |_, key, _, _| {
+            //             match key {
+            //                 gdk::Key::F1 => {
+            //                     tx.
+            //                     send_blocking(InfoType::UpdateMode(Some(RunMode::Run))).unwrap();
+            //                     toggle_debug.set_active(false);
+            //                 }
+            //                 gdk::Key::F2 => {
+            //                     tx.
+            //                     send_blocking(InfoType::UpdateMode(Some(RunMode::Debug))).unwrap();
+            //                     toggle_debug.set_active(true);
+            //                 }
+            //                 _ => (),
+            //             };
+            //             glib::Propagation::Proceed
+            //         }),
+            //     );
+            //     self.obj().add_controller(event_controller);
+            //
+            //     // Processor Screen
+            //     let screen = crate::ui::screen::Screen::new();
+            //     screen.set_content_height(480);
+            //     screen.set_content_width(640);
+            //     screen.add_css_class("frame");
+            //     screen.set_halign(gtk::Align::Center);
+            //     screen.set_valign(gtk::Align::Center);
+            //     screen.set_margin_bottom(8);
+            //     screen.set_margin_start(8);
+            //     screen.set_margin_end(8);
+            //     self.frame_screen.set_child(Some(&screen));
         }
     }
 

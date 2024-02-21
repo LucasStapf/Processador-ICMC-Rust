@@ -32,108 +32,132 @@ impl Default for RunMode {
 
 #[derive(Clone)]
 pub struct ProcessorManager {
-    pub mode: Arc<Mutex<Option<RunMode>>>,
+    pub mode: Arc<Mutex<RunMode>>,
     pub processor: Arc<Mutex<Processor>>,
     pub error: Arc<Mutex<Option<ProcessorError>>>,
     pub tx: Option<Sender<Option<ProcessorError>>>,
     pub rx: Option<Receiver<bool>>,
+
+    pub mode_notification_recv: Receiver<()>,
+    pub mode_notification_send: Sender<()>,
+    pub status_notification_recv: Receiver<Option<ProcessorError>>,
+    pub status_notification_send: Sender<Option<ProcessorError>>,
 }
 
 impl Default for ProcessorManager {
     fn default() -> Self {
+        let (status_notification_send, status_notification_recv) = async_channel::bounded(1);
+        let (mode_notification_send, mode_notification_recv) = async_channel::bounded(1);
         Self {
             mode: Default::default(),
             processor: Default::default(),
             error: Arc::new(Mutex::new(None)),
             tx: None,
             rx: None,
+            status_notification_recv,
+            status_notification_send,
+            mode_notification_recv,
+            mode_notification_send,
         }
     }
 }
 
 impl ProcessorManager {
     pub fn new(tx: Option<Sender<Option<ProcessorError>>>, rx: Option<Receiver<bool>>) -> Self {
-        let mut pm = ProcessorManager::default();
-        pm.tx = tx;
-        pm.rx = rx;
-        pm
-    }
-
-    pub fn run(&self, tx: Sender<InfoType<ProcessorError>>) {
-        let m = self.mode.clone();
-        let p = self.processor.clone();
-
-        if let Ok(mut p) = p.lock() {
-            p.set_mem(4, 0b1110010000000000);
-            p.set_mem(5, 0b0000110000000000);
-            p.set_mem(7, 0b1011110000000000);
+        Self {
+            tx,
+            rx,
+            ..Default::default()
         }
-
-        RUNTIME.spawn(async move {
-            loop {
-                let mode_test;
-                match m.lock() {
-                    Ok(mut mode) => match mode.as_ref() {
-                        Some(m) => match m {
-                            RunMode::Run => mode_test = RunMode::Run,
-                            RunMode::Debug => {
-                                *mode = None;
-                                mode_test = RunMode::Debug;
-                            }
-                        },
-                        None => continue,
-                    },
-                    Err(e) => {
-                        error!("{e}");
-                        tx.send_blocking(InfoType::Error(ProcessorError::Generic {
-                            title: "Erro inesperado".to_string(),
-                            description: e.to_string(),
-                        }))
-                        .expect("Falha ao enviar o erro!");
-                        break;
-                    }
-                }
-
-                let pixel_test;
-                match p.lock() {
-                    Ok(mut p) => match p.next() {
-                        Ok(_) => pixel_test = p.pixel(),
-                        Err(e) => {
-                            error!("{e}");
-                            tx.send_blocking(InfoType::Error(e))
-                                .expect("Falha ao enviar o erro!");
-                            break;
-                        }
-                    },
-                    Err(e) => {
-                        error!("{e}");
-                        tx.send_blocking(InfoType::Error(ProcessorError::Generic {
-                            title: "Erro inesperado".to_string(),
-                            description: e.to_string(),
-                        }))
-                        .expect("Falha ao enviar o erro!");
-                        break;
-                    }
-                }
-
-                match mode_test {
-                    RunMode::Run => (),
-                    RunMode::Debug => tx
-                        .send(InfoType::UpdateUI)
-                        .await
-                        .expect("Falha ao enviar mensagem UpdateUI"),
-                }
-
-                match pixel_test {
-                    Some((p, i)) => tx
-                        .send(InfoType::UpdateScreen(p, i))
-                        .await
-                        .expect("Falha ao enviar mensagem UpdateUI"),
-                    None => (),
-                }
-            }
-        });
     }
+
+    fn next_instruction_cicle(p: &Mutex<Processor>) -> Result<(), ProcessorError> {
+        let mut processor = p.lock().map_err(|_| ProcessorError::Generic {
+            title: "Poison Error".to_string(),
+            description: "Falha ao acessar o processador!".to_string(),
+        })?;
+
+        match processor.instruction_cicle() {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e),
+        }
+    }
+
+    // pub fn run(&self, tx: Sender<InfoType<ProcessorError>>) {
+    //     let m = self.mode.clone();
+    //     let p = self.processor.clone();
+    //
+    //     if let Ok(mut p) = p.lock() {
+    //         p.set_mem(4, 0b1110010000000000);
+    //         p.set_mem(5, 0b0000110000000000);
+    //         p.set_mem(7, 0b1011110000000000);
+    //     }
+    //
+    //     RUNTIME.spawn(async move {
+    //         loop {
+    //             let mode_test;
+    //             match m.lock() {
+    //                 Ok(mut mode) => match mode.as_ref() {
+    //                     Some(m) => match m {
+    //                         RunMode::Run => mode_test = RunMode::Run,
+    //                         RunMode::Debug => {
+    //                             *mode = None;
+    //                             mode_test = RunMode::Debug;
+    //                         }
+    //                     },
+    //                     None => continue,
+    //                 },
+    //                 Err(e) => {
+    //                     error!("{e}");
+    //                     tx.send_blocking(InfoType::Error(ProcessorError::Generic {
+    //                         title: "Erro inesperado".to_string(),
+    //                         description: e.to_string(),
+    //                     }))
+    //                     .expect("Falha ao enviar o erro!");
+    //                     break;
+    //                 }
+    //             }
+    //
+    //             let pixel_test;
+    //             match p.lock() {
+    //                 Ok(mut p) => match p.next() {
+    //                     Ok(_) => pixel_test = p.pixel(),
+    //                     Err(e) => {
+    //                         error!("{e}");
+    //                         tx.send_blocking(InfoType::Error(e))
+    //                             .expect("Falha ao enviar o erro!");
+    //                         break;
+    //                     }
+    //                 },
+    //                 Err(e) => {
+    //                     error!("{e}");
+    //                     tx.send_blocking(InfoType::Error(ProcessorError::Generic {
+    //                         title: "Erro inesperado".to_string(),
+    //                         description: e.to_string(),
+    //                     }))
+    //                     .expect("Falha ao enviar o erro!");
+    //                     break;
+    //                 }
+    //             }
+    //
+    //             match mode_test {
+    //                 RunMode::Run => (),
+    //                 RunMode::Debug => tx
+    //                     .send(InfoType::UpdateUI)
+    //                     .await
+    //                     .expect("Falha ao enviar mensagem UpdateUI"),
+    //             }
+    //
+    //             match pixel_test {
+    //                 Some((p, i)) => tx
+    //                     .send(InfoType::UpdateScreen(p, i))
+    //                     .await
+    //                     .expect("Falha ao enviar mensagem UpdateUI"),
+    //                 None => (),
+    //             }
+    //         }
+    //     });
+    // }
 
     // pub fn run(&self) {
     //     if let Some(tx) = self.tx.clone() {

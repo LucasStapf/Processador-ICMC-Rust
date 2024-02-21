@@ -70,7 +70,7 @@ mod imp {
                         cr.set_source_rgba(0.0, 0.0, 0.0, 1.0);
                         let _ = cr.fill().map_err(|e| error!{"Falha ao preencher a tela de preto: {e}"});
                         screen.draw_buffer(cr, &buf.borrow(), &charmap.borrow().get());
-                }));
+        }));
         }
     }
 
@@ -84,6 +84,9 @@ use cairo::glib::subclass::types::ObjectSubclassIsExt;
 use glib::Object;
 use gtk::prelude::WidgetExt;
 use log::{debug, error};
+use processor::modules::video::Pixelmap;
+
+use crate::processor::RunMode;
 
 glib::wrapper! {
     pub struct ProcessorScreen(ObjectSubclass<imp::ProcessorScreen>)

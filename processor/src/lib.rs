@@ -9,13 +9,24 @@ use crate::instructions::InstructionCicle;
 use errors::ProcessorError;
 use isa::{Instruction, MemoryCell};
 use log::{debug, info, warn};
-use modules::video::Pixelmap;
+use modules::{
+    control_unit::ControlUnit,
+    video::{Pixelmap, VideoModule},
+};
 use std::{
     borrow::Borrow,
     fmt::Display,
     ops::Deref,
     sync::{Arc, Mutex},
+    thread,
 };
+
+#[derive(Clone, Copy)]
+pub enum ProcessorStatus {
+    Running,
+    Debug,
+    Halted,
+}
 
 /// Tamanho da memória do processador, ou seja, número de endereços disponíveis para o
 /// funcionamento do dispositivo.
@@ -30,6 +41,8 @@ type Result<T> = std::result::Result<T, ProcessorError>;
 
 pub struct Processor {
     memory: Arc<Mutex<Vec<usize>>>, // pub temp
+    cu: ControlUnit,
+    video: Arc<Mutex<VideoModule>>,
 
     registers: [usize; NUM_REGISTERS],
 
@@ -45,10 +58,8 @@ pub struct Processor {
     // Stack Pointer
     sp: usize,
 
+    status: Arc<Mutex<ProcessorStatus>>,
     pixel: Option<(Pixelmap, usize)>,
-
-    halted: bool,
-    debug: bool,
 }
 
 impl Default for Processor {
@@ -67,6 +78,8 @@ impl Default for Processor {
 
         Self {
             memory: mem,
+            cu: ControlUnit::default(),
+            video: Arc::new(Mutex::new(VideoModule::default())),
             registers: [0; NUM_REGISTERS],
             rx: 0,
             ry: 0,
@@ -75,9 +88,8 @@ impl Default for Processor {
             pc: *isa::memory::layout::ADDR_PROG_AND_VAR.start(),
             ir: 0,
             sp: *isa::memory::layout::ADDR_STACK.end(),
+            status: Arc::new(Mutex::new(ProcessorStatus::Debug)),
             pixel: None,
-            halted: false,
-            debug: false,
         }
     }
 }
@@ -97,27 +109,7 @@ impl Processor {
             MEMORY_SIZE, NUM_REGISTERS
         );
 
-        let mem = Arc::new(Mutex::new(Vec::with_capacity(MEMORY_SIZE)));
-        let c_mem = mem.clone();
-        let mut guard = mem.lock().unwrap();
-        for _ in 0..MEMORY_SIZE {
-            guard.push(0);
-        }
-
-        Self {
-            memory: c_mem,
-            registers: [0; NUM_REGISTERS],
-            rx: 0,
-            ry: 0,
-            rz: 0,
-            fr: [false; isa::BITS_ADDRESS],
-            pc: *isa::memory::layout::ADDR_PROG_AND_VAR.start(),
-            ir: 0,
-            sp: *isa::memory::layout::ADDR_STACK.end(),
-            pixel: None,
-            halted: false,
-            debug: false,
-        }
+        Self::default()
     }
 
     /// Cria um novo processado com [`NUM_REGISTERS`] registradores, memória de tamanho
@@ -138,27 +130,30 @@ impl Processor {
         );
 
         let mem = Arc::new(Mutex::new(Vec::with_capacity(s)));
-        let c_mem = mem.clone();
         let mut guard = mem.lock().unwrap();
         for _ in 0..s {
             guard.push(0);
         }
+        drop(guard);
 
         Self {
-            memory: c_mem,
-            registers: [0; NUM_REGISTERS],
-            rx: 0,
-            ry: 0,
-            rz: 0,
-            fr: [false; isa::BITS_ADDRESS],
-            pc: *isa::memory::layout::ADDR_PROG_AND_VAR.start(),
-            ir: 0,
-            sp: *isa::memory::layout::ADDR_STACK.end(),
-            pixel: None,
-            halted: false,
-            debug: false,
+            memory: mem,
             ..Default::default()
         }
+    }
+
+    pub fn run(processor: Arc<Mutex<Processor>>) {
+        thread::spawn(move || {
+            while let Ok(mut p) = processor.lock() {
+                match p.status() {
+                    ProcessorStatus::Running => match p.instruction_cicle() {
+                        Ok(_) => todo!(),
+                        Err(_) => todo!(),
+                    },
+                    ProcessorStatus::Halted | ProcessorStatus::Debug => break,
+                }
+            }
+        });
     }
 
     /// Retorna o valor presente no endereço `addr` da memória.
@@ -428,24 +423,12 @@ impl Processor {
         self.set_pc(self.pc + v)
     }
 
-    #[warn(missing_docs)]
-    pub fn set_halted(&mut self, value: bool) {
-        self.halted = value
+    pub fn set_status(&mut self, status: ProcessorStatus) {
+        *self.status.lock().expect("Falha ao trocar o status atual") = status
     }
 
-    /// Retorna se o processador está parado ou não.
-    pub fn halted(&self) -> bool {
-        self.halted
-    }
-
-    #[warn(missing_docs)]
-    pub fn set_debug(&mut self, value: bool) {
-        self.debug = value
-    }
-
-    /// Retorna se o processador está em modo *debug* ou não.
-    pub fn debug(&self) -> bool {
-        self.halted
+    pub fn status(&self) -> ProcessorStatus {
+        *self.status.lock().expect("Falha ao acessar o status atual")
     }
 
     #[warn(missing_docs)]
@@ -525,31 +508,31 @@ impl Processor {
     }
 
     #[warn(missing_docs)]
-    fn instruction_cicle(&mut self) -> Result<()> {
+    pub fn instruction_cicle(&mut self) -> Result<()> {
         self.fetch_stage()?;
         let inst = self.decode_stage()?;
         self.execution_stage(inst)
     }
 
-    #[warn(missing_docs)]
-    fn execution_cicle(&mut self) -> Result<()> {
-        self.rx = isa::bits(self.ir, 7..=9);
-        self.ry = isa::bits(self.ir, 4..=6);
-        self.rz = isa::bits(self.ir, 1..=3);
+    // #[warn(missing_docs)]
+    // fn execution_cicle(&mut self) -> Result<()> {
+    //     self.rx = isa::bits(self.ir, 7..=9);
+    //     self.ry = isa::bits(self.ir, 4..=6);
+    //     self.rz = isa::bits(self.ir, 1..=3);
+    //
+    //     let instruction = Instruction::get_instruction(self.ir);
+    //     debug!("Execution Cicle [{} {}]", instruction, instruction.mask());
+    //     instruction.execution(self)
+    // }
 
-        let instruction = Instruction::get_instruction(self.ir);
-        debug!("Execution Cicle [{} {}]", instruction, instruction.mask());
-        instruction.execution(self)
-    }
-
-    #[warn(missing_docs)]
-    pub fn next(&mut self) -> Result<()> {
-        if !self.halted {
-            self.instruction_cicle()?;
-        }
-
-        Ok(())
-    }
+    // #[warn(missing_docs)]
+    // pub fn next(&mut self) -> Result<()> {
+    //     if !self.halted {
+    //         self.instruction_cicle()?;
+    //     }
+    //
+    //     Ok(())
+    // }
 
     #[warn(missing_docs)]
     pub fn load_memory(&mut self, memory: &[MemoryCell]) -> Result<()> {
@@ -585,8 +568,10 @@ impl Processor {
         self.ry = 0;
         self.rz = 0;
         self.pixel = None;
-        self.halted = false;
-        self.debug = false;
+        *self
+            .status
+            .lock()
+            .expect("Falha ao trocar o status para o seu valor padrão") = ProcessorStatus::Debug
     }
 
     #[warn(missing_docs)]

@@ -37,7 +37,9 @@ fn main() -> glib::ExitCode {
     info!("Iniciando o simulador");
     let app = Application::builder().application_id(APP_ID).build();
     app.connect_startup(|_| load_css());
+    // app.connect_startup(setup_actions);
     app.connect_activate(build_ui);
+
     app.run()
 }
 
@@ -71,20 +73,24 @@ fn load_css() {
     );
 }
 
+fn setup_actions(app: &Application) {
+    app.set_accels_for_action("processor.debug", &["<Ctrl>T"]);
+}
+
 fn build_ui(app: &Application) {
     // let window = ui::window::Window::new(app);
 
     let window = ui::simulator_window::SimulatorWindow::new(app);
-    // let spinner = gtk::Spinner::new();
-    // spinner.start();
-    // let gtk_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    // gtk_box.append(&spinner);
-    // let window = gtk::ApplicationWindow::builder()
-    //     .application(app)
-    //     .default_height(400)
-    //     .default_width(400)
-    //     .child(&gtk_box)
+
+    // Tirar
+    // let action_debug = gtk::gio::ActionEntry::builder("debug")
+    //     .activate(move |_, _, _| log::debug!("Teste action"))
     //     .build();
+    //
+    // let actions = gtk::gio::SimpleActionGroup::new();
+    // actions.add_action_entries([action_debug]);
+    //
+    // window.insert_action_group("processor", Some(&actions));
 
     window.present();
 }

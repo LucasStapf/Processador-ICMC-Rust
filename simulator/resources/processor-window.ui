@@ -51,8 +51,7 @@ card</property>
                         <property name="halign">center</property>
                         <child>
                           <object class="GtkSearchEntry" id="search_addr">
-                            <property name="css-classes">body
-numeric</property>
+                            <property name="css-classes">numeric</property>
                             <property name="placeholder-text">Address</property>
                             <signal name="search-changed" handler="search_changed" swapped="yes"/>
                           </object>
@@ -110,7 +109,6 @@ numeric</property>
                     <property name="hexpand">True</property>
                     <child>
                       <object class="GtkLabel">
-                        <property name="css-classes">body</property>
                         <property name="label">&lt;b&gt;PC&lt;/b&gt;</property>
                         <property name="tooltip-text">Program Counter</property>
                         <property name="use-markup">True</property>
@@ -119,8 +117,7 @@ numeric</property>
                     </child>
                     <child>
                       <object class="GtkLabel" id="label_val_pc">
-                        <property name="css-classes">body
-numeric
+                        <property name="css-classes">numeric
 card</property>
                         <property name="justify">right</property>
                         <property name="label">0x0000</property>
@@ -131,7 +128,6 @@ card</property>
                     </child>
                     <child>
                       <object class="GtkLabel">
-                        <property name="css-classes">body</property>
                         <property name="label">&lt;b&gt;SP&lt;/b&gt;</property>
                         <property name="tooltip-text">Stack Pointer</property>
                         <property name="use-markup">True</property>
@@ -140,8 +136,7 @@ card</property>
                     </child>
                     <child>
                       <object class="GtkLabel" id="label_val_sp">
-                        <property name="css-classes">body
-numeric
+                        <property name="css-classes">numeric
 card</property>
                         <property name="justify">right</property>
                         <property name="label">0x0000</property>
@@ -151,7 +146,6 @@ card</property>
                     </child>
                     <child>
                       <object class="GtkLabel">
-                        <property name="css-classes">body</property>
                         <property name="label">&lt;b&gt;IR&lt;/b&gt;</property>
                         <property name="tooltip-text">Instruction Register</property>
                         <property name="use-markup">True</property>
@@ -160,8 +154,7 @@ card</property>
                     </child>
                     <child>
                       <object class="GtkLabel" id="label_val_ir">
-                        <property name="css-classes">body
-numeric
+                        <property name="css-classes">numeric
 card</property>
                         <property name="justify">right</property>
                         <property name="label">0000000000000000</property>
@@ -171,7 +164,6 @@ card</property>
                     </child>
                     <child>
                       <object class="GtkLabel">
-                        <property name="css-classes">body</property>
                         <property name="label">&lt;b&gt;FR&lt;/b&gt;</property>
                         <property name="tooltip-text">Flag Register</property>
                         <property name="use-markup">True</property>
@@ -182,8 +174,7 @@ card</property>
                       <object class="GtkBox">
                         <child>
                           <object class="GtkLabel" id="label_fr_15">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -193,8 +184,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_14">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -204,8 +194,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_13">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -215,8 +204,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_12">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -226,8 +214,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_11">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -237,8 +224,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_10">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -248,8 +234,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_9">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -260,8 +245,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_8">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -272,8 +256,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_7">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -284,8 +267,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_6">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -296,8 +278,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_5">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -308,8 +289,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_4">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -320,8 +300,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_3">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -332,8 +311,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_2">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -344,8 +322,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_1">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>
@@ -356,8 +333,7 @@ card</property>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label_fr_0">
-                            <property name="css-classes">body
-numeric
+                            <property name="css-classes">numeric
 card</property>
                             <property name="justify">right</property>
                             <property name="label">0</property>

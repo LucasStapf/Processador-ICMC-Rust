@@ -4,8 +4,6 @@
   <requires lib="gtk" version="4.12"/>
   <requires lib="libadwaita" version="1.4"/>
   <template class="EntryRegister" parent="GtkBox">
-    <property name="css-classes">
-caption</property>
     <property name="halign">center</property>
     <property name="orientation">vertical</property>
     <property name="valign">center</property>

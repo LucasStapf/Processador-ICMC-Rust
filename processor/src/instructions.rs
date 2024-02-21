@@ -385,14 +385,14 @@ impl InstructionCicle for Instruction {
             }
 
             Instruction::NOP => (),
-            Instruction::HALT => p.set_halted(true),
+            Instruction::HALT => p.set_status(super::ProcessorStatus::Halted),
             Instruction::CLEARC => {
                 p.set_fr(FlagIndex::CARRY, false)?;
             }
             Instruction::SETC => {
                 p.set_fr(FlagIndex::CARRY, true)?;
             }
-            Instruction::BREAKP => p.set_debug(true),
+            Instruction::BREAKP => p.set_status(super::ProcessorStatus::Debug),
         }
 
         Ok(())
@@ -410,7 +410,7 @@ mod tests {
         let _ = p.set_mem(0, 0b1011110000000000);
         assert_eq!(
             ProcessorError::InvalidInstruction(0b1011110000000000),
-            p.next().err().unwrap()
+            p.instruction_cicle().err().unwrap()
         )
     }
 }
