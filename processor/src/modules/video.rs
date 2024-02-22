@@ -76,37 +76,17 @@ impl Color {
 }
 
 pub type Pixelmap = (u8, Color);
-pub type VideoBuffer = Vec<Pixelmap>;
+pub type FrameBuffer = Vec<Pixelmap>;
 
-#[derive(Clone, Copy, Debug)]
-pub enum VideoError {
-    InvalidColor(usize),
-    InvalidMap(usize),
-    InvalidIndex(usize),
-}
-
-impl Display for VideoError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            VideoError::InvalidColor(c) => write!(f, "Cor inválida: {c}"),
-            VideoError::InvalidMap(c) => write!(f, "Pixelmap inválido: {c}"),
-            VideoError::InvalidIndex(i) => write!(f, "Índice inválido: {i}"),
-        }
-    }
-}
-
-impl Error for VideoError {}
-
+#[derive(Clone)]
 pub struct VideoModule {
     /// Largura do vídeo, em pixels.
     width: usize,
     /// Altura do vídeo, em pixels.
     height: usize,
     /// Buffer de vídeo que armazena o código do *pixelmap* a ser desenhado e sua cor.
-    buffer: Arc<Mutex<VideoBuffer>>,
+    frame_buffer: Arc<Mutex<FrameBuffer>>,
 
-    clear_signal_recv: Receiver<()>,
-    clear_signal_send: Sender<()>,
     draw_signal_recv: Receiver<()>,
     draw_signal_send: Sender<()>,
 }
@@ -115,21 +95,19 @@ impl Default for VideoModule {
     /// Cria um novo módulo de vídeo, inicializando o *buffer* ([`VIDEO_WIDTH`] x [`VIDEO_HEIGHT`])
     /// com o *pixelmap* de código 0 e cor [`Color::Black`].
     fn default() -> Self {
-        let mut buffer = VideoBuffer::with_capacity(VIDEO_HEIGHT * VIDEO_WIDTH);
+        let mut buffer = FrameBuffer::with_capacity(VIDEO_HEIGHT * VIDEO_WIDTH);
         for _ in 0..buffer.capacity() {
             buffer.push((0, Color::Black))
         }
         let arc_buffer = Arc::new(Mutex::new(buffer));
 
-        let (clear_s, clear_r) = async_channel::bounded(1);
+        // let (clear_s, clear_r) = async_channel::bounded(1);
         let (draw_s, draw_r) = async_channel::bounded(1);
 
         Self {
             width: VIDEO_WIDTH,
             height: VIDEO_HEIGHT,
-            buffer: arc_buffer,
-            clear_signal_recv: clear_r,
-            clear_signal_send: clear_s,
+            frame_buffer: arc_buffer,
             draw_signal_recv: draw_r,
             draw_signal_send: draw_s,
         }
@@ -140,63 +118,46 @@ impl VideoModule {
     /// Cria um novo módulo de vídeo, inicializando o *buffer* (`width` x `height`)
     /// com o *pixelmap* de código 0 e cor [`Color::Black`].
     pub fn new(width: usize, height: usize) -> Self {
-        let mut buffer = VideoBuffer::with_capacity(width * height);
+        let mut buffer = FrameBuffer::with_capacity(width * height);
         for _ in 0..buffer.capacity() {
             buffer.push((0, Color::Black))
         }
         let arc_buffer = Arc::new(Mutex::new(buffer));
         Self {
-            buffer: arc_buffer,
+            frame_buffer: arc_buffer,
             width,
             height,
             ..Default::default()
         }
     }
 
-    pub fn clear_signal(&self) -> Sender<()> {
-        self.clear_signal_send.clone()
+    pub fn frame_buffer(&self) -> Arc<Mutex<FrameBuffer>> {
+        self.frame_buffer.clone()
     }
 
     pub fn draw_signal(&self) -> Receiver<()> {
         self.draw_signal_recv.clone()
     }
 
-    pub fn draw(&self) {
+    fn send_draw_signal(&self) {
         match self.draw_signal_send.send_blocking(()) {
             Ok(_) => (),
-            Err(e) => log::error!("Falha ao enviar o sinal draw_signal. {e}"),
+            Err(e) => log::error!("Falha ao enviar o sinal draw_signal: {e}"),
         }
     }
-    //
-    // pub fn buffer_len(&self) -> usize {
-    //     self.buffer.len()
-    // }
-    //
-    // pub fn width(&self) -> u16 {
-    //     self.width
-    // }
-    //
-    // pub fn height(&self) -> u16 {
-    //     self.height
-    // }
-    //
-    // pub fn updated(&self) -> bool {
-    //     self.updated
-    // }
-    //
-    // /// Retorna uma referência do *pixelmap* presente na posicão desejada (`index`). Se o índice
-    // /// não for válido, retorna `None`pub fn pixelmap(&self, index: usize) -> Some(&Pixelmap) {
-    // pub fn pixelmap(&self, index: usize) -> Option<&Pixelmap> {
-    //     self.buffer.get(index)
-    // }
-    //
-    // pub fn set_pixelmap(&mut self, index: usize, pixelmap: Pixelmap) -> Result<(), VideoError> {
-    //     match self.buffer.get_mut(index) {
-    //         Some(p) => {
-    //             self.updated = true;
-    //             Ok(*p = pixelmap)
-    //         }
-    //         None => Err(VideoError::InvalidIndex(index)),
-    //     }
-    // }
+
+    pub fn draw(&self, pos: usize, map: Pixelmap) {
+        match self.frame_buffer.lock() {
+            Ok(mut fb) => match fb.get_mut(pos) {
+                Some(p) => {
+                    *p = map;
+                    self.send_draw_signal();
+                }
+                None => log::error!("Falha ao desenhar o pixel map: Posição {pos} inválida"),
+            },
+            Err(e) => {
+                log::error!("Falha ao desenhar o desenhar o pixelmap {map:?} na posição {pos}: {e}")
+            }
+        }
+    }
 }

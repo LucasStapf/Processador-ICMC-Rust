@@ -10,8 +10,8 @@ use errors::ProcessorError;
 use isa::{Instruction, MemoryCell};
 use log::{debug, info, warn};
 use modules::{
-    control_unit::ControlUnit,
     video::{Pixelmap, VideoModule},
+    Modules,
 };
 use std::{
     borrow::Borrow,
@@ -41,9 +41,7 @@ type Result<T> = std::result::Result<T, ProcessorError>;
 
 pub struct Processor {
     memory: Arc<Mutex<Vec<usize>>>, // pub temp
-    cu: ControlUnit,
-    video: Arc<Mutex<VideoModule>>,
-
+    modules: Modules,
     registers: [usize; NUM_REGISTERS],
 
     rx: usize,
@@ -59,7 +57,6 @@ pub struct Processor {
     sp: usize,
 
     status: Arc<Mutex<ProcessorStatus>>,
-    pixel: Option<(Pixelmap, usize)>,
 }
 
 impl Default for Processor {
@@ -78,8 +75,7 @@ impl Default for Processor {
 
         Self {
             memory: mem,
-            cu: ControlUnit::default(),
-            video: Arc::new(Mutex::new(VideoModule::default())),
+            modules: Modules::default(),
             registers: [0; NUM_REGISTERS],
             rx: 0,
             ry: 0,
@@ -89,7 +85,6 @@ impl Default for Processor {
             ir: 0,
             sp: *isa::memory::layout::ADDR_STACK.end(),
             status: Arc::new(Mutex::new(ProcessorStatus::Debug)),
-            pixel: None,
         }
     }
 }
@@ -431,28 +426,13 @@ impl Processor {
         *self.status.lock().expect("Falha ao acessar o status atual")
     }
 
-    #[warn(missing_docs)]
-    pub fn set_pixel(&mut self, value: Option<(Pixelmap, usize)>) {
-        self.pixel = value
+    pub fn modules(&self) -> &Modules {
+        &self.modules
     }
 
-    /// Retorna o último *pixel* modificado pelo processador. Após a leitura, o *pixel* é descartado.
-    ///
-    /// # Exemplo
-    ///
-    /// ```
-    /// use crate::processor::Processor;
-    /// use crate::processor::modules::video::Color;   
-    ///
-    /// let mut p = Processor::with_capacity(10);
-    /// p.set_pixel(Some(((2, Color::Black), 0)));
-    /// assert!(p.pixel().is_some());
-    /// assert!(p.pixel().is_none());
-    /// ```
-    pub fn pixel(&mut self) -> Option<(Pixelmap, usize)> {
-        let p = self.pixel;
-        self.pixel = None;
-        p
+    #[warn(missing_docs)]
+    pub fn draw_pixelmap(&mut self, pos: usize, map: Pixelmap) {
+        self.modules.video.draw(pos, map)
     }
 
     #[warn(missing_docs)]
@@ -567,7 +547,6 @@ impl Processor {
         self.rx = 0;
         self.ry = 0;
         self.rz = 0;
-        self.pixel = None;
         *self
             .status
             .lock()

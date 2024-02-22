@@ -69,10 +69,7 @@ impl InstructionCicle for Instruction {
                 let color = video::Color::color(color_code);
 
                 match color {
-                    Some(color) => {
-                        let pixel = ((c, color), index);
-                        p.set_pixel(Some(pixel));
-                    }
+                    Some(color) => p.draw_pixelmap(index, (c, color)),
                     None => {
                         return Err(ProcessorError::Generic {
                             title: "Cor inválida".to_string(),
