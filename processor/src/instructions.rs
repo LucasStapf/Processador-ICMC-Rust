@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use crate::{errors::ProcessorError, modules::video};
 
 use super::Processor;
@@ -69,7 +71,7 @@ impl InstructionCicle for Instruction {
                 let color = video::Color::color(color_code);
 
                 match color {
-                    Some(color) => p.draw_pixelmap(index, (c, color)),
+                    Some(color) => p.modules().video.draw(index, (c, color)),
                     None => {
                         return Err(ProcessorError::Generic {
                             title: "Cor inválida".to_string(),

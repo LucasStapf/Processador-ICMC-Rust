@@ -426,13 +426,9 @@ impl Processor {
         *self.status.lock().expect("Falha ao acessar o status atual")
     }
 
+    /// Retorna uma referência aos módulos presentes no processador.
     pub fn modules(&self) -> &Modules {
         &self.modules
-    }
-
-    #[warn(missing_docs)]
-    pub fn draw_pixelmap(&mut self, pos: usize, map: Pixelmap) {
-        self.modules.video.draw(pos, map)
     }
 
     #[warn(missing_docs)]
@@ -467,7 +463,12 @@ impl Processor {
         Ok(())
     }
 
-    #[warn(missing_docs)]
+    /// Realiza a etapa de decodificação do processador.
+    ///
+    /// # Erros
+    ///
+    /// Esta função retorna o erro [`ProcessorError::InvalidInstruction`] caso a instrução seja
+    /// inválida.
     fn decode_stage(&mut self) -> Result<Instruction> {
         self.rx = isa::bits(self.ir, 7..=9);
         self.ry = isa::bits(self.ir, 4..=6);
@@ -481,38 +482,26 @@ impl Processor {
         }
     }
 
-    #[warn(missing_docs)]
+    /// Realiza a etapa de execução do processador.
+    ///
+    /// # Erros
+    ///
+    /// Esta função pode retornar [`ProcessorError`].
     fn execution_stage(&mut self, instruction: Instruction) -> Result<()> {
         debug!("Execution Stage [{}]", instruction);
         instruction.execution(self)
     }
 
-    #[warn(missing_docs)]
+    /// Realiza o ciclo de instrução do processador.
+    ///
+    /// # Erros
+    ///
+    /// Esta função pode retornar qualquer erro presente em [`ProcessorError`].
     pub fn instruction_cicle(&mut self) -> Result<()> {
         self.fetch_stage()?;
         let inst = self.decode_stage()?;
         self.execution_stage(inst)
     }
-
-    // #[warn(missing_docs)]
-    // fn execution_cicle(&mut self) -> Result<()> {
-    //     self.rx = isa::bits(self.ir, 7..=9);
-    //     self.ry = isa::bits(self.ir, 4..=6);
-    //     self.rz = isa::bits(self.ir, 1..=3);
-    //
-    //     let instruction = Instruction::get_instruction(self.ir);
-    //     debug!("Execution Cicle [{} {}]", instruction, instruction.mask());
-    //     instruction.execution(self)
-    // }
-
-    // #[warn(missing_docs)]
-    // pub fn next(&mut self) -> Result<()> {
-    //     if !self.halted {
-    //         self.instruction_cicle()?;
-    //     }
-    //
-    //     Ok(())
-    // }
 
     #[warn(missing_docs)]
     pub fn load_memory(&mut self, memory: &[MemoryCell]) -> Result<()> {
