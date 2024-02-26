@@ -78,7 +78,7 @@ impl Color {
 pub type Pixelmap = (u8, Color);
 pub type FrameBuffer = Vec<Pixelmap>;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct VideoModule {
     /// Largura do vídeo, em pixels.
     width: usize,

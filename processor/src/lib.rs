@@ -137,18 +137,36 @@ impl Processor {
         }
     }
 
-    pub fn run(processor: Arc<Mutex<Processor>>) {
-        thread::spawn(move || {
-            while let Ok(mut p) = processor.lock() {
-                match p.status() {
-                    ProcessorStatus::Running => match p.instruction_cicle() {
-                        Ok(_) => todo!(),
-                        Err(_) => todo!(),
-                    },
-                    ProcessorStatus::Halted | ProcessorStatus::Debug => break,
+    pub fn run(processor: Arc<Mutex<Processor>>) -> thread::JoinHandle<Option<ProcessorError>> {
+        let run_signal = processor
+            .lock()
+            .expect("Falha ao obter o sinal 'run'")
+            .modules
+            .control_unit
+            .run_signal_recv();
+
+        let thread = thread::Builder::new()
+            .name("Processor_Run".to_string())
+            .spawn(move || {
+                if let Ok(false) = run_signal.recv_blocking() {
+                    return None;
                 }
-            }
-        });
+
+                loop {
+                    if let Ok(false) = run_signal.try_recv() {
+                        return None;
+                    }
+
+                    if let Ok(mut p) = processor.lock() {
+                        if let Err(e) = p.instruction_cicle() {
+                            return Some(e);
+                        }
+                    }
+                }
+            })
+            .unwrap();
+
+        thread
     }
 
     /// Retorna o valor presente no endereço `addr` da memória.
