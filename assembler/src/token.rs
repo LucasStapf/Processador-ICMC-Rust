@@ -67,16 +67,28 @@ impl Token {
     }
 
     fn number(s: &str) -> Result<Self, TokenError> {
-        if let Ok(n) = usize::from_str_radix(&s[2..], 2) {
-            // [2..] para ignorar o "0b"
-            Ok(Self::Number(n))
-        } else if let Ok(n) = usize::from_str_radix(&s, 10) {
-            Ok(Self::Number(n))
-        } else if let Ok(n) = usize::from_str_radix(&s[2..], 16) {
-            // [2..] para ignorar o "0x"
-            Ok(Self::Number(n))
-        } else {
-            Err(TokenError::NumberBadFormat(s.to_string()))
+        let re = regex::RegexSet::new(&[
+            r"^[[:digit:]]{1,6}$",
+            r"^0[xX][[:xdigit:]]{1,4}$",
+            r"^0[bB][[0-1]{1,16}$]",
+        ])
+        .unwrap();
+
+        match re.is_match(s) {
+            true => {
+                let ret_val = if let Ok(n) = usize::from_str_radix(&s, 10) {
+                    n
+                } else if let Ok(n) = usize::from_str_radix(&s[2..], 2) {
+                    n
+                } else if let Ok(n) = usize::from_str_radix(&s[2..], 16) {
+                    n
+                } else {
+                    return Err(TokenError::NumberBadFormat(s.to_string()));
+                };
+
+                Ok(Self::Number(ret_val))
+            }
+            false => Err(TokenError::NumberBadFormat(s.to_string())),
         }
     }
 
@@ -232,6 +244,24 @@ mod tests {
                 Token::Identifier("foo_1".to_string()),
                 Token::from_str(s).unwrap()
             )
+        }
+    }
+
+    #[test]
+    fn test_number() {
+        {
+            let s = "2";
+            assert_eq!(Token::Number(2), Token::from_str(s).unwrap())
+        }
+
+        {
+            let s = "0b10";
+            assert_eq!(Token::Number(2), Token::from_str(s).unwrap())
+        }
+
+        {
+            let s = "0x10";
+            assert_eq!(Token::Number(2), Token::from_str(s).unwrap())
         }
     }
 
