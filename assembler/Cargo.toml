@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 isa = { path = "../isa" }
+thiserror = "1.0.57"

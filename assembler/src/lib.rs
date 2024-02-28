@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_imports)]
 
-mod parser;
+mod lexer;
 mod token;
 
 fn write_instruction(i: isa::Instruction) {
