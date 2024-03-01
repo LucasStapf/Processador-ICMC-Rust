@@ -1,4 +1,232 @@
-pub struct Lexer {}
+use std::str::FromStr;
+
+use crate::token::{self, Token, TokenError, PUNCTUATION};
+
+pub const COMMENTATY_BEGIN: char = ';';
+
+pub struct Lexer<'a> {
+    stream: &'a str,
+    line: usize,
+    column: usize,
+}
+
+impl<'a> Lexer<'a> {
+    pub fn new(stream: &'a str) -> Self {
+        Self {
+            stream,
+            line: 1,
+            column: 1,
+        }
+    }
+
+    pub fn stream(&self) -> &str {
+        self.stream
+    }
+
+    pub fn line(&self) -> usize {
+        self.line
+    }
+
+    pub fn column(&self) -> usize {
+        self.column
+    }
+
+    fn increment_line(&mut self) {
+        self.line += 1;
+        self.column = 1;
+    }
+
+    fn next_line(&mut self) {
+        self.stream = match self.stream.split_once(|c| c == '\n') {
+            Some((_, s)) => {
+                self.increment_line();
+                s
+            }
+            None => "",
+        }
+    }
+
+    fn trim_left(&mut self) {
+        let mut n = 0;
+
+        for (i, c) in self.stream.char_indices() {
+            match c {
+                '\n' => {
+                    n = i;
+                    self.increment_line();
+                }
+                c if c.is_whitespace() => {
+                    n = i;
+                    self.column += 1;
+                }
+                _ => {
+                    n = i;
+                    break;
+                }
+            }
+        }
+
+        self.stream = &self.stream[n..];
+    }
+
+    fn skip_commentary(&mut self) {
+        while let Some(COMMENTATY_BEGIN) = self.stream.chars().next() {
+            self.next_line();
+            self.trim_left();
+        }
+    }
+
+    fn string_item(s: &str) -> String {
+        let mut iter = s.chars();
+        let mut ret_val = String::with_capacity(s.len());
+        let mut count = 0;
+        while let Some(c) = iter.next() {
+            match c {
+                '\\' => match iter.next() {
+                    Some(c) => ret_val.push(c),
+                    None => break,
+                },
+                '"' => {
+                    count += count;
+                    ret_val.push(c);
+                    if count == 2 {
+                        break;
+                    }
+                }
+                _ => ret_val.push(c),
+            }
+        }
+
+        ret_val
+    }
+
+    fn next_item(&mut self) -> Option<String> {
+        self.trim_left();
+        self.skip_commentary();
+
+        match self.stream.chars().next() {
+            Some(c) => match c {
+                '"' => {
+                    let s = Self::string_item(self.stream);
+                    self.stream = &self.stream[s.len()..];
+                    Some(s)
+                }
+                c if token::PUNCTUATION.contains(&c) => {
+                    self.stream = &self.stream[1..];
+                    Some(c.to_string())
+                }
+                _ => {
+                    let str = self
+                        .stream
+                        .chars()
+                        .take_while(|c| !c.is_whitespace() && !PUNCTUATION.contains(&c))
+                        .collect::<String>();
+
+                    self.stream = &self.stream[str.len()..];
+                    Some(str)
+                }
+            },
+            None => None,
+        }
+    }
+
+    pub fn next_token(&mut self) -> Option<Result<Token, TokenError>> {
+        match self.next_item() {
+            Some(s) => Some(Token::from_str(&s)),
+            None => None,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::token::Token;
+
+    use super::Lexer;
+
+    #[test]
+    fn test_next_line() {
+        let mut lex = Lexer::new("1 linha\n2 linha");
+        lex.next_line();
+        assert_eq!("2 linha", lex.stream());
+        assert_eq!(2, lex.line());
+    }
+
+    #[test]
+    fn test_trim_left() {
+        let mut lex = Lexer::new(" \t\n  2 linha");
+        lex.trim_left();
+        assert_eq!("2 linha", lex.stream());
+        assert_eq!(2, lex.line());
+        assert_eq!(3, lex.column());
+    }
+
+    #[test]
+    fn test_skip_commentary() {
+        let mut lex = Lexer::new("; 1\n\t\t ;2\n\t3 linha");
+        lex.skip_commentary();
+        assert_eq!("3 linha", lex.stream());
+        assert_eq!(3, lex.line());
+        assert_eq!(2, lex.column());
+    }
+
+    #[test]
+    fn test_item_identifier_declaration() {
+        {
+            let mut lex = Lexer::new("main:");
+            assert_eq!("main".to_string(), lex.next_item().unwrap());
+            assert_eq!(":", lex.stream())
+        }
+
+        {
+            let mut lex = Lexer::new("foo_1:");
+            assert_eq!("foo_1".to_string(), lex.next_item().unwrap());
+            assert_eq!(":", lex.stream())
+        }
+    }
+
+    #[test]
+    fn test_keyword() {
+        {
+            let mut lex = Lexer::new("var position_1");
+            assert_eq!("var".to_string(), lex.next_item().unwrap());
+            assert_eq!(" position_1", lex.stream());
+        }
+
+        {
+            let mut lex = Lexer::new("; comentary \n \tvar position_1");
+            assert_eq!("var".to_string(), lex.next_item().unwrap());
+            assert_eq!(" position_1", lex.stream());
+        }
+    }
+
+    #[test]
+    fn test_token_keyword() {
+        let mut lex = Lexer::new("var position_1");
+        assert_eq!(
+            Token::Keyword("var".to_string()),
+            lex.next_token().unwrap().unwrap()
+        )
+    }
+
+    #[test]
+    fn test_token_instruction() {
+        let mut lex = Lexer::new("ADD R1, R2, R3");
+        assert_eq!(
+            Token::Instruction(isa::Instruction::ADD),
+            lex.next_token().unwrap().unwrap()
+        )
+    }
+
+    #[test]
+    fn test_token_identifier() {
+        let mut lex = Lexer::new("foo_1:");
+        assert_eq!(
+            Token::Identifier("foo_1".to_string()),
+            lex.next_token().unwrap().unwrap()
+        )
+    }
+}
 
 // use crate::token::*;
 // use isa::Instruction;

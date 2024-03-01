@@ -3,11 +3,22 @@ use std::{error, fmt::Display, option::Option, str::FromStr};
 use isa::Instruction;
 use thiserror::Error;
 
-const KEYWORDS: [&str; 12] = [
-    "string", "var", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "SP", "FR",
+pub const KEYWORDS: [&str; 13] = [
+    "string", "var", "static", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "SP", "FR",
 ];
 
-const PUNCTUATION: [char; 2] = [',', '#'];
+pub const PUNCTUATION: [char; 4] = [',', '#', ':', '+'];
+
+pub const TOKEN_REGISTERS: [Token; 8] = [
+    Token::Keyword("R0".to_string()),
+    Token::Keyword("R1".to_string()),
+    Token::Keyword("R2".to_string()),
+    Token::Keyword("R3".to_string()),
+    Token::Keyword("R4".to_string()),
+    Token::Keyword("R5".to_string()),
+    Token::Keyword("R6".to_string()),
+    Token::Keyword("R7".to_string()),
+];
 
 #[derive(Error, Debug, PartialEq)]
 pub enum TokenError {
