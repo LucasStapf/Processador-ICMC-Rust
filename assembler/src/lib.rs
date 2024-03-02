@@ -7,14 +7,16 @@ use lexer::Lexer;
 use thiserror::Error;
 use token::{Token, TokenError};
 
+use crate::token::Keyword;
+
 mod lexer;
 mod token;
 
 #[derive(Error, Debug, PartialEq)]
-pub enum AssemblerError<'a> {
+pub enum AssemblerError {
     #[error("Esperado {expected:?}, Recebido: {received:?}")]
     UnexpectedToken {
-        expected: Option<&'a [Token]>,
+        expected: Option<Token>,
         received: Option<Token>,
     },
 
@@ -30,41 +32,16 @@ pub struct Assembler<'a> {
     stream_out: Vec<usize>,
 }
 
-impl<'a> Assembler<'a> {
-    fn expected_token(&mut self, token: &'a [Token]) -> Result<Token, AssemblerError> {
-        match self.lex.next_token() {
-            Some(r) => match r {
-                Ok(t) => match token.contains(&t) {
-                    true => Ok(t),
-                    false => Err(AssemblerError::UnexpectedToken {
-                        expected: Some(token),
-                        received: None,
-                    }),
-                },
-
-                Err(e) => Err(AssemblerError::InvalidToken(e)),
-            },
-
-            None => Err(AssemblerError::UnexpectedToken {
-                expected: Some(token),
-                received: None,
-            }),
-        }
+impl Assembler<'_> {
+    fn expected_token<T>(&mut self) -> Result<T, AssemblerError> {
+        todo!()
     }
 
     fn write_instruction(&mut self, instruction: Instruction) -> Result<(), AssemblerError> {
         match instruction {
             Instruction::InvalidInstruction => todo!(),
             Instruction::LOAD => {
-                // match self.expected_token(token::TOKEN_REGISTERS)? {
-                //     Token::Keyword(_) => todo!(),
-                //     Token::Instruction(_) => todo!(),
-                //     Token::Identifier(_) => todo!(),
-                //     Token::Number(_) => todo!(),
-                //     Token::String(_) => todo!(),
-                //     Token::Char(_) => todo!(),
-                //     Token::Punctuation(_) => todo!(),
-                // }
+                // let register = self.expected_token::<Keyword>()?;
                 todo!()
             }
             Instruction::LOADN => todo!(),

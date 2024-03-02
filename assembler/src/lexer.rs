@@ -204,7 +204,7 @@ mod tests {
     fn test_token_keyword() {
         let mut lex = Lexer::new("var position_1");
         assert_eq!(
-            Token::Keyword("var".to_string()),
+            Token::Keyword(crate::token::Keyword::Var),
             lex.next_token().unwrap().unwrap()
         )
     }

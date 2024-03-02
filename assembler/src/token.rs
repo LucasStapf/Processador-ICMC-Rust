@@ -9,17 +9,6 @@ pub const KEYWORDS: [&str; 13] = [
 
 pub const PUNCTUATION: [char; 4] = [',', '#', ':', '+'];
 
-pub const TOKEN_REGISTERS: [Token; 8] = [
-    Token::Keyword("R0".to_string()),
-    Token::Keyword("R1".to_string()),
-    Token::Keyword("R2".to_string()),
-    Token::Keyword("R3".to_string()),
-    Token::Keyword("R4".to_string()),
-    Token::Keyword("R5".to_string()),
-    Token::Keyword("R6".to_string()),
-    Token::Keyword("R7".to_string()),
-];
-
 #[derive(Error, Debug, PartialEq)]
 pub enum TokenError {
     #[error("A string \"{0}\" está mal formatada.")]
@@ -38,21 +27,145 @@ pub enum TokenError {
     Invalid(String),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Register {
+    R0,
+    R1,
+    R2,
+    R3,
+    R4,
+    R5,
+    R6,
+    R7,
+    SP,
+    FR,
+}
+
+impl Display for Register {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::R0 => write!(f, "R0"),
+            Self::R1 => write!(f, "R1"),
+            Self::R2 => write!(f, "R2"),
+            Self::R3 => write!(f, "R3"),
+            Self::R4 => write!(f, "R4"),
+            Self::R5 => write!(f, "R5"),
+            Self::R6 => write!(f, "R6"),
+            Self::R7 => write!(f, "R7"),
+            Self::SP => write!(f, "SP"),
+            Self::FR => write!(f, "FR"),
+        }
+    }
+}
+
+impl FromStr for Register {
+    type Err = TokenError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            s if s.eq_ignore_ascii_case(&Self::R0.to_string()) => Ok(Self::R0),
+            s if s.eq_ignore_ascii_case(&Self::R1.to_string()) => Ok(Self::R1),
+            s if s.eq_ignore_ascii_case(&Self::R2.to_string()) => Ok(Self::R2),
+            s if s.eq_ignore_ascii_case(&Self::R3.to_string()) => Ok(Self::R3),
+            s if s.eq_ignore_ascii_case(&Self::R4.to_string()) => Ok(Self::R4),
+            s if s.eq_ignore_ascii_case(&Self::R5.to_string()) => Ok(Self::R5),
+            s if s.eq_ignore_ascii_case(&Self::R6.to_string()) => Ok(Self::R6),
+            s if s.eq_ignore_ascii_case(&Self::R7.to_string()) => Ok(Self::R7),
+            s if s.eq_ignore_ascii_case(&Self::SP.to_string()) => Ok(Self::SP),
+            s if s.eq_ignore_ascii_case(&Self::FR.to_string()) => Ok(Self::FR),
+            _ => Err(Self::Err::Invalid(s.to_string())),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Keyword {
+    String,
+    Static,
+    Var,
+    Register(Register),
+}
+
+impl Display for Keyword {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Keyword::String => write!(f, "string"),
+            Keyword::Static => write!(f, "static"),
+            Keyword::Var => write!(f, "var"),
+            Keyword::Register(r) => write!(f, "{r}"),
+        }
+    }
+}
+
+impl FromStr for Keyword {
+    type Err = TokenError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            s if s.eq_ignore_ascii_case(&Self::String.to_string()) => Ok(Self::String),
+            s if s.eq_ignore_ascii_case(&Self::Static.to_string()) => Ok(Self::Static),
+            s if s.eq_ignore_ascii_case(&Self::Var.to_string()) => Ok(Self::Var),
+            s if Register::from_str(s).is_ok() => {
+                Ok(Self::Register(Register::from_str(s).unwrap()))
+            }
+            _ => Err(Self::Err::Invalid(s.to_string())),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Punctuation {
+    Pound,
+    Comma,
+    Colon,
+    Plus,
+}
+
+impl Display for Punctuation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Punctuation::Pound => write!(f, "#"),
+            Punctuation::Comma => write!(f, ","),
+            Punctuation::Colon => write!(f, ":"),
+            Punctuation::Plus => write!(f, "+"),
+        }
+    }
+}
+
+impl FromStr for Punctuation {
+    type Err = TokenError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            s if s == Self::Pound.to_string() => Ok(Self::Pound),
+            s if s == Self::Comma.to_string() => Ok(Self::Comma),
+            s if s == Self::Colon.to_string() => Ok(Self::Colon),
+            s if s == Self::Plus.to_string() => Ok(Self::Plus),
+            _ => Err(Self::Err::InvalidPunctuation(s.to_string())),
+        }
+    }
+}
+
+pub struct TokenValue<T> {
+    token: Token,
+    value: T,
+}
+
 #[derive(Debug, Clone)]
 pub enum Token {
-    Keyword(String),
+    Keyword(Keyword),
     Instruction(Instruction),
     Identifier(String),
     Number(usize),
     String(String),
     Char(char),
-    Punctuation(char),
+    Punctuation(Punctuation),
 }
 
 impl PartialEq for Token {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Self::Keyword(l0), Self::Keyword(r0)) => l0.eq_ignore_ascii_case(r0),
+            (Self::Keyword(l0), Self::Keyword(r0)) => l0 == r0,
             (Self::Instruction(l0), Self::Instruction(r0)) => l0 == r0,
             (Self::Identifier(l0), Self::Identifier(r0)) => l0 == r0,
             (Self::Number(l0), Self::Number(r0)) => l0 == r0,
@@ -68,8 +181,8 @@ impl Token {
     fn word(s: &str) -> Result<Self, TokenError> {
         if s.len() == 0 {
             Err(TokenError::Invalid("Tamanho nulo.".to_string()))
-        } else if KEYWORDS.iter().any(|w| w.eq_ignore_ascii_case(s)) {
-            Ok(Self::Keyword(s.to_string()))
+        } else if let Ok(kw) = Keyword::from_str(s) {
+            Ok(Self::Keyword(kw))
         } else if let Some(i) = Instruction::from_str(s) {
             Ok(Self::Instruction(i))
         } else {
@@ -167,9 +280,9 @@ impl Token {
 
     fn punctuation(s: &str) -> Result<Self, TokenError> {
         if s.len() == 1 {
-            match s.chars().next().unwrap() {
-                c if PUNCTUATION.contains(&c) => Ok(Token::Punctuation(c)),
-                _ => Err(TokenError::InvalidPunctuation(s.to_string())),
+            match Punctuation::from_str(s) {
+                Ok(p) => Ok(Token::Punctuation(p)),
+                Err(_) => Err(TokenError::InvalidPunctuation(s.to_string())),
             }
         } else {
             Err(TokenError::InvalidPunctuation(s.to_string()))
@@ -198,25 +311,19 @@ impl FromStr for Token {
 
 #[cfg(test)]
 mod tests {
-    use crate::token::Token;
+    use crate::token::{Keyword, Punctuation, Token};
     use std::str::FromStr;
 
     #[test]
     fn test_keyword() {
         {
             let s = "var";
-            assert_eq!(
-                Token::Keyword("var".to_string()),
-                Token::from_str(s).unwrap()
-            )
+            assert_eq!(Token::Keyword(Keyword::Var), Token::from_str(s).unwrap())
         }
 
         {
             let s = "VAR";
-            assert_eq!(
-                Token::Keyword("var".to_string()),
-                Token::from_str(s).unwrap()
-            )
+            assert_eq!(Token::Keyword(Keyword::Var), Token::from_str(s).unwrap())
         }
     }
 
@@ -312,12 +419,18 @@ mod tests {
     fn test_punctuation() {
         {
             let s = "#";
-            assert_eq!(Token::Punctuation('#'), Token::from_str(s).unwrap())
+            assert_eq!(
+                Token::Punctuation(Punctuation::Pound),
+                Token::from_str(s).unwrap()
+            )
         }
 
         {
             let s = ",";
-            assert_eq!(Token::Punctuation(','), Token::from_str(s).unwrap())
+            assert_eq!(
+                Token::Punctuation(Punctuation::Comma),
+                Token::from_str(s).unwrap()
+            )
         }
     }
 }
