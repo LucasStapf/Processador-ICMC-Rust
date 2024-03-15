@@ -1,5 +1,8 @@
 ///! *Instruction Set Architecture - ISA*
 use std::ops::RangeInclusive;
+use std::str::FromStr;
+
+use thiserror::Error;
 
 pub mod memory;
 
@@ -26,6 +29,12 @@ impl FlagIndex {
     pub const NEGATIVE: usize = 9;
 }
 
+#[derive(Error, Debug, PartialEq)]
+#[error("Instrução inválida: {code}")]
+pub struct InvalidInstruction {
+    code: String,
+}
+
 macro_rules! instruction_set {
     ($($(#[$doc:meta])* $name:ident $op:literal),+) => {
 
@@ -50,6 +59,17 @@ macro_rules! instruction_set {
             }
         }
 
+        impl FromStr for Instruction {
+            type Err = InvalidInstruction;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                $(if s.eq_ignore_ascii_case(stringify!($name)) {
+                    return Ok(Instruction::$name)
+                })+
+                Err(Self::Err { code: s.to_string() })
+            }
+        }
+
         impl Instruction {
 
             /// Retorna o OPCODE da instrução.
@@ -65,14 +85,6 @@ macro_rules! instruction_set {
                 match self {
                     $(Instruction::$name => $op),+,
                 }
-            }
-
-
-            pub fn from_str(s: &str) -> Option<Self> {
-                $(if s.eq_ignore_ascii_case(stringify!($name)) {
-                    return Some(Instruction::$name)
-                })+
-                None
             }
 
             pub fn bits(&self, r: RangeInclusive<usize>) -> MemoryCell {
@@ -97,7 +109,7 @@ macro_rules! instruction_set {
             /// let mem = 0b1100001000100011; // LOAD
             /// assert_eq!(Instruction::LOAD, Instruction::get_instruction(mem));
             /// ```
-            pub fn get_instruction(value: MemoryCell) -> Instruction {
+            pub fn get_instruction(value: MemoryCell) -> Result<Instruction, InvalidInstruction> {
                 let value_string = format!("{:016b}", value);
 
                 let mut test_value: String;
@@ -111,10 +123,10 @@ macro_rules! instruction_set {
                 }).collect();
 
                 if test_value == $op {
-                    return Instruction::$name;
+                    return Ok(Instruction::$name);
                 })+
 
-                Instruction::InvalidInstruction
+                Err(InvalidInstruction { code: value.to_string() })
             }
 
         }
@@ -122,8 +134,8 @@ macro_rules! instruction_set {
 }
 
 instruction_set!(
-    /// Instrução inválida. Utilizada apenas para sinalização.
-    InvalidInstruction  "XXXXXXXXXXXXXXXX",         // Apenas controle para instrução inválida.
+    // /// Instrução inválida. Utilizada apenas para sinalização.
+    // InvalidInstruction  "XXXXXXXXXXXXXXXX",         // Apenas controle para instrução inválida.
 
     /// Carrega o valor da memória presente no endereço `END` para o registrador `Rx`. 
     ///
