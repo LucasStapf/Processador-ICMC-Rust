@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -9,6 +9,12 @@ pub enum RamError {
     InvalidLenght { expected: usize, received: usize },
     #[error("Ocorreu uma panic enquanto a memória estava sendo acessada!")]
     Panic,
+}
+
+impl<T> From<PoisonError<T>> for RamError {
+    fn from(_value: PoisonError<T>) -> Self {
+        Self::Panic
+    }
 }
 
 /// Memória RAM (Random Access Memory) utilizada para guardar as instruções e dados dos programas.
@@ -37,10 +43,6 @@ impl Ram {
         }
     }
 
-    fn memory(&self) -> Result<MutexGuard<Vec<usize>>, RamError> {
-        self.memory.lock().map_err(|_| RamError::Panic)
-    }
-
     /// Carrega novos dados dentro da memória. Qualquer dado anteriormente guardado é apagado. O
     /// tamanho de `data` deve ser o mesmo que a capacidade da memória RAM.
     ///
@@ -53,7 +55,7 @@ impl Ram {
     /// retornar o erro [`RamError::Panic`].
     pub fn load(&mut self, data: &[usize]) -> Result<(), RamError> {
         if data.len() == self.capacity {
-            let mut mem = self.memory()?;
+            let mut mem = self.memory.lock()?;
             mem.clear();
             for d in data {
                 mem.push(*d);
@@ -76,10 +78,21 @@ impl Ram {
     /// Se alguma *thread* entrou em pânico enquanto estava acessando a memória, esta função irá
     /// retornar o erro [`RamError::Panic`].
     pub fn get(&self, addr: usize) -> Result<usize, RamError> {
-        let mem = self.memory()?;
+        let mem = self.memory.lock()?;
         mem.get(addr).map_or_else(
             || Err(RamError::InvalidAddress { index: addr }),
             |value| Ok(*value),
         )
+    }
+
+    /// Altera o valor presente no endereço `addr` para `value`.
+    pub fn set(&self, addr: usize, value: usize) -> Result<(), RamError> {
+        let mut mem = self.memory.lock()?;
+        if let Some(m) = mem.get_mut(addr) {
+            *m = value;
+            Ok(())
+        } else {
+            Err(RamError::InvalidAddress { index: addr })
+        }
     }
 }
