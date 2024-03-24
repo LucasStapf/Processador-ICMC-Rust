@@ -5,9 +5,7 @@ use std::{collections::HashMap, fs::File};
 use isa::Instruction;
 use lexer::Lexer;
 use thiserror::Error;
-use token::{Token, TokenError};
-
-use crate::token::Keyword;
+use token::{Token, TokenError, TokenType};
 
 mod lexer;
 mod token;
@@ -33,13 +31,8 @@ pub struct Assembler<'a> {
 }
 
 impl Assembler<'_> {
-    fn expected_token<T>(&mut self) -> Result<T, AssemblerError> {
-        todo!()
-    }
-
     fn write_instruction(&mut self, instruction: Instruction) -> Result<(), AssemblerError> {
         match instruction {
-            Instruction::InvalidInstruction => todo!(),
             Instruction::LOAD => {
                 // let register = self.expected_token::<Keyword>()?;
                 todo!()

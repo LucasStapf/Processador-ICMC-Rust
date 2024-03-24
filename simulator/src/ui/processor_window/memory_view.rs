@@ -259,7 +259,7 @@ impl MemoryView {
                             cell.add_css_class("error");
                         }
 
-                        cell.update(Some(inst), i, &inst.display(i, &p), raw);
+                        cell.update(Some(inst), i, &inst.display_row(i, &p), raw);
                         cell.set_float_instruction("Instruction");
                     }
                     MemoryValue::Address => {

@@ -1,13 +1,7 @@
-use std::{error, fmt::Display, option::Option, str::FromStr};
+use std::{any::Any, error, fmt::Display, option::Option, str::FromStr};
 
 use isa::Instruction;
 use thiserror::Error;
-
-pub const KEYWORDS: [&str; 13] = [
-    "string", "var", "static", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "SP", "FR",
-];
-
-pub const PUNCTUATION: [char; 4] = [',', '#', ':', '+'];
 
 #[derive(Error, Debug, PartialEq)]
 pub enum TokenError {
@@ -27,8 +21,20 @@ pub enum TokenError {
     Invalid(String),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Register {
+pub trait TokenType {
+    fn same_type(&self, other: Self) -> bool;
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Token {
+    Instruction(Instruction),
+    Identifier(String),
+    Number(usize),
+    LiteralChar(char),
+    LiteralStr(String),
+    String,
+    Static,
+    Var,
     R0,
     R1,
     R2,
@@ -39,11 +45,29 @@ pub enum Register {
     R7,
     SP,
     FR,
+    Pound,
+    Comma,
+    Colon,
+    Plus,
 }
 
-impl Display for Register {
+impl TokenType for Token {
+    fn same_type(&self, other: Self) -> bool {
+        self.type_id() == other.type_id()
+    }
+}
+
+impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Instruction(i) => write!(f, "{i}"),
+            Self::Identifier(id) => write!(f, "{id}"),
+            Self::Number(n) => write!(f, "{n}"),
+            Self::LiteralChar(c) => write!(f, "'{c}'"),
+            Self::LiteralStr(s) => write!(f, "\"{s}\""),
+            Self::String => write!(f, "string"),
+            Self::Static => write!(f, "static"),
+            Self::Var => write!(f, "var"),
             Self::R0 => write!(f, "R0"),
             Self::R1 => write!(f, "R1"),
             Self::R2 => write!(f, "R2"),
@@ -54,125 +78,10 @@ impl Display for Register {
             Self::R7 => write!(f, "R7"),
             Self::SP => write!(f, "SP"),
             Self::FR => write!(f, "FR"),
-        }
-    }
-}
-
-impl FromStr for Register {
-    type Err = TokenError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            s if s.eq_ignore_ascii_case(&Self::R0.to_string()) => Ok(Self::R0),
-            s if s.eq_ignore_ascii_case(&Self::R1.to_string()) => Ok(Self::R1),
-            s if s.eq_ignore_ascii_case(&Self::R2.to_string()) => Ok(Self::R2),
-            s if s.eq_ignore_ascii_case(&Self::R3.to_string()) => Ok(Self::R3),
-            s if s.eq_ignore_ascii_case(&Self::R4.to_string()) => Ok(Self::R4),
-            s if s.eq_ignore_ascii_case(&Self::R5.to_string()) => Ok(Self::R5),
-            s if s.eq_ignore_ascii_case(&Self::R6.to_string()) => Ok(Self::R6),
-            s if s.eq_ignore_ascii_case(&Self::R7.to_string()) => Ok(Self::R7),
-            s if s.eq_ignore_ascii_case(&Self::SP.to_string()) => Ok(Self::SP),
-            s if s.eq_ignore_ascii_case(&Self::FR.to_string()) => Ok(Self::FR),
-            _ => Err(Self::Err::Invalid(s.to_string())),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Keyword {
-    String,
-    Static,
-    Var,
-    Register(Register),
-}
-
-impl Display for Keyword {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Keyword::String => write!(f, "string"),
-            Keyword::Static => write!(f, "static"),
-            Keyword::Var => write!(f, "var"),
-            Keyword::Register(r) => write!(f, "{r}"),
-        }
-    }
-}
-
-impl FromStr for Keyword {
-    type Err = TokenError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            s if s.eq_ignore_ascii_case(&Self::String.to_string()) => Ok(Self::String),
-            s if s.eq_ignore_ascii_case(&Self::Static.to_string()) => Ok(Self::Static),
-            s if s.eq_ignore_ascii_case(&Self::Var.to_string()) => Ok(Self::Var),
-            s if Register::from_str(s).is_ok() => {
-                Ok(Self::Register(Register::from_str(s).unwrap()))
-            }
-            _ => Err(Self::Err::Invalid(s.to_string())),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Punctuation {
-    Pound,
-    Comma,
-    Colon,
-    Plus,
-}
-
-impl Display for Punctuation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Punctuation::Pound => write!(f, "#"),
-            Punctuation::Comma => write!(f, ","),
-            Punctuation::Colon => write!(f, ":"),
-            Punctuation::Plus => write!(f, "+"),
-        }
-    }
-}
-
-impl FromStr for Punctuation {
-    type Err = TokenError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            s if s == Self::Pound.to_string() => Ok(Self::Pound),
-            s if s == Self::Comma.to_string() => Ok(Self::Comma),
-            s if s == Self::Colon.to_string() => Ok(Self::Colon),
-            s if s == Self::Plus.to_string() => Ok(Self::Plus),
-            _ => Err(Self::Err::InvalidPunctuation(s.to_string())),
-        }
-    }
-}
-
-pub struct TokenValue<T> {
-    token: Token,
-    value: T,
-}
-
-#[derive(Debug, Clone)]
-pub enum Token {
-    Keyword(Keyword),
-    Instruction(Instruction),
-    Identifier(String),
-    Number(usize),
-    String(String),
-    Char(char),
-    Punctuation(Punctuation),
-}
-
-impl PartialEq for Token {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::Keyword(l0), Self::Keyword(r0)) => l0 == r0,
-            (Self::Instruction(l0), Self::Instruction(r0)) => l0 == r0,
-            (Self::Identifier(l0), Self::Identifier(r0)) => l0 == r0,
-            (Self::Number(l0), Self::Number(r0)) => l0 == r0,
-            (Self::String(l0), Self::String(r0)) => l0 == r0,
-            (Self::Char(l0), Self::Char(r0)) => l0 == r0,
-            (Self::Punctuation(l0), Self::Punctuation(r0)) => l0 == r0,
-            _ => false,
+            Self::Pound => write!(f, "#"),
+            Self::Comma => write!(f, ","),
+            Self::Colon => write!(f, ":"),
+            Self::Plus => write!(f, "+"),
         }
     }
 }
@@ -181,12 +90,15 @@ impl Token {
     fn word(s: &str) -> Result<Self, TokenError> {
         if s.len() == 0 {
             Err(TokenError::Invalid("Tamanho nulo.".to_string()))
-        } else if let Ok(kw) = Keyword::from_str(s) {
-            Ok(Self::Keyword(kw))
-        } else if let Some(i) = Instruction::from_str(s) {
-            Ok(Self::Instruction(i))
+        } else if let Ok(inst) = Instruction::from_str(s) {
+            Ok(Self::Instruction(inst))
         } else {
-            Ok(Self::Identifier(s.to_string()))
+            match s {
+                s if s.eq_ignore_ascii_case(&Self::String.to_string()) => Ok(Self::String),
+                s if s.eq_ignore_ascii_case(&Self::Var.to_string()) => Ok(Self::Var),
+                s if s.eq_ignore_ascii_case(&Self::Static.to_string()) => Ok(Self::Static),
+                _ => Ok(Self::Identifier(s.to_string())),
+            }
         }
     }
 
@@ -240,7 +152,7 @@ impl Token {
                 }
             }
 
-            Ok(Token::String(ret_val))
+            Ok(Token::LiteralStr(ret_val))
         } else {
             Err(TokenError::StringBadFormat(s.to_string()))
         }
@@ -257,16 +169,16 @@ impl Token {
                     Some(ch) => match ch {
                         '\\' => match iter.next() {
                             Some(ch) => match ch {
-                                '\'' => Ok(Token::Char('\'')),
-                                'n' => Ok(Token::Char('\n')),
-                                'r' => Ok(Token::Char('\r')),
-                                't' => Ok(Token::Char('\t')),
-                                '\\' => Ok(Token::Char('\\')),
+                                '\'' => Ok(Token::LiteralChar('\'')),
+                                'n' => Ok(Token::LiteralChar('\n')),
+                                'r' => Ok(Token::LiteralChar('\r')),
+                                't' => Ok(Token::LiteralChar('\t')),
+                                '\\' => Ok(Token::LiteralChar('\\')),
                                 _ => Err(TokenError::CharBadFormat(s.to_string())),
                             },
                             None => Err(TokenError::CharBadFormat(s.to_string())),
                         },
-                        _ => Ok(Token::Char(ch)),
+                        _ => Ok(Token::LiteralChar(ch)),
                     },
                     None => Err(TokenError::CharBadFormat(s.to_string())),
                 }
@@ -280,9 +192,12 @@ impl Token {
 
     fn punctuation(s: &str) -> Result<Self, TokenError> {
         if s.len() == 1 {
-            match Punctuation::from_str(s) {
-                Ok(p) => Ok(Token::Punctuation(p)),
-                Err(_) => Err(TokenError::InvalidPunctuation(s.to_string())),
+            match s {
+                s if Self::Comma.to_string().eq(s) => Ok(Self::Comma),
+                s if Self::Colon.to_string().eq(s) => Ok(Self::Colon),
+                s if Self::Plus.to_string().eq(s) => Ok(Self::Plus),
+                s if Self::Pound.to_string().eq(s) => Ok(Self::Pound),
+                _ => Err(TokenError::InvalidPunctuation(s.to_string())),
             }
         } else {
             Err(TokenError::InvalidPunctuation(s.to_string()))
@@ -298,11 +213,11 @@ impl FromStr for Token {
             Err(TokenError::Invalid("Tamanho nulo.".to_string()))
         } else {
             match s.chars().next().unwrap() {
-                c if c.is_alphabetic() => Token::word(&s),
-                c if c.is_numeric() => Token::number(&s),
-                c if c == '"' => Token::string(&s),
-                c if c == '\'' => Token::char(&s),
-                c if PUNCTUATION.contains(&c) => Token::punctuation(&s),
+                c if c.is_alphabetic() => Self::word(&s),
+                c if c.is_numeric() => Self::number(&s),
+                c if c == '"' => Self::string(&s),
+                c if c == '\'' => Self::char(&s),
+                c if c == '+' || c == '#' || c == ',' || c == ':' => Self::punctuation(s),
                 _ => Err(TokenError::Invalid(s.to_string())),
             }
         }
@@ -311,19 +226,19 @@ impl FromStr for Token {
 
 #[cfg(test)]
 mod tests {
-    use crate::token::{Keyword, Punctuation, Token};
+    use crate::token::Token;
     use std::str::FromStr;
 
     #[test]
     fn test_keyword() {
         {
             let s = "var";
-            assert_eq!(Token::Keyword(Keyword::Var), Token::from_str(s).unwrap())
+            assert_eq!(Token::Var, Token::from_str(s).unwrap())
         }
 
         {
             let s = "VAR";
-            assert_eq!(Token::Keyword(Keyword::Var), Token::from_str(s).unwrap())
+            assert_eq!(Token::Var, Token::from_str(s).unwrap())
         }
     }
 
@@ -388,7 +303,7 @@ mod tests {
         {
             let s = r#""test""#;
             assert_eq!(
-                Token::String("test".to_string()),
+                Token::LiteralStr("test".to_string()),
                 Token::from_str(s).unwrap()
             )
         }
@@ -396,7 +311,7 @@ mod tests {
         {
             let s = "\"test \\\"123\\\".\"";
             assert_eq!(
-                Token::String("test \"123\".".to_string()),
+                Token::LiteralStr("test \"123\".".to_string()),
                 Token::from_str(s).unwrap()
             )
         }
@@ -406,12 +321,12 @@ mod tests {
     fn test_char() {
         {
             let s = "'t'";
-            assert_eq!(Token::Char('t'), Token::from_str(s).unwrap())
+            assert_eq!(Token::LiteralChar('t'), Token::from_str(s).unwrap())
         }
 
         {
             let s = "'\\''";
-            assert_eq!(Token::Char('\''), Token::from_str(s).unwrap())
+            assert_eq!(Token::LiteralChar('\''), Token::from_str(s).unwrap())
         }
     }
 
@@ -419,18 +334,12 @@ mod tests {
     fn test_punctuation() {
         {
             let s = "#";
-            assert_eq!(
-                Token::Punctuation(Punctuation::Pound),
-                Token::from_str(s).unwrap()
-            )
+            assert_eq!(Token::Pound, Token::from_str(s).unwrap())
         }
 
         {
             let s = ",";
-            assert_eq!(
-                Token::Punctuation(Punctuation::Comma),
-                Token::from_str(s).unwrap()
-            )
+            assert_eq!(Token::Comma, Token::from_str(s).unwrap())
         }
     }
 }

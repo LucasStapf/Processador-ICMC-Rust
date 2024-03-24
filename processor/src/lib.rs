@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_imports, missing_docs)]
 
+pub mod components;
 pub mod errors;
 pub mod instructions;
 pub mod modules;
@@ -492,12 +493,8 @@ impl Processor {
         self.ry = isa::bits(self.ir, 4..=6);
         self.rz = isa::bits(self.ir, 1..=3);
 
-        let instruction = Instruction::get_instruction(self.ir);
-        debug!("Decode Stage [{} {}]", instruction, instruction.mask());
-        match instruction {
-            Instruction::InvalidInstruction => Err(ProcessorError::InvalidInstruction(self.ir)),
-            _ => Ok(instruction),
-        }
+        Instruction::get_instruction(self.ir)
+            .map_err(|_| ProcessorError::InvalidInstruction(self.ir))
     }
 
     /// Realiza a etapa de execução do processador.

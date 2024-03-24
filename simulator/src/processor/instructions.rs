@@ -2,7 +2,7 @@ use isa::MemoryCell;
 use processor::Processor;
 
 pub trait InstructionDisplay {
-    fn display(&self, addr: MemoryCell, processor: &Processor) -> String;
+    fn display_row(&self, addr: MemoryCell, processor: &Processor) -> String;
 }
 
 fn rx(mem: MemoryCell) -> MemoryCell {
@@ -18,7 +18,7 @@ fn rz(mem: MemoryCell) -> MemoryCell {
 }
 
 impl InstructionDisplay for isa::Instruction {
-    fn display(&self, addr: MemoryCell, processor: &Processor) -> String {
+    fn display_row(&self, addr: MemoryCell, processor: &Processor) -> String {
         let mut link = "https://lucasstapf.github.io/Processador-ICMC-Rust-Doc/isa/enum.Instruction.html#variant.".to_string();
 
         let mut link_string = |s: &str| -> String {
@@ -27,8 +27,6 @@ impl InstructionDisplay for isa::Instruction {
         };
 
         match self {
-            isa::Instruction::InvalidInstruction => "Invalid Instruction".to_string(),
-
             isa::Instruction::LOAD => format!(
                 "{} R{}, {}",
                 link_string(&isa::Instruction::LOAD.to_string()),

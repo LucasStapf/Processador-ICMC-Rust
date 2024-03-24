@@ -12,10 +12,6 @@ pub trait InstructionCicle {
 impl InstructionCicle for Instruction {
     fn execution(&self, p: &mut Processor) -> Result<(), ProcessorError> {
         match self {
-            Instruction::InvalidInstruction => {
-                return Err(ProcessorError::InvalidInstruction(p.ir()))
-            }
-
             Instruction::LOAD => {
                 p.set_reg(p.rx(), p.mem(p.mem(p.pc())?)?)?;
                 p.inc_pc(1)?;

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::token::{self, Token, TokenError, PUNCTUATION};
+use crate::token::{self, Token, TokenError};
 
 pub const COMMENTATY_BEGIN: char = ';';
 
@@ -111,7 +111,7 @@ impl<'a> Lexer<'a> {
                     self.stream = &self.stream[s.len()..];
                     Some(s)
                 }
-                c if token::PUNCTUATION.contains(&c) => {
+                c if c == '+' || c == '#' || c == ',' || c == ':' => {
                     self.stream = &self.stream[1..];
                     Some(c.to_string())
                 }
@@ -119,7 +119,9 @@ impl<'a> Lexer<'a> {
                     let str = self
                         .stream
                         .chars()
-                        .take_while(|c| !c.is_whitespace() && !PUNCTUATION.contains(&c))
+                        .take_while(|&c| {
+                            !c.is_whitespace() && c != '+' && c != '#' && c != ',' && c != ':'
+                        })
                         .collect::<String>();
 
                     self.stream = &self.stream[str.len()..];
@@ -203,10 +205,7 @@ mod tests {
     #[test]
     fn test_token_keyword() {
         let mut lex = Lexer::new("var position_1");
-        assert_eq!(
-            Token::Keyword(crate::token::Keyword::Var),
-            lex.next_token().unwrap().unwrap()
-        )
+        assert_eq!(Token::Var, lex.next_token().unwrap().unwrap())
     }
 
     #[test]
