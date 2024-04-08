@@ -1,6 +1,5 @@
 #![allow(dead_code, unused_imports, missing_docs)]
 
-pub mod components;
 pub mod errors;
 pub mod instructions;
 pub mod modules;
