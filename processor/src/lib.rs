@@ -40,7 +40,7 @@ pub const MAX_VALUE_MEMORY: usize = 2_usize.pow(isa::BITS_ADDRESS as u32) - 1;
 type Result<T> = std::result::Result<T, ProcessorError>;
 
 pub struct Processor {
-    memory: Arc<Mutex<Vec<usize>>>, // pub temp
+    memory: Vec<usize>, // pub temp
     modules: Modules,
     registers: [usize; NUM_REGISTERS],
 
@@ -66,12 +66,10 @@ impl Default for Processor {
             MEMORY_SIZE, NUM_REGISTERS
         );
 
-        let mem = Arc::new(Mutex::new(Vec::with_capacity(MEMORY_SIZE)));
-        let mut guard = mem.lock().unwrap();
+        let mut mem = Vec::with_capacity(MEMORY_SIZE);
         for _ in 0..MEMORY_SIZE {
-            guard.push(0);
+            mem.push(0);
         }
-        drop(guard);
 
         Self {
             memory: mem,
@@ -124,12 +122,10 @@ impl Processor {
             s, NUM_REGISTERS
         );
 
-        let mem = Arc::new(Mutex::new(Vec::with_capacity(s)));
-        let mut guard = mem.lock().unwrap();
+        let mut mem = Vec::with_capacity(s);
         for _ in 0..s {
-            guard.push(0);
+            mem.push(0);
         }
-        drop(guard);
 
         Self {
             memory: mem,
@@ -174,7 +170,6 @@ impl Processor {
     /// # Erros
     ///
     /// - [`ProcessorError::InvalidAddress`] caso o endereço seja inválido.
-    /// - [`ProcessorError::Generic`] em caso de [`std::sync::PoisonError`].
     ///
     /// # Exemplo
     ///
@@ -185,15 +180,9 @@ impl Processor {
     /// assert_eq!(0x0, p.mem(0).unwrap());
     /// ```
     pub fn mem(&self, addr: MemoryCell) -> Result<MemoryCell> {
-        match self.memory.lock() {
-            Ok(m) => match m.get(addr) {
-                Some(&v) => Ok(v),
-                None => Err(ProcessorError::InvalidAddress(addr)),
-            },
-            Err(e) => Err(ProcessorError::Generic {
-                title: "Erro inesperado".to_string(),
-                description: e.to_string(),
-            }),
+        match self.memory.get(addr) {
+            Some(&v) => Ok(v),
+            None => Err(ProcessorError::InvalidAddress(addr)),
         }
     }
 
@@ -202,7 +191,6 @@ impl Processor {
     /// # Erros
     ///
     /// - [`ProcessorError::InvalidAddress`] caso o endereço seja inválido.
-    /// - [`ProcessorError::Generic`] em caso de [`std::sync::PoisonError`].
     ///
     /// # Exemplo
     ///
@@ -215,18 +203,12 @@ impl Processor {
     /// assert_eq!(0x1, p.mem(0).unwrap());
     /// ```
     pub fn set_mem(&mut self, adrr: MemoryCell, v: MemoryCell) -> Result<()> {
-        match self.memory.lock() {
-            Ok(mut m) => match m.get_mut(adrr) {
-                Some(m) => {
-                    *m = v;
-                    Ok(())
-                }
-                None => Err(ProcessorError::InvalidAddress(adrr)),
-            },
-            Err(e) => Err(ProcessorError::Generic {
-                title: "Erro inesperado".to_string(),
-                description: e.to_string(),
-            }),
+        match self.memory.get_mut(adrr) {
+            Some(m) => {
+                *m = v;
+                Ok(())
+            }
+            None => Err(ProcessorError::InvalidAddress(adrr)),
         }
     }
 
@@ -520,18 +502,11 @@ impl Processor {
     #[warn(missing_docs)]
     pub fn load_memory(&mut self, memory: &[MemoryCell]) -> Result<()> {
         match memory.len() {
-            MEMORY_SIZE => match self.memory.lock() {
-                Ok(mut m) => {
-                    m.clear();
-                    m.copy_from_slice(memory);
-                    Ok(())
-                }
-                Err(e) => Err(ProcessorError::Generic {
-                    title: "Poison error".to_string(),
-                    description:
-                        format!("Uma thread entrou em pânico enquanto acessava a memória do processador: {e}"),
-                }),
-            },
+            MEMORY_SIZE => {
+                self.memory.clear();
+                self.memory.copy_from_slice(memory);
+                Ok(())
+            }
             _ => Err(ProcessorError::Generic {
                 title: "Tamanho inválido de memória".to_string(),
                 description:
@@ -560,18 +535,11 @@ impl Processor {
     pub fn reset(&mut self, memory: &[MemoryCell]) -> Result<()> {
         self.reset_fields();
         match memory.len() {
-            MEMORY_SIZE => match self.memory.lock() {
-                Ok(mut m) => {
-                    m.clear();
-                    m.copy_from_slice(memory);
-                    Ok(())
-                }
-                Err(e) => Err(ProcessorError::Generic {
-                    title: "Poison error".to_string(),
-                    description:
-                        format!("Uma thread entrou em pânico enquanto acessava a memória do processador: {e}"),
-                }),
-            },
+            MEMORY_SIZE => {
+                self.memory.clear();
+                self.memory.copy_from_slice(memory);
+                Ok(())
+            }
             _ => Err(ProcessorError::Generic {
                 title: "Tamanho inválido de memória".to_string(),
                 description:
