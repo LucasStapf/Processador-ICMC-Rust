@@ -7,8 +7,8 @@ mod imp {
     use std::{cell::RefCell, rc::Rc};
 
     use adw::glib;
+    use adw::prelude::StaticTypeExt;
     use adw::subclass::prelude::*;
-    use cairo::glib::StaticTypeExt;
     use gtk::CompositeTemplate;
 
     use gtk::{

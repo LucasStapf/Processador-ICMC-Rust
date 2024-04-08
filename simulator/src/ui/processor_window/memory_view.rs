@@ -66,7 +66,7 @@ use std::sync::{Arc, Mutex};
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 use adw::{gio, glib};
-use cairo::glib::PropertySet;
+use cairo::glib::property::PropertySet;
 
 use crate::mem_row::MemoryCellRow;
 use crate::processor::instructions::InstructionDisplay;
@@ -102,109 +102,112 @@ impl MemoryView {
             match addr {
                 a if isa::memory::layout::ADDR_PROG_AND_VAR.contains(&a) => {
                     let inst = isa::Instruction::get_instruction(p.mem(a).unwrap());
-                    match inst {
-                        isa::Instruction::LOAD
-                        | isa::Instruction::STORE
-                        | isa::Instruction::JZ
-                        | isa::Instruction::JC
-                        | isa::Instruction::JN
-                        | isa::Instruction::JMP
-                        | isa::Instruction::JEQ
-                        | isa::Instruction::JNE
-                        | isa::Instruction::JNZ
-                        | isa::Instruction::JNC
-                        | isa::Instruction::JGR
-                        | isa::Instruction::JLE
-                        | isa::Instruction::JEG
-                        | isa::Instruction::JEL
-                        | isa::Instruction::JOV
-                        | isa::Instruction::JNO
-                        | isa::Instruction::JDZ
-                        | isa::Instruction::CZ
-                        | isa::Instruction::CC
-                        | isa::Instruction::CN
-                        | isa::Instruction::CEQ
-                        | isa::Instruction::CNE
-                        | isa::Instruction::CNZ
-                        | isa::Instruction::CNC
-                        | isa::Instruction::CGR
-                        | isa::Instruction::CEG
-                        | isa::Instruction::CEL
-                        | isa::Instruction::COV
-                        | isa::Instruction::CNO
-                        | isa::Instruction::CDZ
-                        | isa::Instruction::CLE
-                        | isa::Instruction::CALL => {
-                            vec.push(MemoryValue::Instruction);
-                            addr += 1;
-                            vec.push(MemoryValue::Address);
-                        }
 
-                        isa::Instruction::LOADI
-                        | isa::Instruction::STOREI
-                        | isa::Instruction::MOV
-                        | isa::Instruction::INCHAR
-                        | isa::Instruction::OUTCHAR
-                        | isa::Instruction::ADD
-                        | isa::Instruction::SUB
-                        | isa::Instruction::ADDC
-                        | isa::Instruction::SUBC
-                        | isa::Instruction::MUL
-                        | isa::Instruction::DIV
-                        | isa::Instruction::INC
-                        | isa::Instruction::DEC
-                        | isa::Instruction::MOD
-                        | isa::Instruction::AND
-                        | isa::Instruction::OR
-                        | isa::Instruction::XOR
-                        | isa::Instruction::NOT
-                        | isa::Instruction::CMP
-                        | isa::Instruction::ROTL
-                        | isa::Instruction::ROTR
-                        | isa::Instruction::SHIFTL0
-                        | isa::Instruction::SHIFTL1
-                        | isa::Instruction::SHIFTR0
-                        | isa::Instruction::SHIFTR1
-                        | isa::Instruction::RTS
-                        | isa::Instruction::RTI
-                        | isa::Instruction::POP
-                        | isa::Instruction::PUSH
-                        | isa::Instruction::NOP
-                        | isa::Instruction::HALT
-                        | isa::Instruction::SETC
-                        | isa::Instruction::CLEARC
-                        | isa::Instruction::BREAKP
-                        | isa::Instruction::InvalidInstruction => {
-                            vec.push(MemoryValue::Instruction)
-                        }
+                    if let Ok(inst) = inst {
+                        match inst {
+                            isa::Instruction::LOAD
+                            | isa::Instruction::STORE
+                            | isa::Instruction::JZ
+                            | isa::Instruction::JC
+                            | isa::Instruction::JN
+                            | isa::Instruction::JMP
+                            | isa::Instruction::JEQ
+                            | isa::Instruction::JNE
+                            | isa::Instruction::JNZ
+                            | isa::Instruction::JNC
+                            | isa::Instruction::JGR
+                            | isa::Instruction::JLE
+                            | isa::Instruction::JEG
+                            | isa::Instruction::JEL
+                            | isa::Instruction::JOV
+                            | isa::Instruction::JNO
+                            | isa::Instruction::JDZ
+                            | isa::Instruction::CZ
+                            | isa::Instruction::CC
+                            | isa::Instruction::CN
+                            | isa::Instruction::CEQ
+                            | isa::Instruction::CNE
+                            | isa::Instruction::CNZ
+                            | isa::Instruction::CNC
+                            | isa::Instruction::CGR
+                            | isa::Instruction::CEG
+                            | isa::Instruction::CEL
+                            | isa::Instruction::COV
+                            | isa::Instruction::CNO
+                            | isa::Instruction::CDZ
+                            | isa::Instruction::CLE
+                            | isa::Instruction::CALL => {
+                                vec.push(MemoryValue::Instruction);
+                                addr += 1;
+                                vec.push(MemoryValue::Address);
+                            }
 
-                        isa::Instruction::LOADN => {
-                            vec.push(MemoryValue::Instruction);
-                            addr += 1;
-                            vec.push(MemoryValue::Data);
-                        }
+                            isa::Instruction::LOADI
+                            | isa::Instruction::STOREI
+                            | isa::Instruction::MOV
+                            | isa::Instruction::INCHAR
+                            | isa::Instruction::OUTCHAR
+                            | isa::Instruction::ADD
+                            | isa::Instruction::SUB
+                            | isa::Instruction::ADDC
+                            | isa::Instruction::SUBC
+                            | isa::Instruction::MUL
+                            | isa::Instruction::DIV
+                            | isa::Instruction::INC
+                            | isa::Instruction::DEC
+                            | isa::Instruction::MOD
+                            | isa::Instruction::AND
+                            | isa::Instruction::OR
+                            | isa::Instruction::XOR
+                            | isa::Instruction::NOT
+                            | isa::Instruction::CMP
+                            | isa::Instruction::ROTL
+                            | isa::Instruction::ROTR
+                            | isa::Instruction::SHIFTL0
+                            | isa::Instruction::SHIFTL1
+                            | isa::Instruction::SHIFTR0
+                            | isa::Instruction::SHIFTR1
+                            | isa::Instruction::RTS
+                            | isa::Instruction::RTI
+                            | isa::Instruction::POP
+                            | isa::Instruction::PUSH
+                            | isa::Instruction::NOP
+                            | isa::Instruction::HALT
+                            | isa::Instruction::SETC
+                            | isa::Instruction::CLEARC
+                            | isa::Instruction::BREAKP => vec.push(MemoryValue::Instruction),
 
-                        isa::Instruction::STOREN => {
-                            vec.push(MemoryValue::Instruction);
-                            addr += 1;
-                            vec.push(MemoryValue::Address);
-                            addr += 1;
-                            vec.push(MemoryValue::Data);
-                        }
+                            isa::Instruction::LOADN => {
+                                vec.push(MemoryValue::Instruction);
+                                addr += 1;
+                                vec.push(MemoryValue::Data);
+                            }
 
-                        isa::Instruction::INPUT => {
-                            unimplemented!("A instrução INPUT não foi implementada!")
-                        }
+                            isa::Instruction::STOREN => {
+                                vec.push(MemoryValue::Instruction);
+                                addr += 1;
+                                vec.push(MemoryValue::Address);
+                                addr += 1;
+                                vec.push(MemoryValue::Data);
+                            }
 
-                        isa::Instruction::OUTPUT => {
-                            unimplemented!("A instrução OUTPUT não foi implementada!")
-                        }
+                            isa::Instruction::INPUT => {
+                                unimplemented!("A instrução INPUT não foi implementada!")
+                            }
 
-                        isa::Instruction::SOUND => {
-                            unimplemented!("A instrução OUTPUT não foi implementada!")
+                            isa::Instruction::OUTPUT => {
+                                unimplemented!("A instrução OUTPUT não foi implementada!")
+                            }
+
+                            isa::Instruction::SOUND => {
+                                unimplemented!("A instrução OUTPUT não foi implementada!")
+                            }
                         }
+                    } else {
+                        vec.push(MemoryValue::Instruction);
                     }
                 }
+
                 a if isa::memory::layout::ADDR_STATIC_DATA.contains(&a)
                     | isa::memory::layout::ADDR_DYNAMIC_DATA.contains(&a)
                     | isa::memory::layout::ADDR_SYSTEM_CALL.contains(&a)
@@ -255,12 +258,15 @@ impl MemoryView {
                     MemoryValue::Instruction => {
                         let raw = p.mem(i).unwrap();
                         let inst = isa::Instruction::get_instruction(raw);
-                        if inst == isa::Instruction::InvalidInstruction {
-                            cell.add_css_class("error");
-                        }
 
-                        cell.update(Some(inst), i, &inst.display_row(i, &p), raw);
-                        cell.set_float_instruction("Instruction");
+                        if let Ok(inst) = inst {
+                            cell.update(Some(inst), i, &inst.display_row(i, &p), raw);
+                            cell.set_float_instruction("Instruction");
+                        } else {
+                            cell.add_css_class("error");
+                            cell.update(None, i, "Invalid Instruction", raw);
+                            cell.set_float_instruction("Instruction");
+                        }
                     }
                     MemoryValue::Address => {
                         cell.update(

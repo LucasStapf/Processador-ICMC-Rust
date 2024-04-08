@@ -10,11 +10,11 @@ mod imp {
     use std::cell::RefCell;
     use std::rc::Rc;
 
+    use crate::glib::property::PropertySet;
     use adw::glib;
     use adw::prelude::*;
     use adw::subclass::prelude::*;
     use cairo::glib::closure_local;
-    use cairo::glib::PropertySet;
     use gtk::CompositeTemplate;
 
     use crate::processor::ProcessorManager;
