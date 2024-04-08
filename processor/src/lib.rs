@@ -2,7 +2,6 @@
 
 pub mod errors;
 pub mod instructions;
-pub mod modules;
 
 use crate::instructions::InstructionCicle;
 
