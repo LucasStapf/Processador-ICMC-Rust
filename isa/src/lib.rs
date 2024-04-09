@@ -107,7 +107,7 @@ macro_rules! instruction_set {
             /// use isa::*;
             ///
             /// let mem = 0b1100001000100011; // LOAD
-            /// assert_eq!(Instruction::LOAD, Instruction::get_instruction(mem));
+            /// assert_eq!(Instruction::LOAD, Instruction::get_instruction(mem).unwrap());
             /// ```
             pub fn get_instruction(value: MemoryCell) -> Result<Instruction, InvalidInstruction> {
                 let value_string = format!("{:016b}", value);
@@ -1418,7 +1418,7 @@ mod tests {
     fn test_instruction_get_only_opcode() {
         assert_eq!(
             Instruction::STORE,
-            Instruction::get_instruction(0b1100010010010101)
+            Instruction::get_instruction(0b1100010010010101).unwrap()
         );
     }
 
@@ -1426,12 +1426,12 @@ mod tests {
     fn test_instruction_get() {
         assert_eq!(
             Instruction::RTS,
-            Instruction::get_instruction(0b0001000000000000)
+            Instruction::get_instruction(0b0001000000000000).unwrap()
         );
 
         assert_eq!(
             Instruction::RTI,
-            Instruction::get_instruction(0b0001001111111111)
+            Instruction::get_instruction(0b0001001111111111).unwrap()
         );
     }
 }
