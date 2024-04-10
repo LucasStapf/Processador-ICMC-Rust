@@ -1,9 +1,74 @@
 use std::borrow::Borrow;
 
-use crate::{errors::ProcessorError, modules::video};
+use crate::errors::ProcessorError;
 
 use super::Processor;
 use isa::{FlagIndex, Instruction, MAX_VALUE_MEMORY};
+
+#[derive(Debug, Clone, Copy)]
+pub enum Color {
+    Black,
+    White,
+    Red,
+    Green,
+    Blue,
+    Brown,
+    Olive,
+    Navy,
+    Purple,
+    Teal,
+    Silver,
+    Gray,
+    Lime,
+    Yellow,
+    Fuchsia,
+    Aqua,
+}
+
+impl Color {
+    pub fn rgba(&self) -> (usize, usize, usize, usize) {
+        match self {
+            Color::Black => (0, 0, 0, 255),
+            Color::White => (255, 255, 255, 255),
+            Color::Red => (255, 0, 0, 255),
+            Color::Green => (0, 128, 0, 255),
+            Color::Blue => (0, 0, 255, 255),
+            Color::Brown => (165, 42, 42, 255),
+            Color::Olive => (128, 128, 0, 255),
+            Color::Navy => (0, 0, 128, 255),
+            Color::Purple => (128, 0, 128, 255),
+            Color::Teal => (0, 128, 128, 255),
+            Color::Silver => (192, 192, 192, 255),
+            Color::Gray => (128, 128, 128, 255),
+            Color::Lime => (0, 255, 0, 255),
+            Color::Yellow => (255, 255, 0, 255),
+            Color::Fuchsia => (255, 0, 255, 255),
+            Color::Aqua => (0, 255, 255, 255),
+        }
+    }
+
+    pub fn from_outchar(code: usize) -> Option<Self> {
+        match code {
+            0 => Some(Self::White),
+            256 => Some(Self::Brown),
+            512 => Some(Self::Green),
+            768 => Some(Self::Olive),
+            1024 => Some(Self::Navy),
+            1280 => Some(Self::Purple),
+            1536 => Some(Self::Teal),
+            1792 => Some(Self::Silver),
+            2048 => Some(Self::Gray),
+            2304 => Some(Self::Red),
+            2560 => Some(Self::Lime),
+            2816 => Some(Self::Yellow),
+            3072 => Some(Self::Blue),
+            3328 => Some(Self::Fuchsia),
+            3584 => Some(Self::Aqua),
+            3840 => Some(Self::Black),
+            _ => None,
+        }
+    }
+}
 
 pub trait InstructionCicle {
     fn execution(&self, processor: &mut Processor) -> Result<(), ProcessorError>;
@@ -51,23 +116,23 @@ impl InstructionCicle for Instruction {
 
             Instruction::OUTCHAR => {
                 let index = p.reg(p.ry())?;
-                if index > video::VIDEO_BUFFER_LENGHT {
+                if index > super::VRAM_SIZE {
                     return Err(ProcessorError::Generic {
                         title: "Índice inválido na Mémoria de Vídeo".to_string(),
                         description: format!(
                             "O índice {} não pertence ao intervalo de 0 a {}.",
                             index,
-                            video::VIDEO_BUFFER_LENGHT
+                            super::VRAM_SIZE
                         ),
                     });
                 }
 
                 let c = isa::bits(p.reg(p.rx())?, 0..=7) as u8;
                 let color_code = isa::bits(p.reg(p.rx())?, 8..=15);
-                let color = video::Color::color(color_code);
+                let color = Color::from_outchar(color_code);
 
                 match color {
-                    Some(color) => p.modules().video.draw(index, (c, color)),
+                    Some(color) => p.set_pixel(index, color.rgba()).unwrap(),
                     None => {
                         return Err(ProcessorError::Generic {
                             title: "Cor inválida".to_string(),
