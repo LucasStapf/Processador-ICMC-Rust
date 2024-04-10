@@ -15,6 +15,7 @@ use ui::{simulator_window, window};
 
 mod files;
 // mod mem_obj;
+mod handler;
 mod mem_row;
 mod processor;
 mod ui;
