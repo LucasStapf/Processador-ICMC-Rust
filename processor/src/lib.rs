@@ -2,6 +2,7 @@
 
 pub mod errors;
 pub mod instructions;
+mod tests;
 
 use crate::instructions::InstructionCicle;
 
@@ -261,6 +262,22 @@ impl Processor {
         self.rx
     }
 
+    /// Define o valor presente no campo `RX` do registrador `IR` para `v`.
+    ///
+    /// # Mapeamento
+    ///
+    /// | Nº | 15 | 14 | 13 | 12 | 11 | 10 | 09 | 08 | 07 | 06 | 05 | 04 | 03 | 02 | 01 | 00 |
+    /// |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+    /// | IR | -- | -- | -- | -- | -- | -- | RX | RX | RX | -- | -- | -- | -- | -- | -- | -- |
+    pub fn set_rx(&mut self, v: MemoryCell) -> Result<()> {
+        if v > NUM_REGISTERS - 1 {
+            return Err(ProcessorError::InvalidRegister(v));
+        }
+
+        self.rx = v;
+        Ok(())
+    }
+
     /// Retorna o valor presente no campo `RY` do registrador `IR`.
     ///
     /// # Mapeamento
@@ -272,6 +289,22 @@ impl Processor {
         self.ry
     }
 
+    /// Define o valor presente no campo `RY` do registrador `IR` para `v`.
+    ///
+    /// # Mapeamento
+    ///
+    /// | Nº | 15 | 14 | 13 | 12 | 11 | 10 | 09 | 08 | 07 | 06 | 05 | 04 | 03 | 02 | 01 | 00 |
+    /// |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+    /// | IR | -- | -- | -- | -- | -- | -- | -- | -- | -- | RY | RY | RY | -- | -- | -- | -- |
+    pub fn set_ry(&mut self, v: MemoryCell) -> Result<()> {
+        if v > NUM_REGISTERS - 1 {
+            return Err(ProcessorError::InvalidRegister(v));
+        }
+
+        self.ry = v;
+        Ok(())
+    }
+
     /// Retorna o valor presente no campo `RZ` do registrador `IR`.
     ///
     /// # Mapeamento
@@ -281,6 +314,22 @@ impl Processor {
     /// | IR | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | RZ | RZ | RZ | -- |
     pub fn rz(&self) -> MemoryCell {
         self.rz
+    }
+
+    /// Define o valor presente no campo `RZ` do registrador `IR` para `v`.
+    ///
+    /// # Mapeamento
+    ///
+    /// | Nº | 15 | 14 | 13 | 12 | 11 | 10 | 09 | 08 | 07 | 06 | 05 | 04 | 03 | 02 | 01 | 00 |
+    /// |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+    /// | IR | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | -- | RZ | RZ | RZ | -- |
+    pub fn set_rz(&mut self, v: MemoryCell) -> Result<()> {
+        if v > NUM_REGISTERS - 1 {
+            return Err(ProcessorError::InvalidRegister(v));
+        }
+
+        self.rz = v;
+        Ok(())
     }
 
     /// Retorna o valor da `i`-ésima *flag* do registrador *Flag Register*.
