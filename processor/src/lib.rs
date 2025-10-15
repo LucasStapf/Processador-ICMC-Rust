@@ -437,7 +437,7 @@ impl Processor {
     /// - [`ProcError::InvalidMemoryIndex`] - Caso a etapa de busca ocorra sobre um índice
     /// inválido.
     /// - [`ProcError::MaximumMemoryReached`] - Caso o limite de memória seja atingido.
-    fn fetch_stage(&mut self) -> Result<()> {
+    fn instruction_fetch_stage(&mut self) -> Result<()> {
         self.ir = self.mem(self.pc)?;
         debug!(
             "Fetch Stage [Instruction Register {:016b}] [Program Counter {}]",
@@ -453,7 +453,7 @@ impl Processor {
     ///
     /// Esta função retorna o erro [`ProcessorError::InvalidInstruction`] caso a instrução seja
     /// inválida.
-    fn decode_stage(&mut self) -> Result<Instruction> {
+    fn instruction_decode_stage(&mut self) -> Result<Instruction> {
         self.rx = isa::bits(self.ir, 7..=9);
         self.ry = isa::bits(self.ir, 4..=6);
         self.rz = isa::bits(self.ir, 1..=3);
@@ -467,7 +467,7 @@ impl Processor {
     /// # Erros
     ///
     /// Esta função pode retornar [`ProcessorError`].
-    fn execution_stage(&mut self, instruction: Instruction) -> Result<()> {
+    fn instruction_execution_stage(&mut self, instruction: Instruction) -> Result<()> {
         debug!("Execution Stage [{}]", instruction);
         instruction.execution(self)
     }
@@ -478,9 +478,9 @@ impl Processor {
     ///
     /// Esta função pode retornar qualquer erro presente em [`ProcessorError`].
     pub fn instruction_cicle(&mut self) -> Result<()> {
-        self.fetch_stage()?;
-        let inst = self.decode_stage()?;
-        self.execution_stage(inst)
+        self.instruction_fetch_stage()?;
+        let inst = self.instruction_decode_stage()?;
+        self.instruction_execution_stage(inst)
     }
 
     #[warn(missing_docs)]
