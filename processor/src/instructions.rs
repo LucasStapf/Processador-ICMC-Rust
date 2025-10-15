@@ -164,6 +164,7 @@ impl InstructionCicle for Instruction {
                         p.set_fr(FlagIndex::ARITHMETIC_OVERFLOW, true)?;
                         p.set_reg(p.rx(), r - MAX_VALUE_MEMORY)?;
                     }
+                    0 => p.set_fr(FlagIndex::ZERO, true)?,
                     _ => (),
                 };
             }
