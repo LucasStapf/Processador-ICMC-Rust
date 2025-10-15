@@ -65,18 +65,11 @@ impl Default for Processor {
             MEMORY_SIZE, NUM_REGISTERS
         );
 
-        let mut mem = Vec::with_capacity(MEMORY_SIZE);
-        for _ in 0..MEMORY_SIZE {
-            mem.push(0);
-        }
-
-        let mut vram = Vec::with_capacity(VRAM_SIZE);
-        for _ in 0..vram.capacity() {
-            vram.push(0);
-        }
+        let ram = vec![0; MEMORY_SIZE];
+        let vram = vec![0; VRAM_SIZE];
 
         Self {
-            ram: mem,
+            ram,
             vram,
             registers: [0; NUM_REGISTERS],
             rx: 0,
@@ -126,13 +119,10 @@ impl Processor {
             s, NUM_REGISTERS
         );
 
-        let mut mem = Vec::with_capacity(s);
-        for _ in 0..s {
-            mem.push(0);
-        }
+        let ram = vec![0, s];
 
         Self {
-            ram: mem,
+            ram,
             ..Default::default()
         }
     }
