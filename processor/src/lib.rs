@@ -56,7 +56,7 @@ pub struct Processor {
     // Stack Pointer
     sp: usize,
 
-    status: Arc<Mutex<ProcessorStatus>>,
+    status: ProcessorStatus,
 }
 
 impl Default for Processor {
@@ -80,7 +80,7 @@ impl Default for Processor {
             pc: *isa::memory::layout::ADDR_PROG_AND_VAR.start(),
             ir: 0,
             sp: *isa::memory::layout::ADDR_STACK.end(),
-            status: Arc::new(Mutex::new(ProcessorStatus::Debug)),
+            status: ProcessorStatus::Debug,
         }
     }
 }
@@ -457,11 +457,11 @@ impl Processor {
     }
 
     pub fn set_status(&mut self, status: ProcessorStatus) {
-        *self.status.lock().expect("Falha ao trocar o status atual") = status
+        self.status = status
     }
 
     pub fn status(&self) -> ProcessorStatus {
-        *self.status.lock().expect("Falha ao acessar o status atual")
+        self.status
     }
 
     #[warn(missing_docs)]
@@ -503,6 +503,7 @@ impl Processor {
     /// Esta função retorna o erro [`ProcessorError::InvalidInstruction`] caso a instrução seja
     /// inválida.
     fn instruction_decode_stage(&mut self) -> Result<Instruction> {
+        debug!("Decode state");
         self.rx = isa::bits(self.ir, 7..=9);
         self.ry = isa::bits(self.ir, 4..=6);
         self.rz = isa::bits(self.ir, 1..=3);
@@ -527,17 +528,27 @@ impl Processor {
     ///
     /// Esta função pode retornar qualquer erro presente em [`ProcessorError`].
     pub fn instruction_cicle(&mut self) -> Result<()> {
+        debug!("Instruction Cicle Begin:");
+        debug!("{self}");
         self.instruction_fetch_stage()?;
         let inst = self.instruction_decode_stage()?;
-        self.instruction_execution_stage(inst)
+        self.instruction_execution_stage(inst)?;
+        debug!("Instruction Cicle End:");
+        debug!("{self}");
+        Ok(())
     }
 
     #[warn(missing_docs)]
     pub fn load_memory(&mut self, memory: &[MemoryCell]) -> Result<()> {
         match memory.len() {
             MEMORY_SIZE => {
-                self.ram.clear();
                 self.ram.copy_from_slice(memory);
+                Ok(())
+            }
+            len if len < MEMORY_SIZE => {
+                for (i, cell) in memory.iter().enumerate() {
+                    self.set_mem(i, *cell)?;
+                }
                 Ok(())
             }
             _ => Err(ProcessorError::Generic {
@@ -558,10 +569,7 @@ impl Processor {
         self.rx = 0;
         self.ry = 0;
         self.rz = 0;
-        *self
-            .status
-            .lock()
-            .expect("Falha ao trocar o status para o seu valor padrão") = ProcessorStatus::Debug
+        self.status = ProcessorStatus::Debug
     }
 
     #[warn(missing_docs)]
@@ -587,8 +595,8 @@ impl Display for Processor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "[Registers {:?}] [FR {:?}] [IR {}] [SP {:#06x}] [PC {:#06x}]",
-            self.registers, self.fr, self.ir, self.sp, self.pc,
+            "[Registers {:?}] [IR {:#016b}] [SP {:#06x}] [PC {:#06x}]\n[FR {:?}]",
+            self.registers, self.ir, self.sp, self.pc, self.fr,
         )
     }
 }

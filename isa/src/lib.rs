@@ -36,7 +36,8 @@ pub struct InvalidInstruction {
 }
 
 macro_rules! instruction_set {
-    ($($(#[$doc:meta])* $name:ident $op:literal),+) => {
+    // ($($(#[$doc:meta])* $name:ident $op:literal),+) => {
+    ($($(#[$doc:meta])* $name:ident $op:literal $({ $($field:ident : $fty:ty),* })?),+) => {
 
         /// Conjunto de instruções presentes na Arquitetura do Processador ICMC.
         #[derive(Debug, Copy, Clone, PartialEq)]
@@ -50,6 +51,19 @@ macro_rules! instruction_set {
                 $name
             ),+
         }
+
+        #[derive(Debug, Clone, PartialEq)]
+        pub enum InstructionData {
+            $(
+                $(#[$doc])*
+                #[doc = "# Máscara\n"]
+                #[doc = "```txt"]
+                #[doc = $op]
+                #[doc = "```"]
+                $name $({ $($field: $fty),* })?
+            ),+
+        }
+
 
         impl std::fmt::Display for Instruction {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
@@ -71,6 +85,10 @@ macro_rules! instruction_set {
         }
 
         impl Instruction {
+
+            pub fn mask_number(&self) -> MemoryCell {
+                MemoryCell::from_str_radix(&self.mask().replace("-", "0"), 2).unwrap()
+            }
 
             /// Retorna o OPCODE da instrução.
             pub fn opcode(&self) -> Opcode {
@@ -151,7 +169,7 @@ instruction_set!(
     /// ```asm
     /// LOAD R3, 0xff00
     /// ```
-    LOAD        "110000----------", // Data Manipulation Instruction
+    LOAD        "110000----------"      { rx: MemoryCell, addr1: MemoryCell }, // Data Manipulation Instruction
 
     /// Carrega o valor `NR` no registrador `Rx`. 
     ///
@@ -167,7 +185,7 @@ instruction_set!(
     /// ```asm
     /// LOADN R3, #0xff00
     /// ```
-    LOADN       "111000----------",
+    LOADN       "111000----------"      {rx: MemoryCell, addr1: MemoryCell },
 
     /// Carrega o valor da memória presente no endereço armazenado em `Ry` para o registrador
     /// `Rx`. 
@@ -184,7 +202,7 @@ instruction_set!(
     /// ```asm
     /// LOADI R3, R0
     /// ```
-    LOADI       "111100----------",
+    LOADI       "111100----------"      { rx: MemoryCell, ry: MemoryCell },
 
     /// Salva no endereço `END` da memória o valor presente no registrador `Rx`.
     ///
@@ -200,7 +218,7 @@ instruction_set!(
     /// ```asm
     /// STORE 0x00ff, R3 
     /// ```
-    STORE       "110001----------",
+    STORE       "110001----------"      { rx: MemoryCell, addr1: MemoryCell },
 
     /// Salva no endereço `END` da memória o valor `NR`.
     ///
@@ -216,7 +234,7 @@ instruction_set!(
     /// ```asm
     /// STOREN 0x00ff, #0b10100 
     /// ```
-    STOREN      "111001----------",
+    STOREN      "111001----------"      { rx: MemoryCell, addr1: MemoryCell },
 
     /// Salva, na memória, no endereço armazenado em `Rx`, o valor presente no registrador `Ry`.
     ///
@@ -232,7 +250,7 @@ instruction_set!(
     /// ```asm
     /// STOREI R3, R0 
     /// ```
-    STOREI      "111101----------",
+    STOREI      "111101----------"     { rx: MemoryCell, ry: MemoryCell },
 
     /// Move, para um registrador `Rx` ou para o `SP`, o valor presente em outro registrador.
     ///
@@ -254,7 +272,7 @@ instruction_set!(
     /// MOV R3, SP 
     /// MOV SP, R0 
     /// ```
-    MOV         "110011----------",
+    MOV         "110011----------"      { rx: MemoryCell, ry: MemoryCell, b2_1: MemoryCell },
 
     INPUT       "111110----------", // Peripheric Instructions
     OUTPUT      "111111----------",
@@ -320,7 +338,7 @@ instruction_set!(
     /// ```asm
     /// ADD R3, R0, R7 
     /// ```
-    ADD         "100000---------0", // Aritmethic Instructions
+    ADD         "100000---------0"      { rx: MemoryCell, ry: MemoryCell, rz: MemoryCell }, // Aritmethic Instructions
 
     /// Realiza a soma dos valores presentes nos registradores `Ry` e `Rz` mais o *carry* (`C`),
     /// guardando o resultado no registrador `Rx`. 
@@ -337,7 +355,7 @@ instruction_set!(
     /// ```asm
     /// ADDC R3, R0, R7 
     /// ```
-    ADDC        "100000---------1", 
+    ADDC        "100000---------1"      { rx: MemoryCell, ry: MemoryCell, rz: MemoryCell }, 
 
     /// Realiza a subtração dos valores presentes nos registradores `Ry` e `Rz`, guardando o
     /// resultado no registrador `Rx`.
@@ -354,7 +372,7 @@ instruction_set!(
     /// ```asm
     /// SUB R3, R0, R7 
     /// ```
-    SUB         "100001---------0",
+    SUB         "100001---------0"      { rx: MemoryCell, ry: MemoryCell, rz: MemoryCell },
 
     /// Realiza a subtração dos valores presentes nos registradores `Ry` e `Rz`, guardando no
     /// registrador `Rx` o resultado somado com o *carry* (`C`).
@@ -371,7 +389,7 @@ instruction_set!(
     /// ```asm
     /// SUBC R3, R0, R7 
     /// ```
-    SUBC        "100001---------1",
+    SUBC        "100001---------1"      { rx: MemoryCell, ry: MemoryCell, rz: MemoryCell },
 
     /// Realiza a multiplicação dos valores presentes nos registradores `Ry` e `Rz`, guardando o
     /// resultado no registrador `Rx`. 
@@ -388,7 +406,7 @@ instruction_set!(
     /// ```asm
     /// MUL R3, R0, R7 
     /// ```
-    MUL         "100010---------0",
+    MUL         "100010---------0"      { rx: MemoryCell, ry: MemoryCell, rz: MemoryCell },
 
     /// Realiza a divisão de `Ry` por `Rz`, guardando o resultado no registrador `Rx`.
     ///
@@ -404,7 +422,7 @@ instruction_set!(
     /// ```asm
     /// DIV R3, R0, R7 
     /// ```
-    DIV         "100011---------0",
+    DIV         "100011---------0"      { rx: MemoryCell, ry: MemoryCell, rz: MemoryCell },
 
     /// Incrementa em uma unidade o registrador `Rx`.
     ///
@@ -420,7 +438,7 @@ instruction_set!(
     /// ```asm
     /// INC R3 
     /// ```
-    INC         "100100---0------",
+    INC         "100100---0------"      { rx: MemoryCell },
 
     /// Decrementa em uma unidade o registrador `Rx`.
     ///
@@ -436,7 +454,7 @@ instruction_set!(
     /// ```asm
     /// DEC R3 
     /// ```
-    DEC         "100100---1------",
+    DEC         "100100---1------"      { rx: MemoryCell },
 
     /// Realiza a operação de módulo entre os registradores `Ry` e `Rz` e salva o resultado no
     /// registrador `Rx`.
@@ -453,7 +471,7 @@ instruction_set!(
     /// ```asm
     /// MOD R3, R2, R5 
     /// ```
-    MOD         "100101----------",
+    MOD         "100101----------"      { rx: MemoryCell, ry: MemoryCell, rz: MemoryCell },
 
     /// Realiza a operação *AND* entre os registradores `Ry` e `Rz` e salva o resultado no
     /// registrador `Rx`.
@@ -470,7 +488,7 @@ instruction_set!(
     /// ```asm
     /// AND R3, R2, R5 
     /// ```
-    AND         "010010----------", // Logic Instructions
+    AND         "010010----------"      { rx: MemoryCell, ry: MemoryCell, rz: MemoryCell }, // Logic Instructions
     
     /// Realiza a operação *OR* entre os registradores `Ry` e `Rz` e salva o resultado no
     /// registrador `Rx`.
@@ -487,7 +505,7 @@ instruction_set!(
     /// ```asm
     /// OR R3, R2, R5 
     /// ```
-    OR          "010011----------",
+    OR          "010011----------"      { rx: MemoryCell, ry: MemoryCell, rz: MemoryCell },
 
     /// Realiza a operação *XOR* entre os registradores `Ry` e `Rz` e salva o resultado no
     /// registrador `Rx`.
@@ -504,7 +522,7 @@ instruction_set!(
     /// ```asm
     /// XOR R3, R2, R5 
     /// ```
-    XOR         "010100----------",
+    XOR         "010100----------"      { rx: MemoryCell, ry: MemoryCell, rz: MemoryCell },
 
     /// Realiza a operação *NOT* no registrador `Ry` e salva o resultado no registrador `Rx`.
     ///
@@ -520,7 +538,7 @@ instruction_set!(
     /// ```asm
     /// NOT R3, R2 
     /// ```
-    NOT         "010101----------",
+    NOT         "010101----------"      { rx: MemoryCell, ry: MemoryCell },
 
     /// Esta operação desliza os bits para a esquerda `N` vezes e os bits que transbordam a
     /// extremidade esquerda desaparecem. Os espaços na direita são preenchidos com 0.
@@ -542,7 +560,7 @@ instruction_set!(
     /// ```asm
     /// SHIFTL0 R7, 9
     /// ```
-    SHIFTL0     "010000---000----",
+    SHIFTL0     "010000---000----"      { rx: MemoryCell, b3_0: MemoryCell },
 
     /// Esta operação desliza os bits para a esquerda `N` vezes e os bits que transbordam a
     /// extremidade esquerda desaparecem. Os espaços na direita são preenchidos com 1.
@@ -564,7 +582,7 @@ instruction_set!(
     /// ```asm
     /// SHIFTL1 R7, 9
     /// ```
-    SHIFTL1     "010000---001----",
+    SHIFTL1     "010000---001----"      { rx: MemoryCell, b3_0: MemoryCell },
 
     /// Esta operação desliza os bits para a direita `N` vezes e os bits que transbordam a
     /// extremidade direita desaparecem. Os espaços na esquerda são preenchidos com 0.
@@ -586,7 +604,7 @@ instruction_set!(
     /// ```asm
     /// SHIFTR0 R7, 9
     /// ```
-    SHIFTR0     "010000---010----",
+    SHIFTR0     "010000---010----"      { rx: MemoryCell, b3_0: MemoryCell },
 
     /// Esta operação desliza os bits para a direita `N` vezes e os bits que transbordam a
     /// extremidade direita desaparecem. Os espaços na esquerda são preenchidos com 1.
@@ -608,7 +626,7 @@ instruction_set!(
     /// ```asm
     /// SHIFTR1 R7, 9
     /// ```
-    SHIFTR1     "010000---011----",
+    SHIFTR1     "010000---011----"      { rx: MemoryCell, b3_0: MemoryCell },
 
     /// Esta operação gira os bits para a esquerda `N` vezes e os bits que transbordam para
     /// a extremidade esquerda são reintroduzidos no lado direito.
@@ -631,7 +649,7 @@ instruction_set!(
     /// ```asm
     /// ROTL R6, 2
     /// ```
-    ROTL        "010000---10-----",
+    ROTL        "010000---10-----"      { rx: MemoryCell, ry: MemoryCell, b3_0: MemoryCell },
 
     /// Esta operação gira os bits para a direita `N` vezes e os bits que transbordam para
     /// a extremidade direita são reintroduzidos no lado esquerdo.
@@ -654,7 +672,7 @@ instruction_set!(
     /// ```asm
     /// ROTL R6, 2
     /// ```
-    ROTR        "010000---11-----",
+    ROTR        "010000---11-----"      { rx: MemoryCell, ry: MemoryCell, b3_0: MemoryCell },
 
     /// Compara os valores dos registradores `Rx` e `Ry` e atualiza o *flag register* (`FR`) de
     /// acordo com o resultado.
@@ -671,7 +689,7 @@ instruction_set!(
     /// ```asm
     /// CMP R3, R2 
     /// ```
-    CMP         "010110----------",
+    CMP         "010110----------"      { rx: MemoryCell, ry: MemoryCell },
 
     /// Pula para o endereço `END` da memória.
     ///
@@ -687,7 +705,7 @@ instruction_set!(
     /// ```asm
     /// JMP 0x00ff 
     /// ```
-    JMP         "0000100000------",
+    JMP         "0000100000------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::EQUAL`] do
     /// *flag register* estiver setado.
@@ -704,7 +722,7 @@ instruction_set!(
     /// ```asm
     /// JEQ 0x00ff 
     /// ```
-    JEQ         "0000100001------",
+    JEQ         "0000100001------"      { addr1: MemoryCell },
     
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::EQUAL`] do
     /// *flag register* não estiver setado.
@@ -721,7 +739,7 @@ instruction_set!(
     /// ```asm
     /// JNE 0x00ff 
     /// ```
-    JNE         "0000100010------",
+    JNE         "0000100010------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::ZERO`] do
     /// *flag register* estiver setado.
@@ -738,7 +756,7 @@ instruction_set!(
     /// ```asm
     /// JZ 0x00ff 
     /// ```
-    JZ          "0000100011------",
+    JZ          "0000100011------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::ZERO`] do
     /// *flag register* não estiver setado.
@@ -755,7 +773,7 @@ instruction_set!(
     /// ```asm
     /// JNZ 0x00ff 
     /// ```
-    JNZ         "0000100100------",
+    JNZ         "0000100100------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::CARRY`] do
     /// *flag register* estiver setado.
@@ -772,7 +790,7 @@ instruction_set!(
     /// ```asm
     /// JC 0x00ff 
     /// ```
-    JC          "0000100101------",
+    JC          "0000100101------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::CARRY`] do
     /// *flag register* não estiver setado.
@@ -789,7 +807,7 @@ instruction_set!(
     /// ```asm
     /// JNC 0x00ff 
     /// ```
-    JNC         "0000100110------",
+    JNC         "0000100110------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::GREATER`] do
     /// *flag register* estiver setado.
@@ -806,7 +824,7 @@ instruction_set!(
     /// ```asm
     /// JGR 0x00ff 
     /// ```
-    JGR         "0000100111------",
+    JGR         "0000100111------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::LESSER`] do
     /// *flag register* estiver setado.
@@ -823,7 +841,7 @@ instruction_set!(
     /// ```asm
     /// JLE 0x00ff 
     /// ```
-    JLE         "0000101000------",
+    JLE         "0000101000------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** algum dos *bits* [`FlagIndex::GREATER`] ou
     /// [`FlagIndex::EQUAL`] do *flag register* estiver setado.
@@ -840,7 +858,7 @@ instruction_set!(
     /// ```asm
     /// JEG 0x00ff 
     /// ```
-    JEG         "0000101001------",
+    JEG         "0000101001------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** algum dos *bits* [`FlagIndex::LESSER`] ou
     /// [`FlagIndex::EQUAL`] do *flag register* estiver setado.
@@ -857,7 +875,7 @@ instruction_set!(
     /// ```asm
     /// JEL 0x00ff 
     /// ```
-    JEL         "0000101010------",
+    JEL         "0000101010------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::ARITHMETIC_OVERFLOW`] do
     /// *flag register* estiver setado.
@@ -874,7 +892,7 @@ instruction_set!(
     /// ```asm
     /// JOV 0x00ff 
     /// ```
-    JOV         "0000101011------",
+    JOV         "0000101011------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::ARITHMETIC_OVERFLOW`] do
     /// *flag register* não estiver setado.
@@ -891,7 +909,7 @@ instruction_set!(
     /// ```asm
     /// JNO 0x00ff 
     /// ```
-    JNO         "0000101100------",
+    JNO         "0000101100------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::DIV_BY_ZERO`] do
     /// *flag register* estiver setado.
@@ -908,7 +926,7 @@ instruction_set!(
     /// ```asm
     /// JDZ 0x00ff 
     /// ```
-    JDZ         "0000101101------",
+    JDZ         "0000101101------"      { addr1: MemoryCell },
 
     /// Pula para o endereço `END` da memória **se** o *bit* [`FlagIndex::NEGATIVE`] do
     /// *flag register* estiver setado.
@@ -925,7 +943,7 @@ instruction_set!(
     /// ```asm
     /// JN 0x00ff 
     /// ```
-    JN          "0000101110------",
+    JN          "0000101110------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado.
     ///
@@ -943,7 +961,7 @@ instruction_set!(
     /// ```asm
     /// CALL 0x003C
     /// ```
-    CALL        "0000110000------",
+    CALL        "0000110000------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::EQUAL`] do *flag register* estiver setado.
@@ -962,7 +980,7 @@ instruction_set!(
     /// ```asm
     /// CEQ 0x003C
     /// ```
-    CEQ         "0000110001------",
+    CEQ         "0000110001------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::EQUAL`] do *flag register* não estiver setado.
@@ -981,7 +999,7 @@ instruction_set!(
     /// ```asm
     /// CNE 0x003C
     /// ```
-    CNE         "0000110010------",
+    CNE         "0000110010------"      { addr1: MemoryCell },
     
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::ZERO`] do *flag register* estiver setado.
@@ -1000,7 +1018,7 @@ instruction_set!(
     /// ```asm
     /// CZ 0x003C
     /// ```
-    CZ          "0000110011------",
+    CZ          "0000110011------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::ZERO`] do *flag register* não estiver setado.
@@ -1019,7 +1037,7 @@ instruction_set!(
     /// ```asm
     /// CNZ 0x003C
     /// ```
-    CNZ         "0000110100------",
+    CNZ         "0000110100------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::CARRY`] do *flag register* estiver setado.
@@ -1038,7 +1056,7 @@ instruction_set!(
     /// ```asm
     /// CC 0x003C
     /// ```
-    CC          "0000110101------",
+    CC          "0000110101------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::CARRY`] do *flag register* não estiver setado.
@@ -1057,7 +1075,7 @@ instruction_set!(
     /// ```asm
     /// CNC 0x003C
     /// ```
-    CNC         "0000110110------",
+    CNC         "0000110110------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::GREATER`] do *flag register* estiver setado.
@@ -1076,7 +1094,7 @@ instruction_set!(
     /// ```asm
     /// CGR 0x003C
     /// ```
-    CGR         "0000110111------",
+    CGR         "0000110111------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::LESSER`] do *flag register* estiver setado.
@@ -1095,7 +1113,7 @@ instruction_set!(
     /// ```asm
     /// CLE 0x003C
     /// ```
-    CLE         "0000111000------",
+    CLE         "0000111000------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// algum dos *bits* [`FlagIndex::EQUAL`] ou [`FlagIndex::GREATER`] do *flag register* estiver
@@ -1115,7 +1133,7 @@ instruction_set!(
     /// ```asm
     /// CEG 0x003C
     /// ```
-    CEG         "0000111001------",
+    CEG         "0000111001------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// algum dos *bits* [`FlagIndex::EQUAL`] ou [`FlagIndex::LESSER`] do *flag register* estiver
@@ -1135,7 +1153,7 @@ instruction_set!(
     /// ```asm
     /// CEL 0x003C
     /// ```
-    CEL         "0000111010------",
+    CEL         "0000111010------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::ARITHMETIC_OVERFLOW`] do *flag register* estiver setado.
@@ -1154,7 +1172,7 @@ instruction_set!(
     /// ```asm
     /// COV 0x003C
     /// ```
-    COV         "0000111011------",
+    COV         "0000111011------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::ARITHMETIC_OVERFLOW`] do *flag register* não estiver setado.
@@ -1173,7 +1191,7 @@ instruction_set!(
     /// ```asm
     /// CNO 0x003C
     /// ```
-    CNO         "0000111100------",
+    CNO         "0000111100------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::DIV_BY_ZERO`] do *flag register* estiver setado.
@@ -1192,7 +1210,7 @@ instruction_set!(
     /// ```asm
     /// CDZ 0x003C
     /// ```
-    CDZ         "0000111101------",
+    CDZ         "0000111101------"      { addr1: MemoryCell },
 
     /// Salva o valor atual do *PC* na *stack* e pula para o endereço do procedimento informado se
     /// o *bit* [`FlagIndex::NEGATIVE`] do *flag register* estiver setado.
@@ -1211,7 +1229,7 @@ instruction_set!(
     /// ```asm
     /// CN 0x003C
     /// ```
-    CN          "0000111110------",
+    CN          "0000111110------"      { addr1: MemoryCell },
 
     /// Altera o valor do *PC* para o último valor salvo na *stack* somado de 1.
     /// 
@@ -1267,7 +1285,7 @@ instruction_set!(
     /// PUSH R5
     /// PUSH FR
     /// ```
-    PUSH        "000101----------",
+    PUSH        "000101----------"      { rx: MemoryCell },
 
     /// Recupera da *stack* o conteúdo de um registrador ou do *flag register*.
     ///
@@ -1288,7 +1306,7 @@ instruction_set!(
     /// POP R5
     /// POP FR
     /// ```
-    POP         "000110----------",
+    POP         "000110----------"{ rx: MemoryCell },
 
     /// Sem operação. Serve apenas para consumir tempo.
     ///

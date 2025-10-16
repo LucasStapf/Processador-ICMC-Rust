@@ -7,6 +7,7 @@ use lexer::Lexer;
 use thiserror::Error;
 use token::{Token, TokenError, TokenType};
 
+pub mod encoder;
 mod lexer;
 mod token;
 
